@@ -1,914 +1,897 @@
-调试状态。。。。。。。。。。
-
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>孕乃馨妇幼服务中心｜民办非营利组织</title>
-  <meta name="description" content="孕乃馨民办非营利组织：立足社区，开展孕产与哺乳知识普及、健康生活辅导、公益义诊、困难帮扶及社区公益活动与社交支持。" />
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b5051">
+<meta name="description" content="荷序健康，上海荷序数智健康科技有限公司旗下健康服务品牌。围绕大健康与女性全生命周期健康，连接服务机构、专业人员与顾问资源，让专业照护走进每个生活阶段。">
+<title>荷序健康｜上海荷序数智健康科技有限公司</title>
 <style>
-  :root{
-    --bg:#fff7fa;
-    --muted:#8f6f79;
-    --text:#4b2432;
+:root{
+  --green:#0b5051;--green-dark:#103537;--green-light:#176968;
+  --cream:#f4f0e6;--paper:#fffcf7;--soft:#ebece1;--sage:#e0e6d8;
+  --gold:#ad925c;--gold-light:#efe0b7;--text:#233633;--muted:#64716a;
+  --line:rgba(30,69,63,.12);
+  --serif:"Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;padding-bottom:70px;background:var(--cream);color:var(--text);font-family:var(--sans);line-height:1.8;-webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+button,a,input{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer;color:inherit;border-radius:0}
+button:disabled{cursor:default}
+a{color:inherit;text-decoration:none}
+a,button{touch-action:manipulation}
+img,svg{max-width:100%}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #b89a57;outline-offset:5px}
+h1,h2,h3,p{margin:0}
+::selection{background:var(--gold-light);color:var(--green-dark)}
+[hidden]{display:none!important}
+.wrap{width:min(1180px,84%);margin-inline:auto}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:fixed;left:16px;top:-90px;padding:10px 18px;background:var(--paper);z-index:10001}
+.skip-link:focus{top:16px}
+.icon{width:26px;height:26px;display:inline-block;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.symbol-library{position:absolute;width:0;height:0;overflow:hidden}
 
-    --brand:#f48fb1;
-    --brand2:#ffd1dc;
+/* 页头 */
+.site-header{background:var(--paper)}
+.header-in{min-height:100px;display:flex;align-items:center;justify-content:space-between;gap:30px;padding-block:14px}
+.brand-lockup{display:flex;align-items:center;gap:26px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:9px;color:var(--green);white-space:nowrap}
+.brand-mark{width:53px;height:65px;display:block}
+.brand-words{display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.brand-words strong{font-size:38px;font-weight:750;letter-spacing:2px}
+.brand-words small{font-size:16px;letter-spacing:9px;padding-left:9px;margin-top:3px}
+.brand-caption{font-size:13px;color:var(--green);letter-spacing:2px;border-left:1px solid #d8d4c9;padding-left:22px}
+.header-tools{display:flex;align-items:center;gap:24px}
+.search-form{display:flex;align-items:center;width:190px;border-bottom:1px solid #b8b9ac}
+.search-form input{width:100%;min-width:0;border:0;background:none;padding:8px 0;outline:none;font-size:13px;color:var(--text)}
+.search-form button{padding:8px 2px 8px 10px;background:none;border:0;color:var(--green);line-height:1}
+.search-form .icon{width:16px;height:16px}
+.login-link{font-size:13px;color:var(--green);white-space:nowrap}
+.login-link:hover{text-decoration:underline}
 
-    --line:rgba(244,143,177,.25);
-    --shadow: 0 10px 30px rgba(244,143,177,.18);
-    --radius:16px;
-    --max:1200px;
+/* 导航 */
+.site-nav{background:var(--green);color:var(--paper)}
+.nav-in{display:flex;align-items:center;min-height:54px;justify-content:space-between}
+.nav-links{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:0;margin:0;list-style:none}
+.nav-links a{display:block;padding:14px 4px;white-space:nowrap;font-size:13px;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold-light)}
+.nav-links .contact-nav{padding:7px 18px;border-radius:25px;color:var(--green-dark);background:var(--gold-light)}
+.nav-links .contact-nav:hover{color:var(--green-dark);background:#f6eacb}
+.menu-toggle{display:none;align-items:center;gap:9px;background:none;color:inherit;border:0;padding:12px 0;font-size:14px}
+.menu-toggle .icon{width:22px;height:22px}
 
-    --pinkbar: rgba(255,235,242,.92);
-    --chip: rgba(244,143,177,.14);
-    --chip2: rgba(255,209,220,.45);
-  }
+/* 首屏轮播 */
+.hero{position:relative;isolation:isolate;background:linear-gradient(112deg,#063638 0%,#0b5353 52%,#184d4d 100%);color:#fffaf0;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 77% 35%,rgba(111,162,131,.22),transparent 52%)}
+.hero-watermark{position:absolute;right:5%;top:-92px;z-index:-1;font-family:var(--serif);font-size:540px;line-height:1.2;color:#b6d0b8;opacity:.045;user-select:none;pointer-events:none}
+.hero-in{position:relative;padding:42px 0 44px}
+.slides{position:relative;min-height:345px}
+.hero-slide{position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .6s ease,visibility .6s ease}
+.hero-slide.is-active{opacity:1;visibility:visible;pointer-events:auto}
+.eyebrow{font-size:12px;letter-spacing:2.6px;color:var(--green);font-weight:500;text-transform:uppercase}
+.hero-eyebrow{display:flex;align-items:center;gap:15px;color:var(--gold-light);font-size:12px;letter-spacing:4px;margin-bottom:23px}
+.hero-eyebrow::before{content:"";width:26px;height:1px;background:var(--gold-light)}
+.hero-title{font-family:var(--serif);font-size:clamp(40px,4.5vw,62px);font-weight:400;letter-spacing:1px;line-height:1.22;max-width:850px}
+.hero-desc{color:#d9e6df;font-size:15px;margin-top:22px;max-width:780px}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:16px;border:1px solid transparent;background:var(--gold-light);color:var(--green-dark);padding:10px 22px;min-height:43px;font-size:14px;font-weight:600;transition:background .2s,transform .2s}
+.button:hover{background:#f5e9c9;transform:translateY(-2px)}
+.button .icon{width:15px;height:15px}
+.hero-slide .button{margin-top:30px}
+.hero-controls{display:flex;align-items:center;gap:16px;margin-top:10px;min-height:32px}
+.circle-control{width:31px;height:31px;display:grid;place-items:center;border:1px solid rgba(225,237,226,.42);border-radius:50%;background:transparent;color:#dce9e1;padding:0}
+.circle-control:hover{background:rgba(255,255,255,.1)}
+.circle-control .icon{width:13px;height:13px}
+.slide-dots{display:flex;align-items:center;gap:7px}
+.slide-dot{border:0;background:transparent;width:18px;height:24px;padding:0;display:grid;place-items:center}
+.slide-dot::before{content:"";width:7px;height:7px;border-radius:6px;background:#7ba29a;transition:width .3s,background .3s}
+.slide-dot.is-active{width:25px}
+.slide-dot.is-active::before{width:25px;background:var(--gold-light)}
+.autoplay-toggle{border:0;background:transparent;color:#c3d8cc;font-size:11px;padding:3px 7px}
+.autoplay-toggle:hover{color:white}
+.slide-counter{margin-left:auto;font-size:12px;font-family:Georgia,serif;color:#b9d1c6;letter-spacing:2px}
 
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    font-family: ui-sans-serif, system-ui, -apple-system,
-      "PingFang SC","Hiragino Sans GB","Microsoft YaHei",
-      Arial,"Noto Sans CJK SC",sans-serif;
-    color:var(--text);
-    background-image: url("./background-pink.jpeg");
-    background-repeat:no-repeat;
-    background-position:center top;
-    background-size:cover;
-    background-color:var(--bg);
-    line-height:1.7;
-  }
-  body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    background: rgba(255, 245, 249, 0.40);
-    z-index:-1;
-  }
+/* 六个快捷入口 */
+.quick-wrap{position:relative;z-index:2;margin-top:-28px}
+.quick-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:var(--paper);box-shadow:0 15px 28px rgba(35,56,44,.13)}
+.quick-entry{appearance:none;background:none;border:0;border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:11px;min-height:108px;padding:16px 6px;text-align:center;transition:background .2s,color .2s;font-size:14px;font-weight:600}
+.quick-entry:last-child{border-right:0}
+.quick-entry .icon{color:var(--green);width:28px;height:28px}
+.quick-entry:hover{background:#e8eee3;color:var(--green)}
 
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:var(--max); margin:0 auto; padding:0 18px}
+/* 内容区 */
+.section{padding:78px 0;background:var(--cream);scroll-margin-top:22px}
+.section.alt{background:var(--soft)}
+.about-section{padding-top:88px}
+.section-heading{margin-bottom:30px}
+.section-heading .eyebrow{margin-bottom:12px}
+.section-heading h2{font-family:var(--serif);font-size:36px;font-weight:400;line-height:1.35;letter-spacing:.4px}
+.section-heading p:not(.eyebrow){font-size:14px;color:var(--muted);margin-top:8px}
+.heading-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+.text-link{display:inline-flex;align-items:center;gap:13px;font-size:13px;color:var(--green);border-bottom:1px solid #99aba0;padding-bottom:3px;flex-shrink:0}
+.text-link:hover{color:var(--gold)}
+.text-link .icon{width:14px;height:14px}
+.two-column{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
+.feature-card{position:relative;isolation:isolate;overflow:hidden;background:var(--green);color:#f5f7ed;padding:40px 46px;min-height:250px}
+.feature-card::after{content:"";position:absolute;z-index:-1;width:310px;height:310px;border:8px solid rgba(217,227,206,.06);border-radius:50%;right:-26px;top:5px;pointer-events:none}
+.feature-card h3{font-family:var(--serif);font-weight:400;font-size:29px;line-height:1.45;margin-bottom:16px}
+.feature-card p{font-size:14px;line-height:2;color:#dfebe1}
+.feature-card .text-link{color:var(--gold-light);border-color:rgba(237,220,173,.6);margin-top:25px}
+.identity-card{padding:35px 39px;background:var(--sage);display:flex;flex-direction:column;justify-content:center}
+.identity-word{font-size:35px;letter-spacing:7px;font-family:Georgia,serif;color:var(--green);margin-bottom:24px}
+.identity-card h3{font-size:20px;margin-bottom:13px}
+.identity-card p{font-size:14px;color:#546157;line-height:1.9}
+.three-column{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.content-card{background:var(--paper);border:1px solid var(--line);padding:26px 28px;transition:box-shadow .25s,transform .25s}
+.content-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(39,60,47,.06)}
+.card-index{font-family:Georgia,serif;font-size:21px;color:var(--gold);margin-bottom:12px}
+.card-kicker{font-family:var(--serif);font-size:22px;color:var(--gold);margin-bottom:12px}
+.content-card h3{font-size:17px;line-height:1.5;margin-bottom:9px}
+.content-card p{font-size:13px;color:var(--muted);line-height:1.9}
 
-  /* 顶部细条 */
-  .topbar{
-    background: rgba(255,255,255,.55);
-    border-bottom:1px solid var(--line);
-    backdrop-filter:saturate(140%) blur(10px);
-    font-size:13px;
-    color:var(--muted);
-  }
-  .topbarIn{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0;}
-  .topbarLeft{display:flex; gap:14px; flex-wrap:wrap}
-  .topbarRight{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-  .search{
-    display:flex; align-items:center; gap:8px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.65);
-    border-radius:999px;
-    padding:6px 10px;
-  }
-  .search input{
-    border:0; outline:none; background:transparent;
-    font-size:13px; width:180px; color:var(--text);
-  }
-  .miniLink{color:var(--muted)}
-  .miniLink:hover{color:var(--text); text-decoration:underline}
+/* 动态与故事 */
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:23px}
+.story-feature{background:var(--green);color:var(--paper);border:0;text-align:left;padding:34px 36px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:230px;position:relative;overflow:hidden}
+.story-feature small{color:var(--gold-light);font-size:12px;margin-bottom:20px}
+.story-feature h3{font-family:var(--serif);font-size:27px;font-weight:400;line-height:1.6}
+.story-feature p{color:#c7ddd1;font-size:13px;margin-top:14px}
+.story-feature .story-arrow{margin-top:18px;color:var(--gold-light);font-size:13px}
+.story-list{background:var(--paper);padding:10px 28px}
+.story-item{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:22px 0;font-size:14px}
+.story-item:last-child{border-bottom:0}
+.story-item small{color:var(--muted);font-size:11px;white-space:nowrap}
+.story-item:hover{color:var(--green)}
+.section-footnote{font-size:12px;color:var(--muted);margin-top:16px}
 
-  /* Header */
-  .nav{
-    position:sticky; top:0; z-index:20;
-    backdrop-filter:saturate(140%) blur(10px);
-    background: var(--pinkbar);
-    border-bottom:1px solid var(--line);
-  }
-  .navin{display:flex; align-items:center; justify-content:space-between; padding:14px 0; gap:12px;}
-  .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.5px; min-width:200px;font-size:40px; }
-  .logo{
-    display:inline-block;
-    width:56px; height:56px;
-    border-radius:28px;
-    background-image:url("./logo.jpeg");
-    background-repeat:no-repeat;
-    background-position:center;
-    background-size:contain;
-  }
-  .menu{display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end}
-  .menu a{padding:8px 12px; border-radius:999px; font-size:14px; color:var(--muted);}
-  .menu a:hover{background:var(--chip); color:var(--text)}
+/* 技师与顾问 */
+.person-card{padding:23px}
+.person-visual{height:120px;display:grid;place-items:center;background:linear-gradient(130deg,#d8e3d9,#eeeade);color:var(--green);font:italic 30px Georgia,serif;margin-bottom:18px}
+.person-card h3{margin-bottom:7px}
+.network-equation{font-size:29px;letter-spacing:1px;font-family:Georgia,serif;color:var(--green);margin-bottom:18px}
+.network-note{font-size:18px!important;line-height:1.65}
 
-  /* 通用卡片 */
-  .panel{
-    background: rgba(255,255,255,.70);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(2px);
-  }
-  .section{padding:18px 0}
-  h1,h2,h3{margin:0}
-  .muted{color:var(--muted)}
+/* 视频栏目 */
+.video-grid{display:grid;grid-template-columns:1.9fr 1fr;gap:22px}
+.video-placeholder{border:0;min-height:280px;padding:32px;background:linear-gradient(120deg,#0b5051,#123536);color:var(--paper);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;width:100%}
+.play-circle{width:54px;height:54px;border:1px solid #809c8f;border-radius:50%;display:grid;place-items:center;margin-bottom:18px}
+.play-circle .icon{width:22px;height:22px;fill:var(--paper);stroke:none;margin-left:3px}
+.video-placeholder h3{font-family:var(--serif);font-size:24px;font-weight:400}
+.video-placeholder p{color:#c9ddd1;font-size:13px;margin-top:10px}
+.video-placeholder:hover .play-circle{border-color:var(--gold-light);background:rgba(255,255,255,.04)}
+.video-menu{background:var(--paper);padding:25px 28px}
+.video-menu h3{font-size:16px;margin-bottom:12px}
+.video-tab{display:flex;align-items:center;gap:14px;text-align:left;width:100%;border:0;border-top:1px solid var(--line);padding:18px 0;background:none;font-size:13px}
+.video-tab span{font-family:Georgia,serif}
+.video-tab.is-active{color:var(--green);font-weight:700}
+.video-tab:hover{color:var(--gold)}
 
-  .btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+/* 联系区与页脚 */
+.contact-band{background:var(--green);color:var(--paper);padding:43px 0}
+.contact-in{display:flex;align-items:center;justify-content:space-between;gap:32px}
+.contact-band h2{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.5}
+.contact-band p{font-size:14px;color:#d9e5d9;margin-top:5px}
+.contact-band .button{flex-shrink:0}
+.footer{background:var(--green-dark);color:#c7d6cc;padding:40px 0 24px}
+.footer-grid{display:grid;grid-template-columns:1.8fr 1fr .65fr;gap:50px;padding-bottom:30px}
+.footer h3{color:#f1f3e8;font-size:15px;margin-bottom:13px}
+.footer p,.footer a{font-size:12px;line-height:2}
+.footer p+p{margin-top:9px}
+.footer-links{display:grid;gap:5px}
+.footer a:hover{color:var(--gold-light)}
+.qr-placeholder{width:91px;height:91px;background:#e9eade;color:#708277;display:grid;place-content:center;text-align:center;font-size:12px;line-height:1.7}
+.copyright{font-size:11px;color:#9db4a6;border-top:1px solid rgba(224,234,217,.12);padding-top:18px;line-height:1.9}
 
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    padding:10px 12px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.65);
-    font-weight:800;
-    cursor:pointer;
-    min-height:44px;
-  }
-  .btn:hover{transform: translateY(-1px)}
-  .btnPrimary{
-    border:0;
-    background: linear-gradient(135deg, var(--brand), var(--brand2));
-    color:#3b1b26;
-  }
-  .btn:not(.btnPrimary){
-    border-color: rgba(244,143,177,.18);
-  }
+/* 内容与搜索弹窗 */
+.dialog{width:min(590px,calc(100% - 34px));max-height:80vh;max-height:80dvh;border:1px solid #c8d0c0;background:var(--paper);color:var(--text);padding:0;box-shadow:0 30px 100px #0004}
+.dialog::backdrop{background:#092c2fb0;backdrop-filter:blur(4px)}
+.dialog-top{position:sticky;top:0;background:var(--paper);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 25px;border-bottom:1px solid var(--line);z-index:1}
+.dialog-top h2{font-size:21px;font-family:var(--serif);font-weight:500}
+.dialog-close{width:34px;height:34px;font-size:25px;line-height:1;border:1px solid var(--line);background:transparent;flex-shrink:0}
+.dialog-body{padding:22px 25px 27px}
+.dialog-body p{font-size:14px;color:var(--muted);line-height:2;margin-bottom:13px}
+.dialog-body .button{margin-top:8px}
+.search-results{display:grid;gap:10px}
+.search-result{display:block;text-align:left;padding:15px 17px;border:1px solid var(--line);background:var(--cream);width:100%}
+.search-result b{display:block;color:var(--green);font-size:15px;margin-bottom:5px}
+.search-result span{display:block;color:var(--muted);font-size:12px;line-height:1.8}
+.search-result:hover{background:var(--sage)}
+.dialog-open{overflow:hidden}
 
-  /* 首屏 */
-  .hero{padding:18px 0 8px}
-  .heroGrid{
-    display:grid;
-    grid-template-columns: 1.4fr .6fr;
-    gap:14px;
-    align-items:stretch;
-  }
-  @media (max-width: 980px){ .heroGrid{grid-template-columns:1fr} }
-
-  .banner{padding:18px; position:relative; overflow:hidden;}
-  .bannerTop{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:13px; color:var(--muted);}
-  .chip{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.55);
-  }
-  .dot{width:8px; height:8px; border-radius:999px; background: linear-gradient(135deg, var(--brand), var(--brand2));}
-  .banner h1{margin:10px 0 8px; font-size:28px; line-height:1.12; letter-spacing:.5px;}
-  @media (max-width:520px){ .banner h1{font-size:32px} }
-  .banner p{margin:0; color:var(--muted)}
-  .bannerNote{margin-top:10px; font-size:12px; color:var(--muted);}
-
-  .sideBox{padding:16px}
-  .sideBox h3{font-size:15px; margin-bottom:10px}
-  .kv{display:grid; gap:10px;}
-  .kvItem{
-    border:1px solid var(--line);
-    border-radius:14px;
-    background: rgba(255,255,255,.55);
-    padding:12px;
-  }
-  .kvItem b{display:block; margin-bottom:4px}
-  .kvItem span{font-size:13px; color:var(--muted)}
-
-  .quick{
-    margin-top:14px;
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:10px;
-  }
-  @media (max-width:980px){ .quick{grid-template-columns: repeat(2, 1fr);} }
-  .quick a{
-    display:flex; align-items:center; justify-content:center;
-    padding:12px 10px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.65);
-    font-weight:800;
-  }
-  .quick a:hover{background: var(--chip2)}
-
-  .mainGrid{
-    display:grid;
-    grid-template-columns: 280px 1fr 320px;
-    gap:14px;
-    align-items:start;
-  }
-  @media (max-width: 1100px){ .mainGrid{grid-template-columns: 1fr} }
-  .mainGrid > *{ min-width:0; }
-
-  .colStack{
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-  }
-
-  .leftStack{
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-  }
-
-  .box{padding:16px}
-  .boxTitle{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
-  .boxTitle h2{font-size:16px}
-  .more{font-size:13px; color:var(--muted)}
-  .more:hover{text-decoration:underline; color:var(--text)}
-
-  .vnav{display:grid; gap:8px; margin-top:6px}
-  .vnav a{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.60);
-    color:var(--text);
-    font-weight:800;
-  }
-  .vnav a span{font-size:12px; color:var(--muted); font-weight:700}
-  .vnav a:hover{background: var(--chip2)}
-
-  .shortcutGrid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:10px;
-    margin-top:10px;
-  }
-  .sbtn{
-    display:flex; align-items:center; justify-content:center;
-    padding:12px 10px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.60);
-    font-weight:800;
-    text-align:center;
-    min-height:44px;
-  }
-  .sbtn:hover{background: var(--chip2)}
-  .smallNote{font-size:12px; color:var(--muted); margin-top:10px; line-height:1.6;}
-
-  .infoList{margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:13px;}
-  .infoList li{margin:6px 0}
-
-  .feature{padding:16px;padding-bottom:60px;}
-  .feature h2{font-size:18px; margin-bottom:8px}
-  .feature p{margin:0 0 10px; color:var(--muted)}
-  .tags{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
-  .tag{
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.55);
-    font-size:12px; color:var(--muted);
-  }
-  .split2{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:14px;
-    margin-top:14px;
-  }
-  @media (max-width: 860px){ .split2{grid-template-columns:1fr} }
-  .miniCard{
-    padding:14px;
-    border-radius: var(--radius);
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.60);
-  }
-  .miniCard h3{font-size:14px; margin-bottom:6px}
-  .miniList{margin:0; padding-left:18px; color:var(--muted); font-size:13px}
-  .miniList li{margin:6px 0}
-
-  .list{display:grid; gap:8px}
-  .list a{
-    display:block;
-    padding:10px 12px;
-    border:1px solid var(--line);
-    border-radius:12px;
-    background: rgba(255,255,255,.60);
-    font-size:13px;
-    color:var(--text);
-    font-weight:700;
-  }
-  .list a small{display:block; color:var(--muted); font-size:12px; margin-top:2px; font-weight:600;}
-  .list a:hover{background: var(--chip2)}
-
-  .donate{display:grid; gap:10px;}
-  .donate .btn{width:100%}
-  .donateNote{font-size:12px; color:var(--muted)}
-
-  .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:14px;}
-  @media (max-width: 980px){ .grid2{grid-template-columns:1fr} }
-
-  .gallery{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:10px;}
-  @media (max-width: 980px){ .gallery{grid-template-columns: repeat(2, 1fr);} }
-  .ph{
-    height:88px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.55);
-    display:flex; align-items:center; justify-content:center;
-    font-size:12px; color:var(--muted);
-    font-weight:700;
-  }
-
-  .footer{
-    margin-top:16px;
-    padding:22px 0 34px;
-    border-top:1px solid var(--line);
-    background: rgba(255,255,255,.55);
-    backdrop-filter: blur(6px);
-    color:var(--muted);
-    font-size:13px;
-  }
-  .footerGrid{display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:14px;}
-  @media (max-width: 980px){ .footerGrid{grid-template-columns:1fr} }
-  .footer b{color:var(--text)}
-  .footer a{color:var(--text); text-decoration:underline; text-decoration-color: rgba(244,143,177,.35)}
-  .footLinks{display:grid; gap:6px}
-
-  .sponsorWrap{
-    margin-top:14px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-  }
-
-  .sponsorCard{
-    padding:14px;
-    border-radius: var(--radius);
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.60);
-    overflow:hidden;
-  }
-
-  .sponsorTitle{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:10px;
-  }
-  .sponsorTitle h3{
-    font-size:14px;
-    margin:0;
-  }
-  .sponsorTitle a{
-    font-size:13px;
-    color:var(--muted);
-  }
-  .sponsorTitle a:hover{color:var(--text); text-decoration:underline;}
-
-  .sponsorGrid{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    overflow-y:auto;
-    padding-right:6px;
-    max-height:200px;
-  }
-  .sponsorGrid::-webkit-scrollbar{ width:8px; }
-  .sponsorGrid::-webkit-scrollbar-thumb{
-    background: rgba(244,143,177,.22);
-    border-radius:999px;
-  }
-  .sponsorGrid::-webkit-scrollbar-track{
-    background: rgba(255,255,255,.35);
-    border-radius:999px;
-  }
-
-  .sponsorItem{
-    border:1px solid var(--line);
-    border-radius:14px;
-    background: rgba(255,255,255,.65);
-    padding:10px 12px;
-  }
-  .sponsorItem b{
-    display:block;
-    font-size:13px;
-    margin-bottom:2px;
-  }
-  .sponsorItem span{
-    display:block;
-    font-size:12px;
-    color:var(--muted);
-  }
-
-  .thanksBox{
-    border:1px solid var(--line);
-    border-radius:14px;
-    background: rgba(255,255,255,.65);
-    overflow:hidden;
-  }
-  .thanksHead{
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    font-weight:800;
-    font-size:13px;
-  }
-  .thanksMarquee{
-    position:relative;
-    overflow:hidden;
-    max-width:100%;
-    padding:10px 12px 12px;
-  }
-  .thanksTrack{
-    display:inline-flex;
-    gap:10px;
-    align-items:center;
-    white-space:nowrap;
-    width:max-content;
-    will-change: transform;
-    animation: thanksScrollX 18s linear infinite;
-  }
-  .thanksItem{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    border:1px dashed rgba(244,143,177,.25);
-    background: rgba(255,255,255,.55);
-    border-radius:999px;
-    padding:8px 12px;
-    font-size:12px;
-    color:var(--muted);
-  }
-  .thanksItem b{
-    color:var(--text);
-    font-weight:800;
-    font-size:12px;
-  }
-  .thanksItem em{
-    font-style:normal;
-    opacity:.9;
-    white-space:nowrap;
-  }
-  @keyframes thanksScrollX{
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .thanksMarquee:hover .thanksTrack{ animation-play-state: paused; }
+/* 响应式 */
+@media(min-width:1600px){.hero-watermark{right:12%}}
+@media(max-width:1100px){
+.brand-caption{font-size:12px;letter-spacing:1px;padding-left:18px}
+.brand-lockup{gap:18px}.header-tools{gap:18px}
+.nav-links{gap:7px}.nav-links a{font-size:12px}
+.nav-links .contact-nav{padding:7px 13px}
+.feature-card{padding:31px}.identity-card{padding:30px}.content-card{padding:23px}
+.hero-title{font-size:52px}.hero-desc{font-size:14px}.hero-in{padding-top:38px}
+.slides{min-height:320px}.section{padding:64px 0}.about-section{padding-top:74px}
+.section-heading h2{font-size:32px}
+}
+@media(max-width:850px){
+.wrap{width:calc(100% - 40px)}.brand-caption{display:none}.header-in{min-height:90px}
+.nav-in{flex-wrap:wrap}.menu-toggle{display:flex}
+.nav-links{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:2px 0 15px}
+.nav-links.is-open{display:grid}.nav-links a{text-align:center;padding:10px 5px;font-size:13px}
+.nav-links .contact-nav{margin:4px 10px;padding:7px}
+.hero-title{font-size:46px}.hero-desc{max-width:90%}
+.hero-watermark{font-size:450px;right:-35px;top:-30px}
+.quick-entry{font-size:12px;min-height:96px}.quick-entry .icon{width:25px;height:25px}
+.two-column{gap:18px;grid-template-columns:1.3fr 1fr}
+.feature-card{padding:27px}.feature-card h3{font-size:25px}
+.identity-card{padding:25px}.identity-card h3{font-size:18px}.identity-word{font-size:30px}
+.three-column{gap:12px}.content-card{padding:20px}.content-card h3{font-size:16px}
+.story-grid{gap:16px}.story-feature{padding:28px}.story-feature h3{font-size:24px}
+.story-list{padding:5px 20px}.story-item{gap:10px;flex-wrap:wrap;padding:18px 0}
+.video-grid{grid-template-columns:1.6fr 1fr;gap:16px}.video-menu{padding:22px}
+.footer-grid{gap:28px;grid-template-columns:1.6fr 1fr .65fr}.contact-band h2{font-size:26px}
+}
+@media(max-width:600px){
+.wrap{width:calc(100% - 34px)}
+.header-in{flex-wrap:wrap;gap:12px;padding:13px 0 14px}
+.brand-mark{height:52px;width:42px}.brand-words strong{font-size:30px}
+.brand-words small{font-size:13px;letter-spacing:7px;padding-left:7px}
+.brand-lockup{width:100%;justify-content:center}
+.brand-caption{display:block;font-size:11px;letter-spacing:0;padding-left:14px}
+.header-tools{width:100%;gap:20px}.search-form{flex:1;width:auto}.login-link{font-size:12px}
+.nav-in{min-height:46px}.menu-toggle{padding:9px 0;font-size:13px}
+.hero-in{padding:32px 0 49px}.slides{min-height:345px}
+.hero-eyebrow{font-size:10px;letter-spacing:2px;gap:10px;margin-bottom:23px}
+.hero-eyebrow::before{width:18px}
+.hero-title{font-size:37px;line-height:1.32;letter-spacing:0}.hero-title br{display:none}
+.hero-desc{font-size:13px;line-height:1.9;max-width:100%;margin-top:20px}
+.hero-slide .button{margin-top:23px;padding:9px 18px;font-size:13px}
+.hero-watermark{font-size:360px;right:-98px;top:20px;opacity:.06}
+.hero-controls{gap:11px}.slide-counter{font-size:11px;letter-spacing:1px}
+.quick-wrap{margin-top:-27px}.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick-entry{min-height:89px;gap:7px;padding:13px 4px;border-bottom:1px solid var(--line)}
+.quick-entry:nth-child(3n){border-right:0}.quick-entry:nth-child(n+4){border-bottom:0}
+.section{padding:48px 0}.about-section{padding-top:53px}
+.section-heading{margin-bottom:24px}
+.section-heading .eyebrow{font-size:10px;letter-spacing:2px;margin-bottom:10px}
+.section-heading h2{font-size:28px}
+.section-heading p:not(.eyebrow){font-size:13px;line-height:1.85}
+.heading-row{align-items:flex-start;gap:15px;flex-direction:column}
+.two-column,.three-column,.story-grid,.video-grid{grid-template-columns:1fr;gap:16px}
+.feature-card{padding:28px 24px;min-height:0}.feature-card h3{font-size:25px}
+.feature-card p{font-size:13px}.identity-card{padding:25px}.identity-word{margin-bottom:12px}
+.content-card{padding:23px 24px}.card-index{margin-bottom:8px}.content-card h3{font-size:17px}
+.card-kicker{font-size:22px;margin-bottom:7px}
+.story-feature{min-height:220px;padding:27px 25px}.story-feature h3{font-size:26px}
+.story-list{padding:0 23px}.story-item{flex-wrap:nowrap;font-size:13px}.story-item small{font-size:10px}
+.person-visual{height:122px}.network-equation{font-size:27px;margin-bottom:12px}
+.video-placeholder{min-height:235px;padding:25px}.video-menu{padding:21px 25px}
+.video-tab{padding:14px 0}.contact-in{flex-direction:column;align-items:flex-start;gap:20px}
+.contact-band{padding:33px 0}.contact-band h2{font-size:25px}.contact-band p{font-size:13px}
+.footer-grid{grid-template-columns:1fr 1fr;gap:26px}.footer-company{grid-column:1/-1}
+.footer{padding-top:33px}.dialog-top{padding:17px 20px}.dialog-body{padding:20px}
+.autoplay-toggle{font-size:10px;padding-inline:2px}
+}
+@media(max-width:360px){
+.hero-title{font-size:32px}.slides{min-height:334px}.brand-caption{font-size:10px}
+.brand-lockup{gap:12px}.quick-entry{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+.hero-slide,.button,.content-card,.slide-dot::before{transition:none}
+.content-card:hover,.button:hover{transform:none}
+}
 </style>
 </head>
-
 <body>
+<a class="skip-link" href="#main">跳到主要内容</a>
 
-  <div class="topbar">
-    <div class="wrap topbarIn">
-      <div class="topbarLeft">
-        <span>服务时间：周一至周五 9:00-18:00</span>
-        <span>咨询电话：<b>（待补充）</b></span>
-        <span>邮箱：<b>（待补充）</b></span>
-      </div>
+<!-- 内嵌图标，不依赖外部图片或图标库 -->
+<svg class="symbol-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M6 5h13v13"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="m14 5-7 7 7 7"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="m10 5 7 7-7 7"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+<symbol id="i-service" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"/><path d="M16 5v22M5 16h22"/></symbol>
+<symbol id="i-ai" viewBox="0 0 32 32"><rect x="5" y="9" width="22" height="18" rx="5"/><path d="M16 5v4M3 16v5M29 16v5M11 16h.01M21 16h.01M12 22c2 2 6 2 8 0"/><circle cx="16" cy="4" r="1"/></symbol>
+<symbol id="i-expert" viewBox="0 0 32 32"><circle cx="14" cy="10" r="5"/><path d="M4 28v-3a10 10 0 0 1 20 0v3M25 4v8M21 8h8"/></symbol>
+<symbol id="i-store" viewBox="0 0 32 32"><path d="M4 12h24l-4-8H8l-4 8ZM6 12v16h20V12M13 28V18h7v10M4 12c0 5 6 5 6 0 0 5 6 5 6 0 0 5 6 5 6 0 0 5 6 5 6 0"/></symbol>
+<symbol id="i-people" viewBox="0 0 32 32"><circle cx="16" cy="8" r="4"/><circle cx="6" cy="12" r="3"/><circle cx="26" cy="12" r="3"/><path d="M9 28v-5a7 7 0 0 1 14 0v5M2 27v-4a5 5 0 0 1 6-5M30 27v-4a5 5 0 0 0-6-5"/></symbol>
+<symbol id="i-mail" viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="18"/><path d="m4 8 12 10L28 8"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m7 4 13 8-13 8Z"/></symbol>
+</defs>
+</svg>
 
-      <div class="topbarRight">
-        <div class="search" role="search">
-          <span aria-hidden="true">🔎</span>
-          <input type="text" placeholder="站内搜索（后续接入）" />
-        </div>
-        <a class="miniLink" href="#open">信息公开</a>
-        <a class="miniLink" href="#contact">联系我们</a>
-      </div>
-    </div>
+<header class="site-header" id="top">
+<div class="wrap header-in">
+  <div class="brand-lockup">
+    <a class="brand" href="#home" aria-label="荷序健康首页">
+      <svg class="brand-mark" viewBox="0 0 600 715" aria-hidden="true">
+        <defs>
+          <linearGradient id="logoGreen" x2="1" y2="1"><stop stop-color="#086361"/><stop offset="1" stop-color="#064444"/></linearGradient>
+          <linearGradient id="logoGold" x2="1" y2="1"><stop stop-color="#eee0b4"/><stop offset="1" stop-color="#b79b58"/></linearGradient>
+        </defs>
+        <path fill="url(#logoGreen)" d="M220 38C125 48 53 102 53 185v83c0 86 70 131 209 168 104 28 127 79 127 153v101c102-13 166-66 166-140 0-98-62-155-206-201-92-29-129-48-129-105V38ZM53 383c42 42 96 73 167 91v200C120 660 53 606 53 528V383ZM420 89c81 15 135 70 135 142v190c-33-40-71-67-135-83V89Z"/>
+        <circle cx="312" cy="278" r="37" fill="url(#logoGold)"/>
+      </svg>
+      <span class="brand-words"><strong>荷序</strong><small>健康</small></span>
+    </a>
+    <span class="brand-caption">女性健康数字化平台</span>
   </div>
-
-  <header class="nav" id="top">
-    <div class="wrap navin">
-      <a class="brand" href="#top" aria-label="孕乃馨-首页">
-        <span class="logo" aria-hidden="true"></span>
-        <span>孕乃馨妇幼服务中心</span>
-      </a>
-
-      <nav class="menu" aria-label="站点导航">
-        <a href="#home">首页</a>
-        <a href="#about">组织概况</a>
-        <a href="#projects">项目与服务</a>
-        <a href="#news">资讯动态</a>
-        <a href="#open">信息公开</a>
-        <a href="#join">参与支持</a>
-        <a href="#contact">联系我们</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="home" class="wrap">
-    <section class="hero">
-      <div class="heroGrid">
-        <div class="panel banner">
-          <div class="bannerTop">
-            <span class="chip"><span class="dot"></span> 民办非营利组织 · 立足社区 · 公益服务</span>
-            <span class="chip">孕产/哺乳知识普及</span>
-            <span class="chip">社交支持与帮扶</span>
-          </div>
-
-          <h1>关爱孕产 · 温暖社区 · 共建健康未来</h1>
-          <p>为孕产妇、哺乳期家庭与新手父母提供科普教育、健康生活辅导、公益义诊、困难帮扶与社区互助支持。</p>
-
-          <div class="btnRow">
-            <a class="btn btnPrimary" href="#projects">查看项目与服务</a>
-            <a class="btn" href="#join">成为志愿者 / 合作伙伴</a>
-            <a class="btn" href="#donate">我要捐赠</a>
-          </div>
-
-          <div class="bannerNote">
-            提示：本站内容用于公益科普与社区支持，不替代医疗诊断与治疗；如有紧急情况请及时就医或拨打急救电话。
-          </div>
-
-          <div class="quick" aria-label="快捷入口">
-            <a href="#projects">孕产课堂</a>
-            <a href="#projects">哺乳支持</a>
-            <a href="#projects">公益义诊</a>
-            <a href="#projects">困难帮扶</a>
-            <a href="#join">志愿者报名</a>
-            <a href="#donate">捐赠支持</a>
-          </div>
-        </div>
-
-        <aside class="panel sideBox" aria-label="机构要点">
-          <h3>服务要点</h3>
-          <div class="kv">
-            <div class="kvItem">
-              <b>服务方向</b>
-              <span>孕产科普｜哺乳支持｜公益义诊｜心理关怀｜困难帮扶｜社区活动</span>
-            </div>
-            <div class="kvItem">
-              <b>服务对象</b>
-              <span>孕产妇、哺乳期家庭、新手父母及婴幼儿家庭（含困难家庭）</span>
-            </div>
-            <div class="kvItem">
-              <b>我们的承诺</b>
-              <span>公益为本｜专业支持｜尊重隐私｜合规开展｜长期陪伴</span>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="section" id="projects">
-      <div class="mainGrid">
-        <div class="leftStack">
-          <aside class="panel box" aria-label="公益项目">
-            <div class="boxTitle">
-              <h2>公益项目</h2>
-              <a class="more" href="#projects">更多</a>
-            </div>
-            <div class="vnav">
-              <a href="#projects">孕产知识进社区 <span>科普</span></a>
-              <a href="#projects">母乳喂养支持小组 <span>哺乳</span></a>
-              <a href="#projects">产后身心关怀与转介 <span>心理</span></a>
-              <a href="#projects">公益义诊与健康咨询 <span>义诊</span></a>
-              <a href="#projects">困难家庭关爱帮扶 <span>帮扶</span></a>
-              <a href="#projects">社区互助与亲子活动 <span>活动</span></a>
-            </div>
-          </aside>
-
-          <aside class="panel box" aria-label="快速入口">
-            <div class="boxTitle">
-              <h2>快速入口</h2>
-              <a class="more" href="#join">去报名</a>
-            </div>
-
-            <div class="shortcutGrid">
-              <a class="sbtn" href="#join">志愿者报名</a>
-              <a class="sbtn" href="#donate">捐赠支持</a>
-              <a class="sbtn" href="#news">最新动态</a>
-              <a class="sbtn" href="#open">信息公开</a>
-            </div>
-
-            <div class="smallNote">
-              建议：后续你可以把“志愿者报名/项目报名”接到表单或公众号；把“信息公开”接到章程/年报/财务摘要页面。
-            </div>
-          </aside>
-
-          <aside class="panel box" aria-label="服务信息">
-            <div class="boxTitle">
-              <h2>服务信息</h2>
-              <a class="more" href="#contact">更新</a>
-            </div>
-            <ul class="infoList">
-              <li><b>服务时间：</b>工作日 9:00-18:00（活动另行公告）</li>
-              <li><b>服务方式：</b>线下课堂 / 社群支持 / 活动与义诊（按排期）</li>
-              <li><b>报名方式：</b>公众号 / 电话 / 社区合作渠道（后续补齐）</li>
-              <li><b>隐私说明：</b>尊重个人隐私，信息仅用于公益服务联系</li>
-            </ul>
-            <div class="btnRow">
-              <a class="btn btnPrimary" href="#contact">联系咨询</a>
-              <a class="btn" href="#open">合规与说明</a>
-            </div>
-          </aside>
-        </div>
-
-<section class="panel feature" aria-label="重点项目">
-  <div class="boxTitle">
-    <h2>重点项目介绍</h2>
-    <a class="more" href="#projects">查看全部项目</a>
+  <div class="header-tools">
+    <form class="search-form" id="siteSearch" role="search">
+      <label class="sr-only" for="searchInput">搜索平台内容</label>
+      <input id="searchInput" name="q" type="search" placeholder="搜索平台内容" maxlength="60" autocomplete="off" required>
+      <button type="submit" aria-label="搜索"><svg class="icon"><use href="#i-search"/></svg></button>
+    </form>
+    <a class="login-link" href="login.html">欢迎登录</a>
   </div>
+</div>
+</header>
 
-  <h2 style="font-size:18px;margin:0 0 6px;">“孕产健康与哺乳支持”社区行动</h2>
-  <p>
-    面向社区孕产妇与婴幼儿家庭，开展可理解、可获得的健康科普与生活方式指导；
-    同步提供哺乳支持与同伴社群，必要时对接专业资源与公益义诊，帮助更多家庭获得持续的支持。
-  </p>
+<nav class="site-nav" aria-label="网站导航">
+<div class="wrap nav-in">
+  <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="navLinks"><svg class="icon"><use href="#i-menu"/></svg>网站导航</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a class="active" href="#home">首页</a></li>
+    <li><a href="#about">平台概况</a></li>
+    <li><a href="#services">服务指南</a></li>
+    <li><a href="#cooperation">合作机构</a></li>
+    <li><a href="#team">技师风采</a></li>
+    <li><a href="#stories">温暖故事</a></li>
+    <li><a href="#community">公益组织</a></li>
+    <li><a href="#advisors">特聘顾问</a></li>
+    <li><a class="contact-nav" href="#contact">联系合作</a></li>
+  </ul>
+</div>
+</nav>
 
-  <div class="tags">
-    <span class="tag">线下课堂</span>
-    <span class="tag">社群支持</span>
-    <span class="tag">专家志愿者</span>
-    <span class="tag">困难帮扶</span>
-    <span class="tag">隐私保护</span>
+<main id="main">
+<section class="hero" id="home" aria-label="荷序健康品牌介绍" aria-roledescription="轮播图" tabindex="0">
+<div class="hero-watermark" aria-hidden="true">荷</div>
+<div class="wrap hero-in">
+  <div class="slides">
+    <article class="hero-slide is-active" data-slide aria-hidden="false" aria-label="第1屏，共3屏">
+      <p class="hero-eyebrow">荷序健康 · 女性健康数字化平台</p>
+      <h1 class="hero-title">让专业的照护，走进每<br>个生活阶段</h1>
+      <p class="hero-desc">从孕产照护到女性全生命周期健康，连接值得信赖的服务与专业力量。</p>
+      <a class="button" href="#services">了解服务指南<svg class="icon"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="hero-slide" data-slide aria-hidden="true" aria-label="第2屏，共3屏" inert>
+      <p class="hero-eyebrow">连接服务 · 连接专业</p>
+      <h2 class="hero-title">让每一次选择，都更清<br>晰安心</h2>
+      <p class="hero-desc">认识服务内容、合作机构与专业人员，沿着清楚的路径找到需要的支持。</p>
+      <a class="button" href="#services" tabindex="-1">探索平台服务<svg class="icon"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="hero-slide" data-slide aria-hidden="true" aria-label="第3屏，共3屏" inert>
+      <p class="hero-eyebrow">机构共建 · 专业共创</p>
+      <h2 class="hero-title">与同行者一起，建立有<br>温度的服务网络</h2>
+      <p class="hero-desc">连接机构、技师与顾问，让专业能力在更多场景中发挥价值。</p>
+      <a class="button" href="#cooperation" tabindex="-1">联系合作<svg class="icon"><use href="#i-arrow"/></svg></a>
+    </article>
   </div>
-
-  <div class="sponsorWrap" aria-label="赞助单位与感谢">
-    <div class="sponsorCard">
-      <div class="sponsorTitle">
-        <h3>赞助单位</h3>
-        <a href="#donate">申请成为赞助单位</a>
-      </div>
-
-      <div class="sponsorGrid">
-        <div class="sponsorItem">
-          <b>（单位名称占位）</b>
-          <span>支持方向：孕产科普</span>
-        </div>
-        <div class="sponsorItem">
-          <b>（单位名称占位）</b>
-          <span>支持方向：公益义诊</span>
-        </div>
-        <div class="sponsorItem">
-          <b>（单位名称占位）</b>
-          <span>支持方向：困难帮扶</span>
-        </div>
-        <div class="sponsorItem">
-          <b>（单位名称占位）</b>
-          <span>支持方向：物资支持</span>
-        </div>
-      </div>
-
-      <div class="muted" style="font-size:12px;margin-top:10px;">
-        说明：赞助单位信息与支持用途，可在“信息公开”栏目持续更新。
-      </div>
+  <div class="hero-controls">
+    <button class="circle-control" type="button" id="prevSlide" aria-label="上一屏"><svg class="icon"><use href="#i-left"/></svg></button>
+    <div class="slide-dots" aria-label="选择展示内容">
+      <button class="slide-dot is-active" type="button" data-dot="0" aria-label="第1屏" aria-pressed="true"></button>
+      <button class="slide-dot" type="button" data-dot="1" aria-label="第2屏" aria-pressed="false"></button>
+      <button class="slide-dot" type="button" data-dot="2" aria-label="第3屏" aria-pressed="false"></button>
     </div>
-
-    <div class="sponsorCard">
-      <div class="thanksBox">
-        <div class="thanksHead">滚动感谢</div>
-
-        <div class="thanksMarquee" aria-label="感谢名单滚动">
-          <div class="thanksTrack">
-            <div class="thanksRow"><b>爱心人士A</b><em>支持：¥200</em></div>
-            <div class="thanksRow"><b>爱心人士B</b><em>支持：物资捐赠</em></div>
-            <div class="thanksRow"><b>爱心人士C</b><em>支持：¥500</em></div>
-            <div class="thanksRow"><b>志愿者团队D</b><em>支持：服务支持</em></div>
-            <div class="thanksRow"><b>爱心人士E</b><em>支持：¥100</em></div>
-            <div class="thanksRow"><b>合作社区F</b><em>支持：场地支持</em></div>
-
-            <div class="thanksRow"><b>爱心人士A</b><em>支持：¥200</em></div>
-            <div class="thanksRow"><b>爱心人士B</b><em>支持：物资捐赠</em></div>
-            <div class="thanksRow"><b>爱心人士C</b><em>支持：¥500</em></div>
-            <div class="thanksRow"><b>志愿者团队D</b><em>支持：服务支持</em></div>
-            <div class="thanksRow"><b>爱心人士E</b><em>支持：¥100</em></div>
-            <div class="thanksRow"><b>合作社区F</b><em>支持：场地支持</em></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="muted" style="font-size:12px;margin-top:10px;">
-        注：为保护隐私，可仅展示昵称/缩写；如需匿名可在捐赠时备注。
-      </div>
-    </div>
+    <button class="circle-control" type="button" id="nextSlide" aria-label="下一屏"><svg class="icon"><use href="#i-right"/></svg></button>
+    <button class="autoplay-toggle" id="autoplayToggle" type="button">暂停轮播</button>
+    <span class="slide-counter" id="slideCounter" aria-hidden="true">01 / 03</span>
+    <span class="sr-only" id="slideStatus" role="status"></span>
   </div>
-
-  <div class="split2">
-    <div class="miniCard">
-      <h3>我们提供什么</h3>
-      <ul class="miniList">
-        <li>孕期与产后科普讲座（常见问题与误区）</li>
-        <li>哺乳支持：姿势、含接、乳房护理等</li>
-        <li>健康生活辅导：营养、运动、睡眠管理</li>
-        <li>公益义诊与咨询（按活动排期）</li>
-      </ul>
-    </div>
-
-    <div class="miniCard">
-      <h3>如何参与</h3>
-      <ul class="miniList">
-        <li>个人：报名课程/加入互助群</li>
-        <li>志愿者：医疗/科普/社工/运营等</li>
-        <li>机构：社区共建、项目合作、场地支持</li>
-        <li>捐赠：物资/资金/服务资源支持</li>
-      </ul>
-    </div>
-  </div>
+</div>
 </section>
 
-        <aside class="panel box" aria-label="资讯与公告">
-          <div class="boxTitle" id="news">
-            <h2>基金会动态</h2>
-            <a class="more" href="#news">更多</a>
-          </div>
-          <div class="list" style="margin-bottom:12px;padding-bottom:124px;">
-            <a href="#news">社区孕产课堂｜本周课程安排 <small>更新：YYYY-MM-DD</small></a>
-            <a href="#news">母乳喂养支持小组｜报名开启 <small>更新：YYYY-MM-DD</small></a>
-            <a href="#news">公益义诊｜本月服务点位发布 <small>更新：YYYY-MM-DD</small></a>
-            <a href="#news">社区亲子活动｜活动回顾图文 <small>更新：YYYY-MM-DD</small></a>
-          </div>
+<div class="wrap quick-wrap">
+<nav class="quick-grid" aria-label="平台快捷入口">
+  <a class="quick-entry" href="#services"><svg class="icon"><use href="#i-service"/></svg><span>服务指南</span></a>
+  <button class="quick-entry" type="button" data-detail="ai"><svg class="icon"><use href="#i-ai"/></svg><span>AI 健康咨询</span></button>
+  <a class="quick-entry" href="#advisors"><svg class="icon"><use href="#i-expert"/></svg><span>专家顾问</span></a>
+  <a class="quick-entry" href="#cooperation"><svg class="icon"><use href="#i-store"/></svg><span>合作机构</span></a>
+  <a class="quick-entry" href="#team"><svg class="icon"><use href="#i-people"/></svg><span>技师风采</span></a>
+  <button class="quick-entry" type="button" data-detail="join"><svg class="icon"><use href="#i-mail"/></svg><span>入驻平台</span></button>
+</nav>
+</div>
 
-          <div class="boxTitle" style="margin-top:6px;">
-            <h2>通知公告</h2>
-            <a class="more" href="#open">更多</a>
-          </div>
-          <div class="list" style="margin-bottom:12px;">
-            <a href="#open">志愿者招募｜长期招募（医疗/科普/社工）<small>公告：YYYY-MM-DD</small></a>
-            <a href="#open">合作征集｜社区/机构共建合作意向 <small>公告：YYYY-MM-DD</small></a>
-            <a href="#open">信息公开｜章程/年报/财务摘要更新 <small>公告：YYYY-MM-DD</small></a>
-          </div>
+<section class="section about-section" id="about" data-search-title="平台概况 · 上海荷序数智健康科技有限公司">
+<div class="wrap">
+  <div class="section-heading">
+    <p class="eyebrow">About Hexu</p>
+    <h2>让专业服务走近每一位女性</h2>
+    <p>以专业、协作与关怀，连接女性全生命周期的健康需求。</p>
+  </div>
+  <div class="two-column">
+    <article class="feature-card">
+      <h3>一个平台，连接多方专业力量</h3>
+      <p>上海荷序数智健康科技有限公司以“荷序健康”为品牌，围绕大健康领域，探索数字技术与健康服务的协同。平台以女性健康服务为切入点，连接服务机构、专业技师与顾问资源，从了解服务、找到适合的服务人员，到合作共建，让每一步更清晰。</p>
+      <a class="text-link" href="#services">探索平台服务<svg class="icon"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="identity-card">
+      <div class="identity-word">HEXU</div>
+      <h3>专业有序 · 温暖相伴</h3>
+      <p>以女性健康为中心，建立看得见的服务路径与协作方式，让数字技术服务于真实的健康需求。</p>
+    </article>
+  </div>
+</div>
+</section>
 
-          <div class="boxTitle" id="donate">
-            <h2>捐赠通道</h2>
-            <a class="more" href="#donate">说明</a>
-          </div>
-          <div class="donate">
-            <a class="btn btnPrimary" href="#donate">微信捐赠（后续放二维码）</a>
-            <a class="btn" href="/bank/index.html">银行转账 </a>
-            <a class="btn" href="#donate">物资捐赠（后续补清单）</a>
-            <div class="donateNote">捐赠票据与用途说明：后续在“信息公开”栏目持续更新。</div>
-          </div>
-        </aside>
-      </div>
-    </section>
+<section class="section alt" id="services" data-search-title="服务指南 · 了解服务与预约指引">
+<div class="wrap">
+  <div class="section-heading"><p class="eyebrow">Service Path</p><h2>从需求出发，找到合适的服务</h2></div>
+  <div class="three-column">
+    <article class="content-card">
+      <div class="card-index">01</div><h3>了解服务</h3>
+      <p>查看服务内容、适用场景与预约流程，做决定前先把信息看明白。具体开通项目及价格，以业务系统展示为准。</p>
+    </article>
+    <article class="content-card">
+      <div class="card-index">02</div><h3>获取咨询指引</h3>
+      <p>通过平台提供的健康科普与咨询指引，找到下一步可参考的方向。涉及诊断、用药与治疗的问题，应向正规医疗机构咨询。</p>
+    </article>
+    <article class="content-card">
+      <div class="card-index">03</div><h3>连接专业人员</h3>
+      <p>认识合作机构、技师与顾问，按需求了解适合自己的服务，并通过平台业务入口完成后续操作。</p>
+    </article>
+  </div>
+</div>
+</section>
 
-    <section class="section" id="about">
-      <div class="grid2">
-        <div class="panel box">
-          <div class="boxTitle">
-            <h2>组织概况</h2>
-            <a class="more" href="#about">更多</a>
-          </div>
-          <p class="muted" style="margin:0 0 10px;">
-            孕乃馨是一家以公益性、非营利性为原则的民办非营利组织。我们希望通过专业科普与社区支持，帮助更多孕产与婴幼儿家庭获得长期、可靠、可持续的社会支持。全称是“南通市崇川区钟秀街道孕乃馨妇幼服务中心”。目前拥有行政许可1个。
-          </p>
-          <div class="tags">
-            <span class="tag">公益为本</span>
-            <span class="tag">专业支持</span>
-            <span class="tag">社区共建</span>
-            <span class="tag">隐私保护</span>
-            <span class="tag">长期陪伴</span>
-          </div>
-          <div class="btnRow">
-            <a class="btn btnPrimary" href="#open">章程与信息公开</a>
-            <a class="btn" href="#contact">联系我们</a>
-          </div>
-        </div>
+<section class="section" id="cooperation" data-search-title="合作机构 · 机构入驻与专业共创">
+<div class="wrap">
+  <div class="section-heading heading-row">
+    <div><p class="eyebrow">Cooperation</p><h2>合作共建</h2><p>面向机构、门店与专业服务人员，探索服务与运营协作。</p></div>
+    <a class="text-link" href="#contact">联系合作<svg class="icon"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="three-column">
+    <article class="content-card"><div class="card-kicker">机构合作</div><h3>共建服务场景</h3><p>合作机构可在平台展示自身服务，与专业团队建立协作，让服务内容、人员信息与预约流程更清晰。</p></article>
+    <article class="content-card"><div class="card-kicker">专业共创</div><h3>让技能被看见</h3><p>支持技师展示专长，参与规范的服务交付与持续学习，在真实的服务场景中积累经验。</p></article>
+    <article class="content-card"><div class="card-kicker">顾问支持</div><h3>链接专业视角</h3><p>探索与健康领域顾问的合作，围绕科普、培训与服务规范交流经验，为合作团队提供专业视角。</p></article>
+  </div>
+</div>
+</section>
 
-        <div class="panel box" id="stories">
-          <div class="boxTitle">
-            <h2>爱心故事</h2>
-            <a class="more" href="#stories">更多</a>
-          </div>
-          <div class="list">
-            <a href="#stories">受助家庭故事｜温柔的支持如何发生 <small>图文｜后续补充</small></a>
-            <a href="#stories">志愿者故事｜专业与陪伴的力量 <small>图文｜后续补充</small></a>
-            <a href="#stories">社区合作故事｜共建更友好的环境 <small>图文｜后续补充</small></a>
-            <a href="#stories">项目回顾｜一次课堂改变的认知 <small>图文｜后续补充</small></a>
-          </div>
-        </div>
-      </div>
-    </section>
+<section class="section alt" id="stories" data-search-title="平台动态与温暖故事">
+<div class="wrap">
+  <div class="section-heading">
+    <p class="eyebrow">Latest from Hexu</p>
+    <h2>平台动态与温暖故事</h2>
+    <p>记录服务中的真实温度与值得分享的故事。</p>
+  </div>
+  <div class="story-grid">
+    <button class="story-feature" type="button" data-detail="brand">
+      <small>平台愿景</small>
+      <h3>荷序健康，与你一起探索女性<br>健康服务的更多可能</h3>
+      <p>连接专业力量，让照护更有序，让生活更温暖。</p>
+      <span class="story-arrow">了解荷序健康 ↗</span>
+    </button>
+    <div class="story-list">
+      <button class="story-item" type="button" data-detail="story-care"><span>公益同行：让健康知识走进更多生活场景</span><small>公益行动</small></button>
+      <button class="story-item" type="button" data-detail="story-people"><span>认识服务者：看见技师的专业与用心</span><small>人物故事</small></button>
+      <button class="story-item" type="button" data-detail="story-guide"><span>平台指南：从需求出发，了解服务选择</span><small>服务指引</small></button>
+    </div>
+  </div>
+  <p class="section-footnote">栏目介绍与内容规划；具体活动、人物资料和动态将在核实并取得相应授权后发布。</p>
+</div>
+</section>
 
-    <section class="section" id="gallery">
-      <div class="panel box">
-        <div class="boxTitle">
-          <h2>公益图片</h2>
-          <a class="more" href="#gallery">更多</a>
-        </div>
-        <div class="muted" style="font-size:13px;">
-          后续可替换为真实活动照片缩略图（点击进入相册列表页）。
-        </div>
-        <div class="gallery" aria-label="活动相册占位">
-          <div class="ph">活动照片 1</div>
-          <div class="ph">活动照片 2</div>
-          <div class="ph">活动照片 3</div>
-          <div class="ph">活动照片 4</div>
-          <div class="ph">活动照片 5</div>
-          <div class="ph">活动照片 6</div>
-          <div class="ph">活动照片 7</div>
-          <div class="ph">活动照片 8</div>
-        </div>
-      </div>
-    </section>
+<section class="section" id="team" data-search-title="优秀技师风采 · 母婴哺乳、产后康复与女性健康">
+<div class="wrap">
+  <div class="section-heading">
+    <p class="eyebrow">Our People</p>
+    <h2>优秀技师风采</h2>
+    <p>专业人员介绍将在入驻资料核实后陆续展示，以下为服务方向介绍。</p>
+  </div>
+  <div class="three-column">
+    <article class="content-card person-card">
+      <div class="person-visual" aria-hidden="true">01</div>
+      <h3>母婴与哺乳支持</h3>
+      <p>关注孕产期常见需求与照护体验，提供更有温度的生活照护与服务支持。</p>
+    </article>
+    <article class="content-card person-card">
+      <div class="person-visual" aria-hidden="true">02</div>
+      <h3>盆底与产后康复</h3>
+      <p>关注产后功能恢复与持续健康管理。涉及医疗康复的服务，应由具备相应资质的机构和人员提供。</p>
+    </article>
+    <article class="content-card person-card">
+      <div class="person-visual" aria-hidden="true">03</div>
+      <h3>女性身心健康</h3>
+      <p>关注不同生命阶段的身心支持，倡导科学生活方式与持续的自我关怀。</p>
+    </article>
+  </div>
+</div>
+</section>
 
-    <section class="section" id="open">
-      <div class="grid2">
-        <div class="panel box">
-          <div class="boxTitle">
-            <h2>信息公开</h2>
-            <a class="more" href="#open">入口</a>
-          </div>
-          <ul class="miniList">
-            <li>组织章程（PDF/页面）</li>
-            <li>年度工作报告/年报</li>
-            <li>财务摘要与捐赠使用说明</li>
-            <li>项目执行公示与反馈渠道</li>
-          </ul>
-          <div class="muted" style="font-size:12px;margin-top:8px;">
-            说明：可先用占位，后续再逐项补齐文件与页面链接。
-          </div>
-        </div>
+<section class="section alt" id="advisors" data-search-title="特聘顾问 · 专家培训与专业支持">
+<div class="wrap">
+  <div class="section-heading"><p class="eyebrow">Advisory Network</p><h2>特聘顾问</h2></div>
+  <div class="two-column">
+    <article class="feature-card">
+      <h3>把专业经验带到服务一线</h3>
+      <p>平台计划邀请医学与健康领域专家参与专业顾问工作，为合作机构和服务人员提供培训、科普与专业支持。具体顾问资料将在合作确认、资料核验并取得本人授权后公布。</p>
+    </article>
+    <article class="identity-card">
+      <div class="network-equation">01 + 01 + 01</div>
+      <h3 class="network-note">一家门店 · 一位顾问 · 一支服务团队</h3>
+      <p>逐步搭建可落地的服务协作体系，让知识、经验与照护在一线相遇。</p>
+    </article>
+  </div>
+</div>
+</section>
 
-        <div class="panel box" id="join">
-          <div class="boxTitle">
-            <h2>参与支持</h2>
-            <a class="more" href="#join">加入</a>
-          </div>
-          <ul class="miniList">
-            <li>志愿者：医疗/护理/科普讲师/社工/运营</li>
-            <li>合作伙伴：社区、医院、企业、媒体支持</li>
-            <li>捐赠支持：资金/物资/服务资源</li>
-            <li>反馈建议：共建更友好的孕产支持网络</li>
-          </ul>
-          <div class="btnRow">
-            <a class="btn btnPrimary" href="#contact">报名/合作咨询</a>
-            <a class="btn" href="#donate">捐赠支持</a>
-          </div>
-        </div>
-      </div>
-    </section>
+<section class="section" id="community" data-search-title="公益组织 · 社区共建与健康科普">
+<div class="wrap">
+  <div class="section-heading">
+    <p class="eyebrow">Community Care</p>
+    <h2>公益组织</h2>
+    <p>让专业知识与支持走向社区，探索与公益组织、社区伙伴的健康服务协作。</p>
+  </div>
+  <div class="three-column">
+    <article class="content-card"><div class="card-kicker">关怀</div><h3>女性健康科普</h3><p>用易懂的内容回应常见健康困惑，让健康知识更贴近真实生活。</p></article>
+    <article class="content-card"><div class="card-kicker">连接</div><h3>社区服务协作</h3><p>与社区及公益伙伴一起拓展服务触达，为需要支持的人提供清晰的服务信息。</p></article>
+    <article class="content-card"><div class="card-kicker">成长</div><h3>公益技能交流</h3><p>分享专业经验，支持服务人员共同成长，让规范服务与温暖陪伴相互促进。</p></article>
+  </div>
+  <p class="section-footnote">本栏目展示公益合作方向，具体活动与合作单位以正式公告为准；本网站不设置募捐入口。</p>
+</div>
+</section>
 
-    <section class="section" id="contact">
-      <div class="panel box">
-        <div class="boxTitle">
-          <h2>联系我们</h2>
-          <a class="more" href="#contact">更新</a>
-        </div>
-        <div class="muted">
-          地址：（待补充）　电话：（待补充）　邮箱：（待补充）<br />
-          微信公众号/视频号：后续放二维码与入口
-        </div>
-      </div>
-    </section>
-  </main>
+<section class="section alt" id="videos" data-search-title="平台视频 · 平台使用指南、服务说明与人员分享">
+<div class="wrap">
+  <div class="section-heading">
+    <p class="eyebrow">Platform Video</p>
+    <h2>平台视频</h2>
+    <p>服务指南、平台操作与专业内容，将在这里持续更新。</p>
+  </div>
+  <div class="video-grid">
+    <button class="video-placeholder" type="button" data-detail="video" aria-label="平台视频内容筹备中，查看说明">
+      <span class="play-circle" aria-hidden="true"><svg class="icon"><use href="#i-play"/></svg></span>
+      <h3>视频内容即将上线</h3>
+      <p id="videoCaption">首期计划：如何查看服务指南与选择服务</p>
+    </button>
+    <aside class="video-menu" aria-label="视频栏目">
+      <h3>视频栏目</h3>
+      <button class="video-tab is-active" type="button" data-video="0" aria-pressed="true"><span>01</span>平台使用指南</button>
+      <button class="video-tab" type="button" data-video="1" aria-pressed="false"><span>02</span>服务项目说明</button>
+      <button class="video-tab" type="button" data-video="2" aria-pressed="false"><span>03</span>专业人员分享</button>
+    </aside>
+  </div>
+</div>
+</section>
 
-  <footer class="footer">
-    <div class="wrap footerGrid">
-      <div>
-        <b>孕乃馨｜民办非营利组织</b><br />
-        <span>立足社区，提供孕产与哺乳支持、健康科普、公益义诊与困难帮扶。</span>
-      </div>
+<section class="contact-band" id="contact" data-search-title="联系我们 · 上海荷序数智健康科技有限公司">
+<div class="wrap contact-in">
+  <div><h2>期待与你一起，做好女性健康服务</h2><p>机构合作、专业共创与顾问合作，欢迎了解荷序健康。</p></div>
+  <button class="button" type="button" data-detail="contact">联系合作<svg class="icon"><use href="#i-arrow"/></svg></button>
+</div>
+</section>
+</main>
 
-      <div class="footLinks">
-        <b>常用入口</b>
-        <a href="#projects">项目与服务</a>
-        <a href="#news">资讯动态</a>
-        <a href="#open">信息公开</a>
-        <a href="#join">参与支持</a>
-      </div>
-
-      <div class="footLinks">
-        <b>备案与声明</b>
-        <span>ICP备案：后续补充</span>
-        <span>公安备案：后续补充</span>
-        <span>Copyright © 孕乃馨</span>
+<footer class="footer">
+<div class="wrap">
+  <div class="footer-grid">
+    <div class="footer-company">
+      <h3>荷序健康数字化平台</h3>
+      <p>上海荷序数智健康科技有限公司<br>连接专业力量，陪伴女性健康生活。</p>
+      <p>地址与联系方式将在核验后于本页面公布。<br>官网：<a href="https://hexuhealthcare.com">hexuhealthcare.com</a></p>
+    </div>
+    <div>
+      <h3>快捷链接</h3>
+      <div class="footer-links">
+        <a href="#about">平台概况</a>
+        <a href="#services">服务指南</a>
+        <a href="#cooperation">机构合作</a>
+        <a href="#advisors">顾问支持</a>
+        <a href="login.html">客户 / 商户入口</a>
       </div>
     </div>
-  </footer>
+    <div><h3>微信公众号</h3><div class="qr-placeholder" aria-label="微信公众号二维码待上线">二维码<br>待上线</div></div>
+  </div>
+  <div class="copyright">
+    © <span id="copyrightYear">2026</span> 上海荷序数智健康科技有限公司 · 荷序健康<br>
+    服务项目、人员资质及合作信息以正式公布内容为准。本站健康信息用于科普与服务介绍，不替代医疗诊断与治疗。
+  </div>
+</div>
+</footer>
 
-<!-- ===== 新增：预定滚动区域 START ===== -->
+<dialog class="dialog" id="infoDialog" aria-labelledby="dialogTitle">
+  <div class="dialog-top">
+    <h2 id="dialogTitle">平台信息</h2>
+    <button class="dialog-close" id="dialogClose" type="button" aria-label="关闭窗口">×</button>
+  </div>
+  <div class="dialog-body" id="dialogBody"></div>
+</dialog>
 
+<!-- 原有客户/商户浮动入口保留 -->
 <style>
-.booking-link{
-    text-decoration:none;
-    display:block;
-}
-
-.booking-bar{
-    position:fixed;
-    left:0;
-    bottom:0;
-    z-index:9999;
-
-    width:100%;
-    height:70px;
-    line-height:70px;
-
-    background:#ffcc33;
-    color:#8a3b00;
-    font-size:24px;
-    font-weight:bold;
-
-    border-top:3px solid #d48806;
-    overflow:hidden;
-    box-shadow:0 -4px 12px rgba(0,0,0,0.15);
-}
+.booking-link{text-decoration:none;display:block}
+.booking-bar{position:fixed;left:0;bottom:0;z-index:9999;width:100%;height:70px;line-height:70px;background:#ffcc33;color:#8a3b00;font-size:24px;font-weight:bold;border-top:3px solid #d48806;overflow:hidden;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
 </style>
-
 <a href="login.html" class="booking-link">
-    <div class="booking-bar">
-        <marquee behavior="scroll" direction="left" scrollamount="7">
-            🔔 客户/商户由此进入，祝福大家天天开心😄🌹
-        </marquee>
-    </div>
+  <div class="booking-bar">
+    <marquee behavior="scroll" direction="left" scrollamount="7">🔔 客户/商户由此进入，祝福大家天天开心😄🌹</marquee>
+  </div>
 </a>
 
-<!-- ===== 新增：预定滚动区域 END ===== -->
+<script>
+(()=>{
+'use strict';
 
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+$('#copyrightYear').textContent=new Date().getFullYear();
+
+/* 手机导航 */
+const menu=$('#navLinks'),menuToggle=$('#menuToggle');
+menuToggle.addEventListener('click',()=>{
+  const open=menuToggle.getAttribute('aria-expanded')!=='true';
+  menuToggle.setAttribute('aria-expanded',String(open));
+  menu.classList.toggle('is-open',open);
+});
+menu.addEventListener('click',e=>{
+  const link=e.target.closest('a');
+  if(!link)return;
+  menu.classList.remove('is-open');
+  menuToggle.setAttribute('aria-expanded','false');
+  $$('#navLinks a').forEach(a=>a.classList.toggle('active',a===link));
+});
+menu.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    menu.classList.remove('is-open');
+    menuToggle.setAttribute('aria-expanded','false');
+    menuToggle.focus();
+  }
+});
+
+/* 首页轮播，不调用业务接口 */
+const hero=$('#home'),slides=$$('[data-slide]'),dots=$$('[data-dot]');
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+let current=0,timer=null,autoplay=!reduceMotion.matches,hovering=false,focusing=false,touchStart=null;
+
+function showSlide(index,manual=false){
+  current=(index+slides.length)%slides.length;
+  slides.forEach((slide,i)=>{
+    const active=i===current;
+    slide.classList.toggle('is-active',active);
+    slide.setAttribute('aria-hidden',String(!active));
+    slide.inert=!active;
+    slide.querySelectorAll('a,button').forEach(el=>{
+      if(active)el.removeAttribute('tabindex');
+      else el.setAttribute('tabindex','-1');
+    });
+  });
+  dots.forEach((dot,i)=>{
+    dot.classList.toggle('is-active',i===current);
+    dot.setAttribute('aria-pressed',String(i===current));
+  });
+  $('#slideCounter').textContent=String(current+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  if(manual)$('#slideStatus').textContent='第'+(current+1)+'屏：'+slides[current].querySelector('.hero-title').textContent;
+}
+function syncTimer(){
+  if(timer)clearInterval(timer);
+  timer=null;
+  $('#autoplayToggle').textContent=autoplay?'暂停轮播':'播放轮播';
+  $('#autoplayToggle').setAttribute('aria-label',autoplay?'暂停自动轮播':'开始自动轮播');
+  if(autoplay&&!document.hidden&&!hovering&&!focusing){
+    timer=setInterval(()=>showSlide(current+1),6500);
+  }
+}
+function moveSlide(delta){showSlide(current+delta,true);syncTimer()}
+$('#prevSlide').addEventListener('click',()=>moveSlide(-1));
+$('#nextSlide').addEventListener('click',()=>moveSlide(1));
+dots.forEach(dot=>dot.addEventListener('click',()=>{
+  showSlide(Number(dot.dataset.dot),true);
+  syncTimer();
+}));
+$('#autoplayToggle').addEventListener('click',()=>{
+  autoplay=!autoplay;
+  syncTimer();
+});
+hero.addEventListener('mouseenter',()=>{hovering=true;syncTimer()});
+hero.addEventListener('mouseleave',()=>{hovering=false;syncTimer()});
+hero.addEventListener('focusin',()=>{focusing=true;syncTimer()});
+hero.addEventListener('focusout',()=>setTimeout(()=>{
+  focusing=hero.contains(document.activeElement);
+  syncTimer();
+},0));
+hero.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'){e.preventDefault();moveSlide(-1)}
+  else if(e.key==='ArrowRight'){e.preventDefault();moveSlide(1)}
+});
+hero.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'&&!e.target.closest('a,button')){
+    touchStart={x:e.clientX,y:e.clientY};
+  }
+});
+hero.addEventListener('pointerup',e=>{
+  if(!touchStart)return;
+  const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y;
+  touchStart=null;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)moveSlide(dx<0?1:-1);
+});
+hero.addEventListener('pointercancel',()=>{touchStart=null});
+document.addEventListener('visibilitychange',syncTimer);
+if(reduceMotion.addEventListener){
+  reduceMotion.addEventListener('change',e=>{
+    if(e.matches){autoplay=false;syncTimer()}
+  });
+}
+showSlide(0);
+syncTimer();
+
+/* 说明弹窗：不采集资料，不模拟 AI 回答或提交结果 */
+const dialog=$('#infoDialog'),dialogBody=$('#dialogBody'),dialogTitle=$('#dialogTitle');
+let previousFocus=null;
+function openDialog(title){
+  previousFocus=document.activeElement;
+  dialogTitle.textContent=title;
+  dialogBody.replaceChildren();
+  if(!dialog.open)dialog.showModal();
+  document.body.classList.add('dialog-open');
+  $('#dialogClose').focus();
+}
+function closeDialog(){if(dialog.open)dialog.close()}
+dialog.addEventListener('close',()=>{
+  document.body.classList.remove('dialog-open');
+  if(previousFocus&&document.contains(previousFocus))previousFocus.focus({preventScroll:true});
+});
+$('#dialogClose').addEventListener('click',closeDialog);
+dialog.addEventListener('click',e=>{
+  if(e.target!==dialog)return;
+  const r=dialog.getBoundingClientRect();
+  if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDialog();
+});
+function paragraph(text){
+  const p=document.createElement('p');
+  p.textContent=text;
+  dialogBody.appendChild(p);
+}
+function dialogLink(label,href){
+  const a=document.createElement('a');
+  a.className='button';
+  a.textContent=label+' ↗';
+  a.href=href;
+  if(href.startsWith('#'))a.addEventListener('click',closeDialog);
+  dialogBody.appendChild(a);
+}
+const details={
+  ai:{
+    title:'AI 健康咨询',
+    paragraphs:[
+      'AI 健康咨询入口尚未接入。本页面不会发送健康资料，也不会生成诊断、治疗或用药建议。',
+      '现阶段可先通过服务指南了解平台内容。涉及健康不适或医疗问题，请咨询正规医疗机构。'
+    ],
+    link:['查看服务指南','#services']
+  },
+  join:{
+    title:'入驻荷序健康',
+    paragraphs:[
+      '欢迎机构、门店、专业服务人员及顾问了解平台合作。正式入驻流程、申请条件与资料要求，以平台公布的规则为准。',
+      '已有平台账户可通过下方入口登录。本首页不收集身份证、银行卡、病历等资料。'
+    ],
+    link:['进入平台','login.html']
+  },
+  contact:{
+    title:'联系与合作',
+    paragraphs:[
+      '公司名称：上海荷序数智健康科技有限公司。品牌：荷序健康。',
+      '合作方向：机构与门店合作、技术服务人员协作、健康科普、培训交流及顾问支持。',
+      '联系电话、邮箱与办公地址尚未在本页面公布，待核验后更新。已有账户可通过平台入口进入业务系统。'
+    ],
+    link:['进入平台','login.html']
+  },
+  brand:{
+    title:'荷序健康 · 专业有序，温暖相伴',
+    paragraphs:[
+      '上海荷序数智健康科技有限公司围绕大健康领域，探索数字技术与健康服务的连接，以女性全生命周期健康需求为切入点，搭建机构、专业服务人员与用户之间更清晰的协作路径。',
+      '我们关注的不只是一次服务的连接，更是服务信息是否清楚、专业能力是否得到充分呈现、每一个生活阶段是否能获得适合的支持。',
+      '平台当前开通的城市、项目与服务安排，以业务系统实际展示为准。'
+    ],
+    link:['了解平台概况','#about']
+  },
+  'story-care':{
+    title:'公益同行：让健康知识走进更多生活场景',
+    paragraphs:[
+      '栏目规划：围绕女性健康科普、社区服务协作与公益技能交流，呈现健康知识与日常生活的连接。',
+      '具体活动安排、合作单位及现场记录，将在核实并取得相关授权后发布。本页面暂不展示未经核实的活动案例。'
+    ],
+    link:['了解公益合作','#community']
+  },
+  'story-people':{
+    title:'认识服务者：看见技师的专业与用心',
+    paragraphs:[
+      '栏目规划：介绍专业服务人员的服务方向、学习经历与服务理念，让用户更清楚地认识服务者。',
+      '人物资料须经核验并取得本人授权后展示；本页面的服务方向卡片不是具体人员资质证明。'
+    ],
+    link:['查看服务方向','#team']
+  },
+  'story-guide':{
+    title:'平台指南：从需求出发，了解服务选择',
+    paragraphs:[
+      '先了解项目内容和适用场景，再核对服务人员、机构信息、价格与预约流程。',
+      '业务入口继续使用现有登录页面，具体可预约内容以平台实际展示为准。'
+    ],
+    link:['查看服务指南','#services']
+  },
+  video:{
+    title:'平台视频正在筹备',
+    paragraphs:[
+      '目前尚未发布可播放的平台视频。栏目计划包括平台使用指南、服务项目说明与专业人员分享。',
+      '视频将在完成制作、内容核验及相关授权后发布。当前页面不播放任何示例素材。'
+    ]
+  }
+};
+$$('[data-detail]').forEach(button=>button.addEventListener('click',()=>{
+  const detail=details[button.dataset.detail];
+  if(!detail)return;
+  openDialog(detail.title);
+  detail.paragraphs.forEach(paragraph);
+  if(detail.link)dialogLink(...detail.link);
+}));
+
+/* 视频栏目切换 */
+const videoCaptions=[
+  '首期计划：如何查看服务指南与选择服务',
+  '栏目计划：了解服务内容、适用场景与预约流程',
+  '栏目计划：专业经验、规范服务与温暖照护'
+];
+$$('[data-video]').forEach(button=>button.addEventListener('click',()=>{
+  const index=Number(button.dataset.video);
+  $$('[data-video]').forEach(item=>{
+    const active=item===button;
+    item.classList.toggle('is-active',active);
+    item.setAttribute('aria-pressed',String(active));
+  });
+  $('#videoCaption').textContent=videoCaptions[index];
+}));
+
+/* 搜索只检索当前首页公开文本，不连接 Supabase */
+const searchable=$$('[data-search-title]').map(section=>({
+  id:section.id,
+  title:section.dataset.searchTitle,
+  text:section.textContent.replace(/\s+/g,' ').trim()
+}));
+$('#siteSearch').addEventListener('submit',e=>{
+  e.preventDefault();
+  const query=$('#searchInput').value.trim().slice(0,60);
+  if(!query){$('#searchInput').focus();return}
+  const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  const results=searchable.filter(item=>
+    terms.every(term=>(item.title+' '+item.text).toLocaleLowerCase().includes(term))
+  );
+  openDialog('搜索：'+query);
+  paragraph(results.length
+    ?'找到 '+results.length+' 个相关栏目。搜索范围为当前首页。'
+    :'当前首页没有匹配内容。可以搜索“服务”“合作”“技师”“顾问”或“女性健康”。');
+  const list=document.createElement('div');
+  list.className='search-results';
+  results.forEach(item=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='search-result';
+    const title=document.createElement('b');
+    title.textContent=item.title;
+    const preview=document.createElement('span');
+    const pos=item.text.toLocaleLowerCase().indexOf(terms[0]);
+    const start=Math.max(0,pos-20);
+    preview.textContent=(start?'…':'')+item.text.slice(start,start+110)+(item.text.length>start+110?'…':'');
+    button.append(title,preview);
+    button.addEventListener('click',()=>{
+      const target=document.getElementById(item.id);
+      closeDialog();
+      if(target)requestAnimationFrame(()=>{
+        target.setAttribute('tabindex','-1');
+        target.focus({preventScroll:true});
+        target.scrollIntoView({behavior:reduceMotion.matches?'auto':'smooth',block:'start'});
+      });
+    });
+    list.appendChild(button);
+  });
+  dialogBody.appendChild(list);
+});
+})();
+</script>
 </body>
 </html>
