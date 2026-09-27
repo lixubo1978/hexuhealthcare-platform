@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>申请成为健康顾问 - 孕乃馨</title>
+<title>申请成为健康顾问 - 荷序健康</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -67,13 +67,46 @@ input::placeholder{color:#b4b4b4}
 .city-select{height:50px;font-size:16px}
 }
 </style>
+<style>
+/* 荷序健康：深青绿与米白为主，粉色细节点缀，保留图标原色。 */
+body{background:#f4f0e6;color:#233633}
+.topbar{background:#fffcf7;border-color:#d3dcd4}
+.brand-logo{background:#fff0f5}
+.brand-name{color:#0b5051;letter-spacing:1px}
+.brand-sub{color:#68766e}
+.back-button,.return-button{background:#fffcf7;border-color:#afc3b9;color:#0b5051;border-radius:4px}
+.back-button:hover,.return-button:hover{background:#e4eee6}
+.title-area{padding:28px 20px;background:linear-gradient(110deg,#073a3c,#0b5051 65%,#205955);border:1px solid #0b5051;border-radius:4px}
+.title-area h1{color:#fffcf7;font-family:"Songti SC","STSong",serif;font-weight:500;letter-spacing:1px}
+.title-area p{color:#d0e0d8}
+.card,.success-page{background:#fffcf7;border-color:#d3dcd4;border-radius:4px;box-shadow:0 5px 20px rgba(16,53,55,.05)}
+.card-title{color:#103537;border-color:#e2e7de}
+label{color:#233633}
+input,select{border-color:#c5d3c9;border-radius:4px;color:#233633}
+input:focus,select:focus{border-color:#478c80;box-shadow:0 0 0 3px rgba(11,80,81,.09)}
+input::placeholder{color:#7b877f}
+.help,.upload-description{color:#68766e}
+.city-select:disabled{background:#edf0e9;color:#68766e}
+.upload-area{background:#f8f4f0;border-color:#dbc5cd;border-radius:4px}
+.select-image-button{background:#fff0f5;color:#b63c69;border:1px solid #e8bbcb;border-radius:4px}
+.preview-area img{border-color:#d3dcd4;border-radius:4px}
+.agreement{background:#e8efe8;border-color:#c5d3c9;border-radius:4px}
+.agreement-text{color:#435e52}
+.agreement input{accent-color:#0b5051}
+.submit-button{background:#0b5051;color:#fff;border-radius:4px}
+.submit-button:hover{background:#073a3c}
+.message{border-radius:4px}
+.success-title{color:#103537;font-family:"Songti SC","STSong",serif;font-weight:500}
+.success-text{color:#68766e}
+button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
+</style>
 </head>
 <body>
 <header class="topbar">
 <div class="brand">
 <div class="brand-logo">♡</div>
 <div>
-<div class="brand-name">孕乃馨</div>
+<div class="brand-name">荷序健康</div>
 <div class="brand-sub">专业服务 · 安心生活</div>
 </div>
 </div>
@@ -96,7 +129,7 @@ input::placeholder{color:#b4b4b4}
 <select id="serviceCitySelect" class="city-select" disabled>
 <option value="">正在读取已开通业务的城市...</option>
 </select>
-<div class="help">这里只显示孕乃馨平台已经开通业务的城市。</div>
+<div class="help">这里只显示荷序健康平台已经开通业务的城市。</div>
 </div>
 <input type="hidden" id="serviceAreaId">
 </section>
@@ -164,7 +197,7 @@ input::placeholder{color:#b4b4b4}
 <section class="card">
 <div class="agreement">
 <input id="agreement" type="checkbox">
-<div class="agreement-text">本人确认以上填写资料及上传的身份证资料真实、准确、完整，并同意孕乃馨平台对本次健康顾问申请进行审核。</div>
+<div class="agreement-text">本人确认以上填写资料及上传的身份证资料真实、准确、完整，并同意荷序健康平台对本次健康顾问申请进行审核。</div>
 </div>
 <button id="submitButton" class="submit-button" type="button" onclick="submitApplication()">提交申请</button>
 <button class="return-button" type="button" onclick="goLogin()">返回登录页面</button>
