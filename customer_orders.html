@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>我的订单 - 孕乃馨</title>
+<title>我的订单 - 荷序健康</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--pink:#ff6f9f;--pink-dark:#f05286;--pink-light:#fff0f5;--pink-soft:#fff7fa;--text:#49363e;--text-light:#9b7f89;--border:#f4e3e9;--white:#ffffff;--green:#31a875;--orange:#e79b2f;--red:#e75b70;--blue:#5788c7;--shadow:0 8px 24px rgba(210,120,150,0.09);}
@@ -111,7 +111,44 @@ button{cursor:pointer;}
 @media (min-width:481px){body{background:#fff4f8;}
 .app{border-left:1px solid #f5e5eb;border-right:1px solid #f5e5eb;}
 }
-</style></head>
+</style><style>
+/* 荷序健康：主色深青绿、米白，保留粉色重点和原有图标、状态色。 */
+:root{--text:#233633;--text-light:#68766e;--border:#d3dcd4;--shadow:0 5px 20px rgba(16,53,55,.05)}
+body,.app{background:#f4f0e6}
+.header{background:#0b5051;border-color:#386e63;color:#fffcf7}
+.header-title h1{font-family:"Songti SC","STSong",serif;font-weight:500;letter-spacing:1px}
+.header-title p{color:#d0e0d8}
+.back-btn,.refresh-btn{background:#fffcf7;color:#0b5051;border-radius:4px;box-shadow:none}
+.summary{border-radius:4px;background:radial-gradient(circle at 92% 10%,rgba(255,255,255,.07) 0,rgba(255,255,255,.07) 45px,transparent 46px),linear-gradient(120deg,#073a3c,#0b5051 65%,#205955)}
+.summary-item{border-radius:4px}
+.filter-btn{background:#fffcf7;border-radius:4px;color:#52695e}
+.filter-btn.active{background:#0b5051;border-color:#0b5051;box-shadow:none;color:#fff}
+.order-card,.state-box{background:#fffcf7;border-radius:4px}
+.order-top,.amount-row{border-color:#e3e7de}
+.amount strong{color:#c34472}
+.usage-box{background:#e8efe8;border-radius:4px}
+.usage-top span:last-child{color:#0b5051}
+.progress{background:#d8e4dc}
+.detail-btn{background:#e4eee6;color:#0b5051;border-radius:4px;border:1px solid #c6d7cb}
+.complaint-mask{background:rgba(16,53,55,.55)}
+.complaint-modal{background:#fffcf7;border-radius:6px;border:1px solid #afc3b9;box-shadow:0 20px 60px rgba(16,53,55,.2)}
+.complaint-modal-title{color:#103537;font-family:"Songti SC","STSong",serif;font-weight:500}
+.complaint-order-info{border-radius:4px}
+.complaint-order-name,.complaint-label{color:#233633}
+.complaint-textarea{background:#fff;border-color:#c5d3c9;border-radius:4px}
+.complaint-textarea:focus{border-color:#478c80;box-shadow:0 0 0 3px rgba(11,80,81,.09)}
+.image-select-box,.image-preview-item{border-radius:4px}
+.complaint-cancel-btn,.complaint-submit-btn{border-radius:4px}
+.complaint-cancel-btn{background:#fffcf7;color:#0b5051;border-color:#afc3b9}
+.complaint-submit-btn,.state-btn{background:#0b5051;color:#fff;border-radius:4px}
+.bottom-nav{background:rgba(255,252,247,.98)}
+.nav-btn{border-radius:4px}
+.nav-btn.active{background:#e4eee6;color:#0b5051}
+.toast{background:rgba(16,53,55,.96);border-radius:4px}
+button:focus-visible{outline:2px solid #478c80;outline-offset:2px}
+@media(min-width:481px){body{background:#f4f0e6}.app{border-color:#d3dcd4}}
+</style>
+</head>
 <body>
 <div class="app">
 <header class="header">
