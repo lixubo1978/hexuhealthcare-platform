@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>健康顾问经营统计 - 孕乃馨平台管理中心</title>
+<title>健康顾问经营统计 - 荷序健康平台管理中心</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
@@ -44,12 +44,88 @@ header{height:64px;padding:0 13px}.brand h1{font-size:15px}.brand small{display:
 main{margin-top:14px;padding:0 12px}.hero{padding:21px 19px}.hero h2{font-size:21px}.stats{grid-template-columns:1fr 1fr;gap:9px}.stat{padding:14px;min-height:88px}.stat-value{font-size:19px}.stat.money-stat .stat-value{font-size:16px}
 .filters{grid-template-columns:1fr;padding:13px}.filter-btn{width:100%}.desktop-table{display:none}.mobile-list{display:block}.modal-mask{padding:7px}.modal{max-height:95vh}.order-summary{grid-template-columns:1fr 1fr}.order-desktop{display:none}.order-mobile{display:block}.modal-body{padding:11px}
 }
+
+/* 荷序健康：深青绿、米白、方正边框。 */
+:root{--pink:#0b5051;--pink-dark:#103537;--pink-light:#e4efea;--pink-border:#bdd2c4;--purple:#176968;--text:#233633;--muted:#748078;--border:#d3dcd4;--bg:#f4f0e6;--orange:#176968;--shadow:0 8px 24px rgba(16,53,55,.05);--hexu-green:#0b5051;--hexu-deep:#103537;--hexu-cream:#f4f0e6;--hexu-paper:#fffcf7;--hexu-serif:"Songti SC","STSong","Noto Serif SC",serif}
+body{-webkit-font-smoothing:antialiased}
+header{height:auto;min-height:88px;padding:12px 30px;gap:16px;background:var(--hexu-paper)}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:0;background:none;box-shadow:none}
+.brand h1{color:var(--hexu-green);font-size:21px;font-weight:650;letter-spacing:1px}
+.brand small{color:#64716a;font-size:10px;letter-spacing:1px}
+.header-actions{flex-shrink:0}
+.btn{border-radius:0;color:var(--hexu-green);background:var(--hexu-paper);border-color:#b7cbbd;font-size:12px;font-weight:600}
+.btn:hover{background:#edf2e9;color:var(--hexu-green);border-color:#176968}
+.btn-primary{background:var(--hexu-green);color:var(--hexu-paper);border-color:var(--hexu-green)}
+.btn-primary:hover{background:var(--hexu-deep);color:var(--hexu-paper)}
+.btn-small{border-radius:0;font-size:11px}
+main{margin-top:30px;padding:0 28px}
+.hero{isolation:isolate;min-height:178px;padding:30px 34px;border:0;border-radius:0;background:linear-gradient(110deg,#073a3c,#0b5051 62%,#205955);margin-bottom:22px}
+.hero:after{content:"荷";z-index:-1;right:20px;top:-42px;width:auto;height:auto;border-radius:0;background:none;font:270px/1 var(--hexu-serif);color:rgba(217,235,218,.055);pointer-events:none}
+.hero-tag{padding:0;margin-bottom:14px;background:none;color:#c7d9cf;border-radius:0;font-size:10px;letter-spacing:2px;font-weight:400}
+.hero h2{font:400 30px/1.5 var(--hexu-serif);letter-spacing:1px;color:var(--hexu-paper);text-wrap:balance}
+.hero p{color:#c7d9cf;font-size:12px;line-height:1.9}
+.stats{margin-bottom:24px;gap:12px}
+.stat{padding:20px;border-radius:0;background:var(--hexu-paper);box-shadow:none;min-height:108px}
+.stat-label{color:#64716a;font-size:11px;line-height:1.5}
+.stat-value{color:var(--hexu-green);font-family:Georgia,serif;font-size:27px;font-weight:500}
+.stat.money-stat .stat-value{font-size:23px}
+.stat-sub{color:#748078;line-height:1.6}
+.panel{border:1px solid #8ba99c;border-top:3px solid var(--hexu-green);border-radius:0;background:var(--hexu-paper)}
+.panel-head{padding:20px 22px;flex-wrap:wrap}
+.panel-title{font:400 22px/1.4 var(--hexu-serif);color:var(--hexu-deep);letter-spacing:1px}
+.panel-sub{color:#748078;line-height:1.8}
+.filters{padding:18px;background:#eaf0e9;gap:12px}
+.filters .field{min-width:0}
+.field label{color:#52695e}
+.control{min-width:0;border-radius:0;background:var(--hexu-paper);border-color:#c4d2c7;color:#233633}
+.control:focus{border-color:#176968;box-shadow:0 0 0 3px rgba(23,105,104,.1)}
+.control::placeholder{color:#7c8980}
+.scope-note{margin:0;padding:14px 18px;border-radius:0;border:0;border-top:1px solid #c7d7ca;background:#edf2e9;color:#52695e}
+.table-wrap{scrollbar-width:thin;scrollbar-color:#94b2a2 var(--hexu-cream)}
+th{background:#eef2e9;color:#52695e;padding:14px 13px}
+td{padding:17px 13px;border-color:#e1e7de;line-height:1.7}
+tbody tr:hover{background:#f2f6ef}
+.consultant-name,.area-name,.amount{color:var(--hexu-deep)}
+.small-text,.empty,.modal-loading{color:#748078}
+.badge{border-radius:0;font-weight:500}
+.badge-orange{background:#e4eee6;border:1px dashed #aec5b6;color:var(--hexu-green)}
+.badge-gray{background:#edf0ea;color:#64716a}
+.mobile-list{background:#eaf0e9;padding:12px}
+.mobile-card{background:var(--hexu-paper);border-radius:0;padding:16px}
+.mobile-cell{color:#64716a}
+.mobile-cell b{color:var(--hexu-deep);overflow-wrap:anywhere}
+.mobile-actions{border-color:var(--border)}
+.loading-overlay{background:rgba(244,240,230,.94);color:var(--hexu-green)}
+.spinner{border-color:#cbded0;border-top-color:var(--hexu-green)}
+.toast{border-radius:0;background:var(--hexu-deep);line-height:1.7}
+.modal-mask{background:rgba(16,53,55,.5)}
+.modal{border:1px solid #b5c9bc;border-radius:0;background:var(--hexu-paper);box-shadow:0 25px 70px rgba(16,53,55,.22);max-height:90dvh}
+.modal-head{padding:20px 24px;background:var(--hexu-green);border-bottom:0}
+.modal-title{font:400 24px/1.5 var(--hexu-serif);color:var(--hexu-paper);letter-spacing:1px}
+.modal-sub{color:#c7d9cf;line-height:1.8;overflow-wrap:anywhere}
+.close{flex:0 0 36px;border:1px solid #83a69a;border-radius:0;background:none;color:var(--hexu-paper)}
+.modal-body{background:var(--hexu-cream);padding:20px}
+.order-summary-card{border-radius:0;background:var(--hexu-paper);padding:16px}
+.order-summary-card span{color:#64716a;line-height:1.5}
+.order-summary-card strong{color:var(--hexu-green);overflow-wrap:anywhere}
+.order-desktop{border:1px solid #8ba99c;border-top:3px solid var(--hexu-green);background:var(--hexu-paper)}
+.btn:focus-visible,.close:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
+@media(max-width:1100px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+ header{min-height:76px;padding:10px 12px;gap:10px;flex-wrap:wrap}.brand{gap:8px}.brand h1{font-size:17px;letter-spacing:0}.logo{width:32px;height:32px;flex-basis:32px}.header-actions{gap:6px}.header-actions .btn{padding:8px;font-size:11px}
+ main{margin-top:18px;padding:0 12px}.hero{padding:25px 22px;min-height:0}.hero h2{font-size:26px}.hero p{font-size:11px}.hero:after{right:-25px;top:0;font-size:240px}
+ .stats{gap:9px}.stat{padding:16px;min-height:100px}.stat-value{font-size:24px}.stat.money-stat .stat-value{font-size:19px}
+ .panel-head{padding:16px}.panel-title{font-size:21px}.filters{grid-template-columns:minmax(0,1fr);padding:14px}
+ .modal-mask{padding:8px}.modal{max-height:94dvh}.modal-head{padding:16px}.modal-title{font-size:21px}.modal-body{padding:12px}.order-summary-card{padding:12px}
+ .toast{left:12px;right:12px;bottom:12px;max-width:none}
+}
+
 </style>
 </head>
 <body>
 <div id="loading" class="loading-overlay"><div class="spinner"></div><div>正在读取健康顾问经营数据...</div></div>
 <header>
-<div class="brand"><img src="./logo.jpeg" class="logo" alt="孕乃馨 Logo"><div><h1>健康顾问经营统计</h1><small>全国健康顾问与城市收入管理</small></div></div>
+<div class="brand"><img src="./logo.jpeg" class="logo" alt="荷序健康 Logo"><div><h1>健康顾问经营统计</h1><small>全国健康顾问与城市收入管理</small></div></div>
 <div class="header-actions"><button class="btn" onclick="goBack()">返回工作台</button><button class="btn btn-primary" onclick="logout()">退出</button></div>
 </header>
 <main>
@@ -82,7 +158,7 @@ main{margin-top:14px;padding:0 12px}.hero{padding:21px 19px}.hero h2{font-size:2
 <div class="scope-note" id="scopeNote">系统正在读取当前账号的省市管理范围。所有辖区限制均由数据库执行，前端无法越权读取其他城市数据。</div>
 </section>
 <section class="panel">
-<div class="panel-head"><div><div class="panel-title">健康顾问收入表</div><div class="panel-sub">订单总金额为客户支付金额；实际到账资金为扣除微信手续费后进入分账账户的订单净额；顾问收入按顾问编号分别汇总</div></div><div id="resultCount" style="font-size:11px;color:#aaa">0 位顾问</div></div>
+<div class="panel-head"><div><div class="panel-title">健康顾问收入表</div><div class="panel-sub">订单总金额为客户支付金额；实际到账资金为扣除微信手续费后进入分账账户的订单净额；顾问收入按顾问编号分别汇总</div></div><div id="resultCount" style="font-size:11px;color:#748078">0 位顾问</div></div>
 <div class="desktop-table table-wrap">
 <table>
 <thead><tr><th>健康顾问</th><th>所属城市</th><th>状态与账户</th><th>有效订单</th><th>订单总金额</th><th>实际到账资金</th><th>最近分账比例</th><th>应分收入</th><th>已分收入</th><th>待分收入</th><th>最后订单</th><th>操作</th></tr></thead>
