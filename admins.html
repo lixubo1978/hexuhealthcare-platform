@@ -473,6 +473,12 @@ tbody tr:hover{background:#f2f6ef}
     .panel-toolbar.merchant-toolbar{scrollbar-width:thin;scrollbar-color:#94b2a2 var(--hexu-cream)}
 }
 
+
+/* 健康顾问：关键词、状态、已开通城市联合筛选。 */
+.panel-toolbar.consultant-toolbar{grid-template-columns:minmax(0,1.6fr) minmax(130px,.55fr) minmax(0,1fr);align-items:center}
+.consultant-toolbar>*{min-width:0}
+.consultant-toolbar .select{font-size:13px;text-overflow:ellipsis}
+@media(max-width:760px){.panel-toolbar.consultant-toolbar{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 
@@ -596,12 +602,15 @@ tbody tr:hover{background:#f2f6ef}
 </div>
 
 <div class="panel">
-<div class="panel-toolbar">
+<div class="panel-toolbar consultant-toolbar">
     <input id="consultantSearch" class="input" type="search" placeholder="搜索编号、老师、手机号、登录邮箱或税号" oninput="renderConsultants()">
     <select id="consultantStatusFilter" class="select" onchange="renderConsultants()">
         <option value="">全部状态</option>
         <option value="active">正常</option>
         <option value="inactive">无效</option>
+    </select>
+    <select id="consultantAreaFilter" class="select" aria-label="已开通城市" title="已开通城市" onchange="renderConsultants()">
+        <option value="">已开通城市（全部）</option>
     </select>
 </div>
 
@@ -1097,12 +1106,22 @@ function populateServiceAreas(){
     document.getElementById("merchantServiceArea").innerHTML=html;
     document.getElementById("consultantServiceArea").innerHTML=html;
     populateMerchantAreaFilter();
+    populateConsultantAreaFilter();
 }
 
 function populateMerchantAreaFilter(){
     const select=document.getElementById("merchantAreaFilter"),old=select.value;
     const areas=[...new Map(serviceAreas.filter(x=>x.status==="active").map(x=>[String(x.id),x])).values()];
     select.innerHTML=`<option value="">${areas.length?"已开通服务区域（全部）":"暂无已开通服务区域"}</option>`+
+        areas.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(serviceAreaLabel(x))}</option>`).join("");
+    select.value=old&&areas.some(x=>String(x.id)===old)?old:"";
+    select.disabled=!areas.length;
+}
+
+function populateConsultantAreaFilter(){
+    const select=document.getElementById("consultantAreaFilter"),old=select.value;
+    const areas=[...new Map(serviceAreas.filter(x=>x.status==="active").map(x=>[String(x.id),x])).values()];
+    select.innerHTML=`<option value="">${areas.length?"已开通城市（全部）":"暂无已开通城市"}</option>`+
         areas.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(serviceAreaLabel(x))}</option>`).join("");
     select.value=old&&areas.some(x=>String(x.id)===old)?old:"";
     select.disabled=!areas.length;
@@ -1220,8 +1239,10 @@ function renderMerchants(){
 function renderConsultants(){
     const keyword=document.getElementById("consultantSearch").value.trim().toLowerCase();
     const filter=document.getElementById("consultantStatusFilter").value;
+    const areaId=document.getElementById("consultantAreaFilter").value;
 
     const list=consultants.filter(row=>{
+        if(areaId&&String(row.service_area_id??"")!==areaId)return false;
         const status=row.status==="active"?"active":"inactive";
         if(filter&&status!==filter)return false;
         if(!keyword)return true;
