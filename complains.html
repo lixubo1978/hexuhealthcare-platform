@@ -10,7 +10,7 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
 
-<title>投诉处理 - 孕乃馨</title>
+<title>投诉处理 - 荷序健康</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1079,6 +1079,87 @@ button {
     .resolution-textarea {
         min-height: 150px;
     }
+}
+
+
+/* 荷序健康：深青绿、米白、方正卡片；保留投诉状态提示。 */
+:root{--hexu-green:#0b5051;--hexu-deep:#103537;--hexu-cream:#f4f0e6;--hexu-paper:#fffcf7;--hexu-line:#d3dcd4;--hexu-serif:"Songti SC","STSong","Noto Serif SC",serif}
+html,body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialiased}
+.topbar{height:88px;background:var(--hexu-green);border-bottom:1px solid #366960;backdrop-filter:none}
+.top-title-main{font-family:var(--hexu-serif);font-size:26px;font-weight:400;letter-spacing:2px;color:var(--hexu-paper)}
+.top-title-sub{color:#c7d9cf;letter-spacing:1px;line-height:1.5}
+.top-btn{top:22px;border:1px solid #83a69a;border-radius:0;background:transparent;color:var(--hexu-paper);font-weight:400}
+.top-btn:hover{background:rgba(255,252,247,.1)}
+.main{padding:28px 0 60px}
+.alert-card{padding:24px 28px;border-radius:0;background:#a93243;box-shadow:none}
+.alert-card::after{background:rgba(255,252,247,.07)}
+.alert-title{font-weight:600;letter-spacing:1px}
+.alert-number{font-family:Georgia,serif;font-size:36px;font-weight:500}
+.alert-unit,.alert-desc{font-weight:500}
+.alert-desc{line-height:1.8;color:#f8e6e8}
+.stats{margin-top:0;gap:0;border:1px solid var(--hexu-line);border-top:0;background:var(--hexu-paper)}
+.stat-card{min-height:91px;padding:18px 20px;border:0;border-right:1px solid var(--hexu-line);border-radius:0;background:transparent;box-shadow:none}
+.stat-card:last-child{border-right:0}
+.stat-label{color:#64716a;letter-spacing:.5px}
+.stat-value{font-family:Georgia,serif;font-size:25px;font-weight:500}
+.stat-merchant{color:var(--hexu-green)}
+.section-head{margin:28px 0 16px;padding-bottom:16px;border-bottom:1px solid #c7d5c9}
+.section-title{font-family:var(--hexu-serif);font-size:24px;font-weight:400;color:var(--hexu-deep);letter-spacing:1px}
+.filter-btn{border-radius:0;background:var(--hexu-paper);border-color:#b7cbbd;color:var(--hexu-green);font-weight:500}
+.filter-btn.active{background:var(--hexu-green);border-color:var(--hexu-green);color:var(--hexu-paper)}
+.complaint-list{padding:20px;border:1px solid #8ba99c;border-top:3px solid var(--hexu-green);background:#eaf0e9;gap:18px;box-shadow:0 8px 24px rgba(16,53,55,.05)}
+.complaint-list:empty{display:none}
+.complaint-card{padding:22px;border:1px solid var(--hexu-line);border-left:3px solid #a93243;border-radius:0;background:var(--hexu-paper);box-shadow:none}
+.complaint-card.resolved{border-color:var(--hexu-line);border-left-color:#27805d}
+.card-head{border-color:var(--hexu-line)}
+.merchant-name{color:var(--hexu-deep);font-weight:600;line-height:1.6}
+.order-no{color:#748078;line-height:1.7}
+.status-badge,.resolution-required,.resolution-locked{border-radius:0;font-weight:600}
+.status-merchant{background:#e2eee6;color:var(--hexu-green);border:1px solid #b7cbbd}
+.region-bar{border-radius:0;background:#e5eee5;color:var(--hexu-green);font-weight:600;line-height:1.7}
+.info-box,.person-card,.content-box,.resolution-box,.resolution-textarea,.resolution-result,.confirm-box,.action-btn,.empty,.modal,.image-item,.close-btn,.toast{border-radius:0}
+.info-box{background:var(--hexu-cream);border:1px solid #e1e7de}
+.info-label{color:#748078}
+.info-value{color:#233633;font-weight:600}
+.customer-card,.merchant-card{background:#edf2e9;border:1px solid var(--hexu-line)}
+.customer-card .person-title,.merchant-card .person-title{color:var(--hexu-green)}
+.person-name{color:var(--hexu-deep);font-weight:600}
+.person-phone{color:#52695e;font-weight:500}
+.content-box{border-color:#c7d7ca;background:var(--hexu-cream)}
+.content-title{color:var(--hexu-green);font-weight:600;letter-spacing:.5px}
+.content-text{color:#233633;line-height:1.9}
+.resolution-box{background:#edf2e9;border-color:#c7d7ca}
+.resolution-title{color:var(--hexu-green);font-weight:600}
+.resolution-tip,.resolution-count{color:#748078}
+.resolution-textarea{background:var(--hexu-paper);border-color:#b7cbbd;color:#233633}
+.resolution-textarea:focus{border-color:#176968;box-shadow:0 0 0 3px rgba(23,105,104,.1)}
+.resolution-textarea::placeholder{color:#7c8980}
+.resolution-result{background:var(--hexu-paper);color:#233633;border:1px solid var(--hexu-line)}
+.confirm-box{font-weight:500}
+.action-btn{font-weight:600;letter-spacing:.5px}
+.image-btn{background:var(--hexu-paper);color:var(--hexu-green);border-color:#aec5b6}
+.confirm-btn{background:var(--hexu-green);color:var(--hexu-paper)}
+.empty{border:1px solid var(--hexu-line);background:var(--hexu-paper)}
+.empty-title{color:var(--hexu-deep);font-family:var(--hexu-serif);font-size:21px;font-weight:400}
+.empty-text{color:#748078;line-height:1.8}
+.modal-mask{background:rgba(16,53,55,.5);backdrop-filter:none}
+.modal{border:1px solid #b5c9bc;background:var(--hexu-paper);padding:24px;max-height:88dvh}
+.modal-title{font-family:var(--hexu-serif);font-size:25px;font-weight:400;color:var(--hexu-green);padding-bottom:14px;border-bottom:2px solid var(--hexu-green)}
+.modal-sub{color:#64716a;line-height:1.7;overflow-wrap:anywhere}
+.image-item{background:#eaf0e9;border:1px solid var(--hexu-line)}
+.no-images{color:#748078}
+.close-btn{background:var(--hexu-green);color:var(--hexu-paper);font-weight:600}
+.loading-mask{background:var(--hexu-cream)}
+.loading-text{color:#64716a}
+.toast{background:var(--hexu-deep);line-height:1.7}
+button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
+@media(max-width:700px){
+ .topbar{height:80px}.top-title-main{font-size:23px}.top-btn{top:18px;width:40px;height:40px}.back-btn{left:12px}.refresh-btn{right:12px}
+ .main{padding-top:18px}.alert-card{padding:22px}.stats{gap:0}.stat-card{padding:16px 10px;min-height:85px}
+ .section-head{margin-top:24px}.section-title{font-size:23px}.filters{gap:7px}.filter-btn{padding:7px 12px;min-height:40px}
+ .complaint-list{padding:10px;gap:12px}.complaint-card{padding:15px}.merchant-name{font-size:16px;overflow-wrap:anywhere}
+ .status-badge{padding:6px 8px}.region-bar{align-items:flex-start}.resolution-title-row{flex-wrap:wrap}
+ .modal-mask{padding:12px}.modal{padding:18px}.modal-title{font-size:23px}
 }
 
 </style>
