@@ -8,7 +8,7 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     >
 
-    <title>孕乃馨 - 客户中心</title>
+    <title>荷序健康 - 客户中心</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -978,7 +978,94 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+    
+/* 荷序健康客户中心：保留原有手机端结构与交互。 */
+:root{--hexu-green:#0b5051;--hexu-deep:#103537;--hexu-cream:#f4f0e6;--hexu-paper:#fffcf7;--hexu-line:#d3dcd4;--hexu-serif:"Songti SC","STSong","Noto Serif SC",serif}
+html,body,.app{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialiased}
+.topbar{min-height:80px;padding:14px 18px;background:var(--hexu-paper);border-bottom:1px solid var(--hexu-line)}
+.top-safe{background:var(--hexu-paper)}
+.logo{width:42px;height:42px;border-radius:0;background:none;box-shadow:none;object-fit:contain;display:block}
+.brand-title{font-size:22px;font-weight:650;color:var(--hexu-green);letter-spacing:2px}
+.brand-subtitle{font-size:10px;color:#64716a;letter-spacing:.5px}
+.logout-btn{background:var(--hexu-green);color:var(--hexu-paper);border-radius:0;border:1px solid var(--hexu-green);box-shadow:none;font-size:12px;font-weight:500;flex-shrink:0}
+.hero{isolation:isolate;margin-top:18px;padding:28px 24px;border-radius:0;background:linear-gradient(110deg,#073a3c,#0b5051 62%,#205955);box-shadow:none;color:var(--hexu-paper)}
+.hero::before{content:"荷";width:auto;height:auto;right:-12px;top:-23px;z-index:0;border-radius:0;background:none;font:240px/1 var(--hexu-serif);color:rgba(217,235,218,.065);pointer-events:none}
+.hero::after{display:none}
+.hero-label{font-size:11px;letter-spacing:1.5px;color:#c7d9cf;opacity:1}
+.hero-name{font:400 30px/1.5 var(--hexu-serif);letter-spacing:1px;overflow-wrap:anywhere}
+.hero-number{border-radius:0;border:1px solid #6b9485;background:rgba(255,252,247,.06);font-size:11px;font-weight:500}
+.hero-tip{color:#c7d9cf;font-size:11px;line-height:1.9;opacity:1}
+.primary-order-btn{min-height:80px;border:1px solid #8ba99c;border-top:3px solid var(--hexu-green);border-radius:0;background:var(--hexu-paper);color:var(--hexu-green);box-shadow:0 6px 20px rgba(16,53,55,.05)}
+.primary-icon{background:#e4eee6;border-radius:0;filter:grayscale(1)}
+.primary-title{font-weight:600;color:var(--hexu-green)}
+.primary-desc{color:#748078;line-height:1.6}
+.primary-arrow{border:1px solid #bdcfc3;background:transparent;color:var(--hexu-green);font-weight:400}
+.section-title-row{padding-bottom:10px;border-bottom:1px solid #c7d5c9}
+.section-title{font:400 23px/1.5 var(--hexu-serif);color:var(--hexu-deep);letter-spacing:1px}
+.section-link{color:var(--hexu-green);font-size:12px;font-weight:500}
+.stats-grid{gap:0;border:1px solid var(--hexu-line);background:var(--hexu-paper)}
+.stat-card{border:0;border-right:1px solid var(--hexu-line);border-radius:0;background:transparent;box-shadow:none;min-width:0}
+.stat-card:last-child{border-right:0}
+.stat-icon{filter:grayscale(1)}
+.stat-value{font:500 26px/1 Georgia,serif;color:var(--hexu-green)}
+.stat-label{color:#64716a;font-weight:500}
+.notice-card{border:1px solid var(--hexu-line);border-radius:0;background:var(--hexu-paper);box-shadow:none}
+.notice-icon{background:#e4eee6;border-radius:0;filter:grayscale(1)}
+.notice-title{color:var(--hexu-green);font-weight:600}
+.notice-text{color:#64716a;line-height:1.8}
+.orders-list{padding:12px;border:1px solid #8ba99c;border-top:3px solid var(--hexu-green);background:#eaf0e9}
+.orders-list:empty{display:none}
+.order-card{border:1px solid var(--hexu-line);border-radius:0;background:var(--hexu-paper);box-shadow:none;padding:16px}
+.order-merchant-name{color:var(--hexu-deep);font-weight:600;overflow-wrap:anywhere;line-height:1.6}
+.order-time{color:#748078}
+.status-badge{border-radius:0;font-weight:500}
+.status-unpaid{color:var(--hexu-green);background:#e4eee6;border:1px dashed #aec5b6}
+.status-completed{color:#176968;background:#e6f2ed}
+.order-line{background:var(--hexu-line)}
+.order-info-label{color:#748078}
+.order-info-value{color:#233633;font-weight:600;overflow-wrap:anywhere;min-width:0}
+.usage-wrap{border-radius:0;background:var(--hexu-cream);border:1px solid var(--hexu-line)}
+.usage-title{color:#52695e;font-weight:500}
+.usage-number{color:var(--hexu-green);font-weight:600}
+.progress{border-radius:0;background:#d5e2d6}
+.progress-bar{border-radius:0;background:var(--hexu-green)}
+.order-btn,.empty-btn,.profile-save-btn,.review-go-btn{border-radius:0;font-weight:600}
+.order-btn-light{background:#e4eee6;color:var(--hexu-green);border:1px solid #aec5b6}
+.order-btn-primary,.empty-btn,.profile-save-btn,.review-go-btn{background:var(--hexu-green);color:var(--hexu-paper);box-shadow:none}
+.empty-state{border-radius:0;border:1px solid var(--hexu-line);background:var(--hexu-paper)}
+.empty-title{font:400 21px/1.5 var(--hexu-serif);color:var(--hexu-deep)}
+.empty-text{color:#748078;line-height:1.8}
+.profile-mask,.review-mask{background:rgba(16,53,55,.5);backdrop-filter:none;-webkit-backdrop-filter:none}
+.profile-modal{border-radius:0;border:1px solid #b5c9bc;background:var(--hexu-paper);box-shadow:0 25px 70px rgba(16,53,55,.22);max-height:calc(100dvh - 36px)}
+.profile-icon{border-radius:0;background:var(--hexu-green)}
+.profile-title{font:400 25px/1.5 var(--hexu-serif);color:var(--hexu-deep)}
+.profile-desc{color:#64716a;line-height:1.8}
+.required-tip{border-radius:0;background:#eaf0e9;border:1px solid #c7d7ca;color:#52695e}
+.form-label{color:#52695e;font-weight:600}
+.required{color:var(--hexu-green)}
+.optional,.profile-security{color:#748078}
+.form-control{border-radius:0;border-color:#c4d2c7;background:var(--hexu-paper);color:#233633;min-width:0}
+.form-control:focus{background:var(--hexu-paper);border-color:#176968;box-shadow:0 0 0 3px rgba(23,105,104,.1)}
+.form-control::placeholder{color:#7c8980}
+.form-control:disabled,.form-control[readonly]{color:#748078;background:#edf1e9}
+.review-sheet{border-radius:0;background:var(--hexu-paper);border:1px solid #b5c9bc;border-top:3px solid var(--hexu-green)}
+.review-sheet-title{font:400 24px/1.5 var(--hexu-serif);color:var(--hexu-deep)}
+.review-close{border:1px solid #aec5b6;border-radius:0;background:#e4eee6;color:var(--hexu-green);flex-shrink:0}
+.review-sheet-desc,.review-order-no,.review-info-label{color:#748078;line-height:1.7}
+.review-item,.review-empty{border-radius:0;border:1px solid var(--hexu-line);background:var(--hexu-cream)}
+.review-merchant{color:var(--hexu-deep);font-weight:600}
+.review-info-row{border-color:var(--hexu-line)}
+.bottom-nav{background:var(--hexu-green);border-top:1px solid #416d62}
+.nav-btn{color:#c7d9cf;font-weight:500}
+.nav-btn.active{color:var(--hexu-paper);background:rgba(255,252,247,.1)}
+.nav-icon{filter:grayscale(1)}
+.toast{border-radius:0;background:var(--hexu-deep);line-height:1.7}
+.loading-mask{background:var(--hexu-cream)}
+.loading-text{color:var(--hexu-green)}
+button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
+@media(max-width:360px){.topbar{padding-left:14px;padding-right:14px}.brand-title{font-size:20px}.brand-area{gap:8px}.hero{padding:24px 20px}.primary-left{gap:9px}.primary-title{font-size:16px}.section-title{font-size:21px}.order-actions{flex-wrap:wrap}.order-btn{min-width:90px}}
+
+</style>
 </head>
 
 <body>
@@ -986,7 +1073,7 @@
 <div id="loadingMask" class="loading-mask">
     <div class="loading-content">
         <div class="loading-heart">🌸</div>
-        <div class="loading-text">正在进入孕乃馨...</div>
+        <div class="loading-text">正在进入荷序健康...</div>
     </div>
 </div>
 
@@ -998,10 +1085,10 @@
     <header class="topbar">
 
         <div class="brand-area">
-            <div class="logo">♡</div>
+            <img class="logo" src="./logo.jpeg" alt="荷序健康">
 
             <div class="brand-text">
-                <div class="brand-title">孕乃馨</div>
+                <div class="brand-title">荷序健康</div>
                 <div class="brand-subtitle">安心服务 · 温暖相伴</div>
             </div>
         </div>
@@ -1095,7 +1182,7 @@
                 <div class="notice-title">线下实体商户服务</div>
 
                 <div class="notice-text">
-                    孕乃馨平台当前服务均在已认证实体商户场所完成，
+                    荷序健康平台当前服务均在已认证实体商户场所完成，
                     不提供上门服务。下单时可查看商户地址和地图位置。
                 </div>
             </div>
@@ -1143,7 +1230,7 @@
         </div>
 
         <div class="profile-desc">
-            首次使用孕乃馨，请先完善基本资料。
+            首次使用荷序健康，请先完善基本资料。
             姓名、所在省和所在市为必填信息。
         </div>
 
