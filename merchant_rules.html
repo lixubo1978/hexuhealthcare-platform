@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>商户分账规则 - 孕乃馨平台管理中心</title>
+<title>商户分账规则 - 荷序健康平台管理中心</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}:root{--pink:#e64f7c;--text:#382a30;--border:#eee3e7;--bg:#fffafb;--green:#2e9d68;--red:#dc4c64;--orange:#b87920;--shadow:0 8px 28px rgba(111,63,78,.06)}
@@ -19,10 +19,21 @@ main{max-width:1240px;margin:24px auto 70px;padding:0 20px}.hero{background:line
 @media(max-width:800px){header{height:64px;padding:0 14px}.brand h1{font-size:15px}.brand small{display:none}.header-actions .btn{padding:8px 10px;font-size:11px}main{padding:0 12px;margin-top:14px}.hero{padding:20px}.hero h2{font-size:21px}.stats{grid-template-columns:1fr 1fr}.filterbar{grid-template-columns:repeat(5,minmax(160px,1fr));overflow-x:auto;gap:10px}.desktop-table{display:none}.mobile-list{display:block;padding:10px}.mobile-card{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:9px}.mobile-card.locked{background:#f6f5f5}.mobile-card-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.mobile-meta{font-size:11px;color:#888;line-height:1.8;margin:10px 0}.ratio-grid{grid-template-columns:1fr}.action-line{flex-wrap:wrap}}
 .city-price-heading,.city-price{white-space:nowrap}.city-price{color:#8c3d58;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}.mobile-city-price{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:#8d7c83}
 </style>
+<style>
+/* 荷序健康：深青绿/米白主色，保留图标、粉色点缀及业务状态色。 */
+:root{--text:#233633;--border:#d3dcd4;--bg:#f4f0e6;--shadow:0 6px 24px rgba(16,53,55,.05)}
+header{background:#fffcf7}.brand h1{color:#0b5051;letter-spacing:1px}.brand small{color:#68766e}
+.btn{background:#fffcf7;border-radius:4px;color:#0b5051}.btn-primary{background:#0b5051;border-color:#0b5051;color:#fff}.btn-danger{background:#fff1f4;border-color:#ffcbd8;color:var(--red)}.btn-disabled{background:#efedef;border-color:#e3dfe1;color:#9d9498}
+.hero{background:linear-gradient(110deg,#073a3c,#0b5051 65%,#205955);border-color:#0b5051;border-radius:4px}.hero h2{color:#fffcf7;font-family:"Songti SC","STSong",serif;font-weight:500;letter-spacing:1px}.hero p{color:#d0e0d8}.hero-tag{background:#fff0f5;color:#b63c69;border-radius:4px}
+.stat,.panel{background:#fffcf7;border-radius:4px}.stat-label,.panel-sub,.merchant-meta,.product-code,.empty{color:#68766e}.stat-value{color:#0b5051;font-family:"Songti SC","STSong",serif;font-weight:600}.panel{border-top:3px solid #0b5051}.panel-title,.merchant-name,.modal-title{color:#103537}.history-toggle,.filterbar-label,.field label{color:#52695e}.history-toggle input{accent-color:#0b5051}.filterbar{background:#e8efe8}.control,.ratio-input{background:#fff;color:#233633;border-radius:4px}.control:focus,.ratio-input:focus{border-color:#478c80;box-shadow:0 0 0 3px rgba(11,80,81,.09)}
+.merchant-head{background:#edf1e8}th{background:#fffcf7;color:#52695e}td{border-color:#e3e7de}.rule-active-row{background:#edf2eb}.rule-active-row td{color:#43564d}.rule-history-row{background:#f5f3ef}.rule-history-row td{color:#787c76}.product-name,.ratio-item b{color:#233633}.city-price{color:#b63c69}.mobile-city-price{color:#68766e}.mobile-card{background:#fffcf7;border-radius:4px}.mobile-card.locked{background:#edf2eb}
+.toast{background:#103537;border-radius:4px}.toast.error{background:#b94057}.loading-overlay{background:rgba(244,240,230,.94);color:#0b5051}.modal-mask{background:rgba(16,53,55,.5)}.modal{background:#fffcf7;border-radius:4px;box-shadow:0 22px 70px rgba(16,53,55,.2)}.modal-close{border-radius:4px}.rule-target{border-radius:4px;background:#fff0f5;border-color:#efd0dc}.rule-target b{color:#b63c69}.total-box{border-radius:4px;background:#e8efe8}.total-box strong{color:#0b5051}.total-box.bad{background:#fff0f0;color:#b33}.total-box.bad strong{color:#b33}
+button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
+</style>
 </head>
 <body>
 <div id="loading" class="loading-overlay">正在读取已开通城市、商户、服务项目及分账规则...</div>
-<header><div class="brand"><div class="logo">♡</div><div><h1>商户分账规则</h1><small>孕乃馨平台管理中心</small></div></div><div class="header-actions"><button class="btn" id="backBtn">返回工作台</button><button class="btn btn-primary" id="logoutBtn">退出</button></div></header>
+<header><div class="brand"><div class="logo">♡</div><div><h1>商户分账规则</h1><small>荷序健康平台管理中心</small></div></div><div class="header-actions"><button class="btn" id="backBtn">返回工作台</button><button class="btn btn-primary" id="logoutBtn">退出</button></div></header>
 <main>
 <section class="hero"><div class="hero-tag">MERCHANT SPLIT RULES</div><h2>商户分账规则</h2><p>系统读取全部有效商户和平台全部有效服务项目。已定义并生效的规则灰色锁定；设为无效后旧规则作为历史记录永久保留，该商户与服务项目恢复未定义，可重新设置新版本。</p></section>
 <section class="stats"><div class="stat"><div class="stat-label">有效商户</div><div class="stat-value" id="statMerchants">0</div></div><div class="stat"><div class="stat-label">服务项目</div><div class="stat-value" id="statProducts">0</div></div><div class="stat"><div class="stat-label">已生效分账规则</div><div class="stat-value" id="statRules">0</div></div><div class="stat"><div class="stat-label">未定义组合</div><div class="stat-value" id="statUndefined">0</div></div></section>
