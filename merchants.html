@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>商户经营统计｜孕乃馨</title>
+<title>商户经营统计｜荷序健康</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--pink:#e7467a;--pink2:#ff789f;--deep:#74344d;--soft:#fff7fa;--line:#f0dfe5;--text:#3d3135;--muted:#998990;--green:#1d9c72;--greenbg:#e8f8f2;--blue:#3779c7;--bluebg:#eaf3ff;--orange:#c77a12;--orangebg:#fff3df;--red:#c7475d;--redbg:#fff0f3;--shadow:0 10px 30px rgba(111,56,77,.07)}
@@ -20,11 +20,21 @@
 @media(max-width:1250px){.stats{grid-template-columns:repeat(4,1fr)}.filter-grid{grid-template-columns:1fr 1fr 1fr}.merchant-summary{grid-template-columns:repeat(3,1fr)}.order-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.topbar{height:70px;padding:0 14px}.brand img{width:38px;height:38px}.brand-title{font-size:17px}.brand-sub{display:none}.top-actions .btn{padding:9px 11px;font-size:12px}.page{width:calc(100% - 20px);margin:12px auto 35px}.hero{padding:20px;border-radius:18px}.hero h1{font-size:22px}.hero p{font-size:13px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{min-height:96px;padding:14px 12px}.stat-value{font-size:19px}.filter-grid{grid-template-columns:1fr}.filter-grid .btn{height:44px}.panel-head{padding:16px}.filters{padding:14px}.desktop-table{display:none}.mobile-list{display:block;padding:10px}.m-card{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;background:#fff}.m-card-head{display:flex;justify-content:space-between;gap:10px}.m-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.m-kv span{font-size:10px;color:#a08c94;display:block}.m-kv b{font-size:13px;display:block;margin-top:4px}.m-card .btn{width:100%;margin-top:13px}.modal-mask{padding:6px}.modal{max-height:98vh;border-radius:17px}.modal-head{padding:15px}.modal-body{padding:12px}.merchant-summary{grid-template-columns:repeat(2,1fr)}.detail-filter{grid-template-columns:1fr}.order-head{display:block}.order-head .badges{margin-top:9px}.order-grid{grid-template-columns:repeat(2,1fr)}.product-line{grid-template-columns:1.4fr .5fr .7fr}.product-line>:last-child{display:none}}
 </style>
+<style>
+/* 荷序健康：深青绿/米白主色，保留粉色点缀、图标与统计状态色。 */
+:root{--deep:#0b5051;--soft:#f4f0e6;--line:#d3dcd4;--text:#233633;--muted:#68766e;--shadow:0 6px 24px rgba(16,53,55,.05)}
+html,body{background:#f4f0e6}.topbar{background:#fffcf7;border-color:#d3dcd4}.brand img{box-shadow:none}.brand-sub{color:#68766e}.btn{background:#fffcf7;color:#0b5051;border-radius:4px}.btn-primary{background:#0b5051;color:#fff}.btn-danger{background:var(--pink);border-color:var(--pink);color:#fff}
+.hero{background:linear-gradient(110deg,#073a3c,#0b5051 65%,#205955);border-color:#0b5051;border-radius:4px}.hero:after{background:rgba(255,255,255,.06);pointer-events:none}.hero-tag{background:#fff0f5;color:#b63c69;border-radius:4px}.hero h1{color:#fffcf7;font-family:"Songti SC","STSong",serif;font-weight:500;letter-spacing:1px}.hero p,.viewer-line{color:#d0e0d8}.viewer-line b{color:#fffcf7}
+.stat,.panel,.m-card{background:#fffcf7;border-radius:4px}.stat-note,.panel-sub,.mini,.empty,.modal-sub,.order-time,.footer-tip{color:#68766e}.panel{border-top:3px solid #0b5051}.panel-head{border-color:#d3dcd4}.filters{background:#e8efe8}.field label{color:#52695e}.control{background:#fff;color:#233633;border-color:#c5d3c9;border-radius:4px}.control:focus{border-color:#478c80;box-shadow:0 0 0 3px rgba(11,80,81,.09)}.filter-note{background:#f4f0e6;color:#52695e;border-color:#c5d3c9;border-radius:4px}
+th{background:#edf1e8;color:#52695e}td{border-color:#e3e7de}tbody tr:hover{background:#edf2eb}.merchant-no{color:#b63c69}.merchant-name,.count-main,.order-item b{color:#233633}
+.loading{background:rgba(244,240,230,.9)}.loading-box{color:#0b5051}.modal-mask{background:rgba(16,53,55,.5)}.modal{background:#fffcf7;border-radius:4px;box-shadow:0 25px 80px rgba(16,53,55,.2)}.close{background:#fff0f5;color:#b63c69}.summary-box{background:#f4f0e6;border-radius:4px}.summary-box span,.order-item span,.m-kv span{color:#68766e}.order-card{border-radius:4px}.order-head{background:#edf1e8}.products,.product-line{border-color:#dce3da}
+button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
+</style>
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <img src="logo.jpeg" alt="孕乃馨">
+    <img src="logo.jpeg" alt="荷序健康">
     <div><div class="brand-title">商户经营统计</div><div class="brand-sub">全国商户、订单与经营收入管理</div></div>
   </div>
   <div class="top-actions">
@@ -87,7 +97,7 @@
     </div>
     <div class="mobile-list" id="mobileList"></div>
   </section>
-  <div class="footer-tip">孕乃馨平台商户经营管理中心</div>
+  <div class="footer-tip">荷序健康平台商户经营管理中心</div>
 </main>
 
 <div class="modal-mask hidden" id="orderModal">
