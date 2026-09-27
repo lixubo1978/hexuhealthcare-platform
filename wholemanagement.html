@@ -189,6 +189,21 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
   .module-card{transition:none}
 }
 
+
+/* 管理模块统一外框：保留原有12个模块、排列及交互。 */
+.module-grid{
+  padding:24px;
+  border:1px solid #8ba99c;
+  border-top:3px solid var(--hexu-green);
+  background:#eaf0e9;
+  box-shadow:0 8px 24px rgba(16,53,55,.05);
+}
+@media(min-width:761px) and (max-width:1100px){
+  .module-grid{padding:18px;}
+}
+@media(max-width:760px){
+  .module-grid{padding:12px;gap:12px;}
+}
 </style>
 </head>
 <body>
