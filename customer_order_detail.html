@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" >
-<title>订单详情 - 孕乃馨</title>
+<title>订单详情 - 荷序健康</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script><style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -80,7 +80,40 @@ button{font:inherit;}
 @media (min-width:700px){body{background:#f8f2f5;}
 .page{box-shadow:0 0 35px rgba(90,50,70,0.08);}
 }
-</style></head>
+</style><style>
+/* 荷序健康：深青绿与米白为主，保留粉色点缀及原图标色彩。 */
+html,body,.page{background:#f4f0e6;color:#233633}
+.header{background:#0b5051;border-color:#386e63}
+.header-title{color:#fffcf7;font-family:"Songti SC","STSong",serif;font-weight:500;letter-spacing:1px}
+.back-btn{color:#fffcf7}
+.status-card{background:linear-gradient(120deg,#073a3c,#0b5051 65%,#205955);border-radius:4px;box-shadow:0 8px 24px rgba(16,53,55,.09)}
+.status-title{font-family:"Songti SC","STSong",serif;font-weight:500}
+.card,.loading-box,.error-box,.qr-entry-card{background:#fffcf7;border-color:#d3dcd4;border-radius:4px;box-shadow:0 5px 18px rgba(16,53,55,.04)}
+.card-title,.qr-entry-title,.qr-modal-title,.qr-merchant{color:#103537}
+.info-value,.verification-value{color:#233633}
+.info-label,.loading-text,.error-text,.qr-entry-desc,.usage-label,.qr-modal-subtitle,.verification-label,.qr-usage-label{color:#68766e}
+.info-row{border-color:#e3e7de}
+.usage-item,.qr-usage-item{background:#e8efe8;border-radius:4px}
+.usage-number,.qr-usage-value{color:#0b5051}
+.amount-summary{border-color:#d3dcd4}
+.payable-price{color:#c34472}
+.bottom-bar{background:rgba(255,252,247,.98);border-color:#d3dcd4}
+.primary-btn,.qr-entry-btn{background:#0b5051;color:#fffcf7;border-radius:4px;box-shadow:0 5px 16px rgba(16,53,55,.1)}
+.secondary-btn{background:#fffcf7;color:#0b5051;border-color:#afc3b9;border-radius:4px}
+.qr-mask{background:rgba(16,53,55,.55)}
+.qr-modal{background:#fffcf7;border-radius:6px;border:1px solid #afc3b9;box-shadow:0 20px 60px rgba(16,53,55,.2)}
+.qr-box{background:#fff;border-color:#d3dcd4;border-radius:4px}
+.verification-item{background:#f4f0e6;border-color:#d3dcd4;border-radius:4px}
+.verification-item.code{background:#fff0f5;border-color:#efc4d3}
+.verification-item.code .verification-label,.verification-item.code .verification-value{color:#b63c69}
+.qr-warning{background:#e8efe8;color:#435e52;border-radius:4px}
+.qr-close-btn{background:#ffedf4;color:#b63c69;border-radius:4px}
+.paid-notice{border-radius:4px}
+.qr-entry-icon{color:#3f3037}
+button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
+@media(min-width:700px){body{background:#f4f0e6}.page{box-shadow:0 0 35px rgba(16,53,55,.07)}}
+</style>
+</head>
 <body>
 <div class="page">
 <header class="header">
