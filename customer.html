@@ -10,8 +10,7 @@
 
     <title>荷序健康 - 客户中心</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <style>
         * {
             box-sizing: border-box;
@@ -1492,20 +1491,202 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 <script>
 
 /* ============================================================
-   Supabase
+   客户同域 API
 ============================================================ */
 
-const SUPABASE_URL =
-    "https://qbuqjwpkltbjhlfbyjyb.supabase.co";
+const CUSTOMER_SESSION_KEY =
+    "hexu_customer_session_v1";
 
-const SUPABASE_ANON_KEY =
-    "sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
+let apiSession =
+    loadApiSession();
 
-const sb =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
+function loadApiSession() {
+    try {
+        return JSON.parse(
+            localStorage.getItem(
+                CUSTOMER_SESSION_KEY
+            ) || "null"
+        );
+    } catch {
+        return null;
+    }
+}
+
+function saveApiSession(value) {
+    apiSession = value || null;
+
+    if (apiSession) {
+        localStorage.setItem(
+            CUSTOMER_SESSION_KEY,
+            JSON.stringify(apiSession)
+        );
+    } else {
+        localStorage.removeItem(
+            CUSTOMER_SESSION_KEY
+        );
+    }
+}
+
+function accessToken() {
+    return apiSession?.access_token || "";
+}
+
+async function api(
+    path,
+    {
+        method = "GET",
+        body,
+        auth = true
+    } = {}
+) {
+    const headers = {
+        Accept: "application/json"
+    };
+
+    if (body !== undefined) {
+        headers["Content-Type"] =
+            "application/json";
+    }
+
+    if (auth) {
+        const token =
+            accessToken();
+
+        if (!token) {
+            throw new Error(
+                "请先登录"
+            );
+        }
+
+        headers.Authorization =
+            "Bearer " + token;
+    }
+
+    let response;
+
+    try {
+        response =
+            await fetch(
+                path,
+                {
+                    method,
+                    headers,
+                    body:
+                        body === undefined
+                            ? undefined
+                            : JSON.stringify(body),
+                    cache: "no-store"
+                }
+            );
+    } catch {
+        throw new Error(
+            "网络连接失败，请稍后重试"
+        );
+    }
+
+    const raw =
+        await response.text();
+
+    let data = null;
+
+    try {
+        data =
+            raw
+                ? JSON.parse(raw)
+                : null;
+    } catch {
+        data = raw;
+    }
+
+    if (!response.ok) {
+        const message =
+            data?.message ||
+            data?.msg ||
+            data?.error_description ||
+            data?.error ||
+            "请求失败";
+
+        throw new Error(
+            typeof message === "string"
+                ? message
+                : "请求失败"
+        );
+    }
+
+    return data;
+}
+
+async function refreshApiSession() {
+    if (!apiSession?.refresh_token) {
+        return false;
+    }
+
+    try {
+        const data =
+            await api(
+                "/api/auth/refresh",
+                {
+                    method: "POST",
+                    auth: false,
+                    body: {
+                        refresh_token:
+                            apiSession.refresh_token
+                    }
+                }
+            );
+
+        if (!data?.access_token) {
+            return false;
+        }
+
+        saveApiSession({
+            ...apiSession,
+            ...data
+        });
+
+        return true;
+
+    } catch {
+        return false;
+    }
+}
+
+async function apiAuth(
+    path,
+    options = {}
+) {
+    try {
+        return await api(
+            path,
+            {
+                ...options,
+                auth: true
+            }
+        );
+
+    } catch (error) {
+        const message =
+            String(
+                error?.message || ""
+            );
+
+        if (
+            /jwt|token|登录状态|unauthorized|401/i
+                .test(message) &&
+            await refreshApiSession()
+        ) {
+            return api(
+                path,
+                {
+                    ...options,
+                    auth: true
+                }
+            );
+        }
+
+        throw error;
+    }
+}
 
 
 /* ============================================================
@@ -1542,49 +1723,25 @@ async function init() {
 
         setupIdleLogout();
 
-        const {
-            data: { session },
-            error
-        } =
-        await sb.auth.getSession();
-
-
-        if (
-            error ||
-            !session ||
-            !session.user
-        ) {
-
+        if (!apiSession?.access_token) {
             goLogin();
             return;
         }
 
-
         currentUser =
-            session.user;
-
+            apiSession.user || null;
 
         const allowed =
             await verifyCustomerAccess();
-
 
         if (!allowed) {
             return;
         }
 
-
         await loadCustomerInfo();
 
-
-        /*
-         * ★ 先判断客户资料。
-         *
-         * 姓名、省、市缺任何一项，
-         * 都必须先完善资料。
-         */
         const completed =
             isCustomerProfileComplete();
-
 
         if (!completed) {
 
@@ -1594,18 +1751,12 @@ async function init() {
 
             showCustomerProfileModal();
 
-            /*
-             * 资料没完成之前，
-             * 不继续加载业务数据。
-             */
             return;
         }
-
 
         await loadOrders();
 
         hideLoading();
-
 
     } catch (error) {
 
@@ -1632,73 +1783,74 @@ async function init() {
 
 async function verifyCustomerAccess() {
 
-    const {
-        data,
-        error
-    } =
-    await sb
-        .from("profiles")
-        .select(`
-            id,
-            full_name,
-            role,
-            status,
-            user_type,
-            account_no
-        `)
-        .eq(
-            "id",
-            currentUser.id
-        )
-        .maybeSingle();
+    try {
 
+        const rows =
+            await apiAuth(
+                "/api/customer/profile"
+            );
 
-    if (error || !data) {
+        const data =
+            Array.isArray(rows)
+                ? rows[0]
+                : rows;
 
-        console.error(error);
+        if (!data) {
+            await forceLogout();
+            return false;
+        }
+
+        currentProfile =
+            data;
+
+        if (
+            data.status &&
+            data.status !== "active"
+        ) {
+
+            toast(
+                "当前账号已停用"
+            );
+
+            setTimeout(
+                forceLogout,
+                900
+            );
+
+            return false;
+        }
+
+        const isCustomer =
+            data.role === "customer" ||
+            data.user_type === "customer";
+
+        if (!isCustomer) {
+            await forceLogout();
+            return false;
+        }
+
+        if (!currentUser) {
+            currentUser = {
+                id: data.id,
+                phone:
+                    apiSession?.user?.phone ||
+                    ""
+            };
+        }
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "verify customer:",
+            error
+        );
 
         await forceLogout();
 
         return false;
     }
-
-
-    currentProfile =
-        data;
-
-
-    if (
-        data.status &&
-        data.status !== "active"
-    ) {
-
-        toast(
-            "当前账号已停用"
-        );
-
-        setTimeout(
-            forceLogout,
-            900
-        );
-
-        return false;
-    }
-
-
-    const isCustomer =
-        data.role === "customer" ||
-        data.user_type === "customer";
-
-
-    if (!isCustomer) {
-
-        await forceLogout();
-
-        return false;
-    }
-
-
-    return true;
 }
 
 
@@ -1708,44 +1860,24 @@ async function verifyCustomerAccess() {
 
 async function loadCustomerInfo() {
 
-    const {
-        data,
-        error
-    } =
-    await sb
-        .from("customers")
-        .select("*")
-        .eq(
-            "id",
-            currentUser.id
-        )
-        .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "load customer:",
-            error
+    const rows =
+        await apiAuth(
+            "/api/customer/record"
         );
 
-        throw new Error(
-            "客户资料读取失败"
-        );
-    }
-
+    const data =
+        Array.isArray(rows)
+            ? rows[0]
+            : rows;
 
     if (!data) {
-
         throw new Error(
             "没有找到客户资料"
         );
     }
 
-
     currentCustomer =
         data;
-
 
     renderCustomerHeader();
 }
@@ -2001,56 +2133,23 @@ function closeCustomerProfileModal() {
 
 async function loadProvinceData() {
 
-    const {
-        data,
-        error
-    } =
-    await sb
-        .from("provinces")
-        .select(`
-            id,
-            province_code,
-            province_name,
-            status
-        `)
-        .eq(
-            "status",
-            "active"
-        )
-        .order(
-            "province_code",
-            {
-                ascending: true
-            }
+    const data =
+        await apiAuth(
+            "/api/customer/provinces"
         );
-
-
-    if (error) {
-
-        console.error(
-            "load provinces:",
-            error
-        );
-
-        throw new Error(
-            "省份数据读取失败"
-        );
-    }
-
 
     provinces =
-        data || [];
-
+        Array.isArray(data)
+            ? data
+            : [];
 
     const select =
         document.getElementById(
             "profileProvince"
         );
 
-
     select.innerHTML =
         `<option value="">请选择省份</option>`;
-
 
     provinces.forEach(
         province => {
@@ -2060,14 +2159,11 @@ async function loadProvinceData() {
                     "option"
                 );
 
-
             option.value =
                 province.id;
 
-
             option.textContent =
                 province.province_name;
-
 
             select.appendChild(
                 option
@@ -2124,96 +2220,65 @@ async function loadCityData(
             "profileCity"
         );
 
-
     citySelect.disabled =
         true;
-
 
     citySelect.innerHTML =
         `<option value="">正在读取城市...</option>`;
 
+    try {
 
-    const {
-        data,
-        error
-    } =
-    await sb
-        .from("cities")
-        .select(`
-            id,
-            province_id,
-            city_code,
-            city_name,
-            status
-        `)
-        .eq(
-            "province_id",
-            Number(provinceId)
-        )
-        .eq(
-            "status",
-            "active"
-        )
-        .order(
-            "city_code",
-            {
-                ascending: true
+        const data =
+            await apiAuth(
+                "/api/customer/cities?province_id=" +
+                encodeURIComponent(
+                    provinceId
+                )
+            );
+
+        cities =
+            Array.isArray(data)
+                ? data
+                : [];
+
+        citySelect.innerHTML =
+            `<option value="">请选择城市</option>`;
+
+        cities.forEach(
+            city => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    city.id;
+
+                option.textContent =
+                    city.city_name;
+
+                citySelect.appendChild(
+                    option
+                );
             }
         );
 
+        citySelect.disabled =
+            false;
 
-    if (error) {
+    } catch (error) {
 
         console.error(
             "load cities:",
             error
         );
 
-
         citySelect.innerHTML =
             `<option value="">城市读取失败</option>`;
 
-
-        throw new Error(
-            "城市数据读取失败"
-        );
+        throw error;
     }
-
-
-    cities =
-        data || [];
-
-
-    citySelect.innerHTML =
-        `<option value="">请选择城市</option>`;
-
-
-    cities.forEach(
-        city => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                city.id;
-
-
-            option.textContent =
-                city.city_name;
-
-
-            citySelect.appendChild(
-                option
-            );
-        }
-    );
-
-
-    citySelect.disabled =
-        false;
 }
 
 
@@ -2357,48 +2422,42 @@ async function saveCustomerProfile() {
 
     try {
 
-        const {
-            data,
-            error
-        } =
-        await sb.rpc(
-            "complete_customer_profile",
-            {
-                p_real_name:
-                    name,
+        const data =
+            await apiAuth(
+                "/api/customer/complete-profile",
+                {
+                    method: "POST",
+                    body: {
+                        real_name:
+                            name,
 
-                p_province_id:
-                    Number(
-                        provinceId
-                    ),
+                        province_id:
+                            Number(
+                                provinceId
+                            ),
 
-                p_city_id:
-                    Number(
-                        cityId
-                    ),
+                        city_id:
+                            Number(
+                                cityId
+                            ),
 
-                p_address:
-                    address || null,
+                        address:
+                            address || null,
 
-                p_work_unit:
-                    workUnit || null,
+                        work_unit:
+                            workUnit || null,
 
-                p_occupation:
-                    occupation || null,
+                        occupation:
+                            occupation || null,
 
-                p_emergency_contact_name:
-                    emergencyName || null,
+                        emergency_contact_name:
+                            emergencyName || null,
 
-                p_emergency_contact_phone:
-                    emergencyPhone || null
-            }
-        );
-
-
-        if (error) {
-
-            throw error;
-        }
+                        emergency_contact_phone:
+                            emergencyPhone || null
+                    }
+                }
+            );
 
 
         if (
@@ -2408,6 +2467,7 @@ async function saveCustomerProfile() {
 
             throw new Error(
                 data?.message ||
+                data?.error ||
                 "客户资料保存失败"
             );
         }
@@ -2479,43 +2539,27 @@ async function saveCustomerProfile() {
 
 async function loadOrders() {
 
-    const result =
-        await sb
-            .from("orders")
-            .select("*")
-            .eq(
-                "customer_id",
-                currentUser.id
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            )
-            .limit(100);
+    try {
 
+        const data =
+            await apiAuth(
+                "/api/customer/orders"
+            );
 
-    if (result.error) {
+        currentOrders =
+            Array.isArray(data)
+                ? data
+                : [];
+
+    } catch (error) {
 
         console.error(
             "load orders:",
-            result.error
+            error
         );
 
         currentOrders = [];
-
-        renderStats();
-
-        renderRecentOrders();
-
-        return;
     }
-
-
-    currentOrders =
-        result.data || [];
-
 
     renderStats();
 
@@ -3294,7 +3338,7 @@ function resetIdleTimer() {
                     "长时间未操作，请重新登录"
                 );
 
-                await sb.auth.signOut();
+                saveApiSession(null);
 
                 setTimeout(
                     goLogin,
@@ -3313,7 +3357,7 @@ function resetIdleTimer() {
 
 async function logout() {
 
-    await sb.auth.signOut();
+    saveApiSession(null);
 
     goLogin();
 }
@@ -3321,17 +3365,11 @@ async function logout() {
 
 async function forceLogout() {
 
-    try {
+    saveApiSession(null);
 
-        await sb.auth.signOut();
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-    }
-
+    currentUser = null;
+    currentProfile = null;
+    currentCustomer = null;
 
     goLogin();
 }
