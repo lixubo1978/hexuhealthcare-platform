@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" >
 <title>订单详情 - 荷序健康</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script><style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:#fff8fb;color:#3f3037;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif;}
@@ -239,9 +238,12 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <div class="card-title">
 <span class="card-title-dot"></span>订单金额</div>
 <div class="info-row">
-<div class="info-label">原价</div>
+<div class="info-label">统一参考价</div>
 <div id="subtotalAmount" class="info-value">¥0.00</div>
 </div>
+<div class="info-row">
+<div class="info-label">实际销售价</div>
+<div id="actualSalePrice" class="info-value">¥0.00</div></div>
 <div class="info-row">
 <div class="info-label">优惠比例</div>
 <div id="discountRate" class="info-value">0%</div>
@@ -318,9 +320,14 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <button class="qr-close-btn" type="button" onclick="closeVerificationQR()" >关闭</button>
 </div>
 </div><script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const SESSION_KEY="hexu_customer_session_v1";
+let apiSession=loadApiSession();
+function loadApiSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||"null")}catch{return null}}
+function saveApiSession(v){apiSession=v||null;if(apiSession)localStorage.setItem(SESSION_KEY,JSON.stringify(apiSession));else localStorage.removeItem(SESSION_KEY)}
+function accessToken(){return apiSession?.access_token||""}
+async function api(path,{method="GET",body,auth=true}={}){const headers={Accept:"application/json"};if(body!==undefined)headers["Content-Type"]="application/json";if(auth){const token=accessToken();if(!token)throw Error("请先登录");headers.Authorization="Bearer "+token;}let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"});}catch{throw Error("网络连接失败，请稍后重试");}const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok){const msg=data?.message||data?.msg||data?.error_description||data?.error||"请求失败";throw Error(typeof msg==="string"?msg:"请求失败")}return data}
+async function refreshApiSession(){if(!apiSession?.refresh_token)return false;try{const data=await api("/api/auth/refresh",{method:"POST",auth:false,body:{refresh_token:apiSession.refresh_token}});if(!data?.access_token)return false;saveApiSession({...apiSession,...data});return true}catch{return false}}
+async function apiAuth(path,options={}){try{return await api(path,{...options,auth:true})}catch(e){if(/jwt|token|登录状态|unauthorized|401/i.test(String(e?.message||""))&&await refreshApiSession())return api(path,{...options,auth:true});throw e}}
 let currentUser=null;
 let currentOrder=null;
 let currentOrderItem=null;
@@ -331,84 +338,12 @@ let paymentExpiryRefreshDone=false;
 const IDLE_TIMEOUT=10*60*1000;
 let idleTimer=null;
 document.addEventListener("DOMContentLoaded",initPage);
-async function initPage(){try{startIdleTimer();const orderId=getOrderId();if(!orderId){showError("缺少订单编号，无法读取订单。");return;}const{data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();if(sessionError){throw sessionError;}const session=sessionData?.session;if(!session?.user){redirectLogin();return;}currentUser=session.user;const customerOK=await verifyCustomer();if(!customerOK){showError("当前账号不是有效客户账号。");return;}await loadOrder(orderId);if(shouldAutoShowQR()&&canShowVerificationQR()){setTimeout(openVerificationQR,220);}}catch(error){console.error("订单详情初始化失败：",error);showError(error?.message||"订单详情加载失败。");}}
+async function initPage(){try{startIdleTimer();const orderId=getOrderId();if(!orderId){showError("缺少订单编号，无法读取订单。");return;}if(!apiSession?.access_token){redirectLogin();return;}currentUser=apiSession?.user||null;const customerOK=await verifyCustomer();if(!customerOK){redirectLogin();return;}await loadOrder(orderId);if(shouldAutoShowQR()&&canShowVerificationQR()){setTimeout(openVerificationQR,220);}}catch(error){console.error("订单详情初始化失败：",error);if(/请先登录|登录状态|jwt|token|unauthorized|401/i.test(String(error?.message||""))){saveApiSession(null);redirectLogin();return;}showError(error?.message||"订单详情加载失败。");}}
 function getOrderId(){const params=new URLSearchParams(window.location.search);const raw=params.get("id");if(!raw){return null;}const id=Number(raw);if(!Number.isInteger(id)||id<=0){return null;}return id;}
 function shouldAutoShowQR(){const params=new URLSearchParams(window.location.search);return params.get("showQR")==="1";}
-async function verifyCustomer(){const{data,error}=await supabaseClient.from("profiles").select("id, role, user_type, status").eq("id",currentUser.id).maybeSingle();if(error){console.error("读取 profiles 失败：",error);return false;}if(!data){return false;}if(data.status!=="active"){return false;}return data.role==="customer"||data.user_type==="customer";}
-async function loadOrder(orderId){const{data:order,error:orderError}=await supabaseClient.from("orders").select(`
-                id,
-                order_no,
-                customer_id,
-                merchant_id,
-
-                province_id,
-                city_id,
-                district_id,
-
-                total_amount,
-
-                order_status,
-                payment_status,
-                invoice_status,
-
-                created_at,
-                updated_at,
-                payment_expires_at,
-                payment_cancelled_at,
-
-                total_uses,
-                used_uses,
-                remaining_uses,
-
-                verification_token,
-                verification_activated_at,
-                first_verified_at,
-                last_verified_at,
-
-                recommendation_source_type,
-                recommendation_source_no,
-                recommendation_source_entity_id,
-                recommendation_source_name_snapshot,
-
-                merchant_no_snapshot,
-                merchant_name_snapshot,
-                merchant_address_snapshot,
-                merchant_longitude_snapshot,
-                merchant_latitude_snapshot,
-                merchant_coordinate_system_snapshot,
-
-                review_status,
-
-                paid_at,
-                completed_at,
-
-                subtotal_amount,
-                discount_rate,
-                discount_amount,
-                payable_amount,
-
-                payment_method,
-                payment_amount,
-                payment_confirmed_at,
-
-                wechat_transaction_id,
-                wechat_out_trade_no
-            `).eq("id",orderId).eq("customer_id",currentUser.id).maybeSingle();if(orderError){throw new Error("读取订单失败："+orderError.message);}if(!order){showError("订单不存在，或者该订单不属于当前登录客户。");return;}currentOrder=order;const{data:items,error:itemError}=await supabaseClient.from("order_items").select(`
-                id,
-                order_id,
-                product_id,
-                product_code_snapshot,
-                product_name_snapshot,
-                product_type,
-                quantity,
-                unit_price,
-                amount,
-                created_at,
-                city_price_id,
-                original_amount,
-                discounted_amount
-            `).eq("order_id",orderId).order("id",{ascending:true});if(itemError){throw new Error("读取订单项目失败："+itemError.message);}if(!items||items.length===0){throw new Error("订单已经存在，但没有找到订单明细。");}currentOrderItem=items[0];renderOrder();document.getElementById("loadingBox").classList.add("hidden");document.getElementById("errorBox").classList.add("hidden");document.getElementById("orderContent").classList.remove("hidden");document.getElementById("bottomBar").classList.remove("hidden");}
-function renderOrder(){const order=currentOrder;const item=currentOrderItem;const status=getOrderStatusDisplay(order.order_status,order.payment_status);setText("orderStatusTitle",status.title);setText("orderStatusDesc",status.description);setText("orderNo",order.order_no||"-");setText("productName",item.product_name_snapshot||"-");setText("productCode",item.product_code_snapshot||"-");setText("quantity",formatQuantity(item.quantity));setText("unitPrice",formatMoney(item.unit_price));setText("merchantName",order.merchant_name_snapshot||"-");setText("merchantNo",order.merchant_no_snapshot??"-");setText("merchantAddress",order.merchant_address_snapshot||"暂未填写");setText("recommendationName",order.recommendation_source_name_snapshot||getRecommendationFallback(order.recommendation_source_type));if(order.recommendation_source_no!==null&&order.recommendation_source_no!==undefined){document.getElementById("recommendationNoRow").classList.remove("hidden");setText("recommendationNo",order.recommendation_source_no);}else{document.getElementById("recommendationNoRow").classList.add("hidden");}setText("totalUses",numberOrZero(order.total_uses));setText("usedUses",numberOrZero(order.used_uses));setText("remainingUses",numberOrZero(order.remaining_uses));const subtotal=firstNumber(order.subtotal_amount,item.original_amount,item.amount,order.total_amount);const discountAmount=firstNumber(order.discount_amount,0);const payable=firstNumber(order.payable_amount,item.discounted_amount,order.total_amount,subtotal);setText("subtotalAmount",formatMoney(subtotal));setText("discountRate",formatDiscountRate(order.discount_rate));setText("discountAmount","- "+formatMoney(discountAmount));setText("payableAmount",formatMoney(payable));setText("paymentStatus",getPaymentStatusText(order.payment_status));setText("createdAt",formatDateTime(order.created_at));setText("paymentExpiresAt",formatDateTime(order.payment_expires_at));document.getElementById("paymentExpiresRow").classList.toggle("hidden",!order.payment_expires_at);if(order.payment_status==="paid"){const paidTime=order.paid_at||order.payment_confirmed_at;document.getElementById("paidAtRow").classList.remove("hidden");setText("paidAt",formatDateTime(paidTime));document.getElementById("paidNotice").classList.remove("hidden");}else{document.getElementById("paidAtRow").classList.add("hidden");document.getElementById("paidNotice").classList.add("hidden");}renderQRCodeEntry();renderPaymentDeadline();updatePayButton();}
+async function verifyCustomer(){try{const rows=await apiAuth("/api/customer/profile");const data=Array.isArray(rows)?rows[0]:rows;if(!data)return false;if(data.status&&data.status!=="active")return false;currentUser={...(currentUser||{}),id:data.id};return data.role==="customer"||data.user_type==="customer";}catch(error){console.error("读取客户身份失败：",error);return false;}}
+async function loadOrder(orderId){const orderRows=await apiAuth("/api/customer/order-detail?id="+encodeURIComponent(orderId));const order=Array.isArray(orderRows)?orderRows[0]:orderRows;if(!order){showError("订单不存在，或者该订单不属于当前登录客户。");return;}currentOrder=order;const items=await apiAuth("/api/customer/order-items?order_id="+encodeURIComponent(orderId));if(!Array.isArray(items)||items.length===0)throw new Error("订单已经存在，但没有找到订单明细。");currentOrderItem=items[0];renderOrder();document.getElementById("loadingBox").classList.add("hidden");document.getElementById("errorBox").classList.add("hidden");document.getElementById("orderContent").classList.remove("hidden");document.getElementById("bottomBar").classList.remove("hidden");}
+function renderOrder(){const order=currentOrder;const item=currentOrderItem;const status=getOrderStatusDisplay(order.order_status,order.payment_status);setText("orderStatusTitle",status.title);setText("orderStatusDesc",status.description);setText("orderNo",order.order_no||"-");setText("productName",item.product_name_snapshot||"-");setText("productCode",item.product_code_snapshot||"-");setText("quantity",formatQuantity(item.quantity));setText("unitPrice",formatMoney(item.unit_price));setText("merchantName",order.merchant_name_snapshot||"-");setText("merchantNo",order.merchant_no_snapshot??"-");setText("merchantAddress",order.merchant_address_snapshot||"暂未填写");setText("recommendationName",order.recommendation_source_name_snapshot||getRecommendationFallback(order.recommendation_source_type));if(order.recommendation_source_no!==null&&order.recommendation_source_no!==undefined){document.getElementById("recommendationNoRow").classList.remove("hidden");setText("recommendationNo",order.recommendation_source_no);}else{document.getElementById("recommendationNoRow").classList.add("hidden");}setText("totalUses",numberOrZero(order.total_uses));setText("usedUses",numberOrZero(order.used_uses));setText("remainingUses",numberOrZero(order.remaining_uses));const referenceTotal=firstNumber(item.original_amount,order.subtotal_amount,item.amount,order.total_amount);const actualSaleUnit=firstNumber(item.unit_price,item.discounted_amount,item.amount);const subtotal=referenceTotal;setText("actualSalePrice",formatMoney(actualSaleUnit));const discountAmount=firstNumber(order.discount_amount,0);const payable=firstNumber(order.payable_amount,item.discounted_amount,order.total_amount,subtotal);setText("subtotalAmount",formatMoney(subtotal));setText("discountRate",formatDiscountRate(order.discount_rate));setText("discountAmount","- "+formatMoney(discountAmount));setText("payableAmount",formatMoney(payable));setText("paymentStatus",getPaymentStatusText(order.payment_status));setText("createdAt",formatDateTime(order.created_at));setText("paymentExpiresAt",formatDateTime(order.payment_expires_at));document.getElementById("paymentExpiresRow").classList.toggle("hidden",!order.payment_expires_at);if(order.payment_status==="paid"){const paidTime=order.paid_at||order.payment_confirmed_at;document.getElementById("paidAtRow").classList.remove("hidden");setText("paidAt",formatDateTime(paidTime));document.getElementById("paidNotice").classList.remove("hidden");}else{document.getElementById("paidAtRow").classList.add("hidden");document.getElementById("paidNotice").classList.add("hidden");}renderQRCodeEntry();renderPaymentDeadline();updatePayButton();}
 function paymentExpired(){if(!currentOrder||currentOrder.payment_status==="paid"||!currentOrder.payment_expires_at)return false;const t=new Date(currentOrder.payment_expires_at).getTime();return Number.isFinite(t)&&Date.now()>=t;}
 function stopPaymentCountdown(){if(paymentCountdownTimer){clearInterval(paymentCountdownTimer);paymentCountdownTimer=null;}}
 function renderPaymentDeadline(){const box=document.getElementById("paymentDeadline");if(!currentOrder||currentOrder.payment_status==="paid"||!currentOrder.payment_expires_at){box.classList.add("hidden");stopPaymentCountdown();return;}box.classList.remove("hidden");paymentExpiryRefreshDone=false;const tick=async()=>{if(!currentOrder)return;const end=new Date(currentOrder.payment_expires_at).getTime(),left=end-Date.now();if(currentOrder.order_status==="cancelled"||left<=0){setText("paymentCountdown","00:00");setText("paymentDeadlineTitle","支付时间已结束");setText("paymentDeadlineText","超过5分钟未完成支付，本订单将由系统自动取消，请重新下单。");box.classList.add("payment-expired");updatePayButton();stopPaymentCountdown();if(!paymentExpiryRefreshDone&&currentOrder.order_status!=="cancelled"){paymentExpiryRefreshDone=true;setTimeout(()=>loadOrder(currentOrder.id),1500);}return;}box.classList.remove("payment-expired");setText("paymentDeadlineTitle","订单已创建，请在5分钟内完成支付");setText("paymentDeadlineText","超过支付截止时间仍未付款，订单将自动取消。");const sec=Math.max(0,Math.ceil(left/1000)),m=Math.floor(sec/60),s=sec%60;setText("paymentCountdown",String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"));};stopPaymentCountdown();tick();paymentCountdownTimer=setInterval(tick,1000);}
@@ -419,7 +354,7 @@ function renderQRCode(token){const container=document.getElementById("qrCode");i
 function closeVerificationQR(){document.getElementById("qrMask").classList.add("hidden");document.body.style.overflow="";}
 function handleQRMaskClick(event){if(event.target.id==="qrMask"){closeVerificationQR();}}
 function updatePayButton(){const button=document.getElementById("payButton");if(currentOrder.payment_status==="paid"){if(Number(currentOrder.remaining_uses??0)>0&&currentOrder.verification_token){button.textContent="显示二维码 / 核销码";button.disabled=false;button.onclick=openVerificationQR;}else{button.textContent=Number(currentOrder.remaining_uses??0)<=0?"服务已完成":"已支付";button.disabled=true;}return;}if(currentOrder.order_status==="cancelled"||paymentExpired()){button.textContent="订单已取消";button.disabled=true;button.onclick=null;return;}button.textContent="去支付";button.disabled=false;button.onclick=simulatePayment;}
-async function simulatePayment(){if(paymentProcessing||!currentOrder){return;}if(currentOrder.payment_status==="paid"){return;}if(currentOrder.order_status==="cancelled"||paymentExpired()){alert("支付时间已结束，本订单已失效，请重新下单。");updatePayButton();return;}const confirmed=window.confirm("开发调试模式\n\n"+"点击“确定”后，系统将模拟微信支付成功，"+"并把本订单写入数据库为“已支付”。\n\n"+"是否继续？");if(!confirmed){return;}paymentProcessing=true;const payButton=document.getElementById("payButton");payButton.disabled=true;payButton.textContent="正在模拟支付...";try{const{data,error}=await supabaseClient.rpc("dev_simulate_payment",{p_order_id:currentOrder.id});if(error){throw new Error(error.message||"模拟支付失败");}if(!data||data.success!==true){throw new Error(data?.message||"模拟支付没有成功");}alert("支付成功！\n\n"+"当前为开发阶段模拟微信支付。\n"+"消费二维码和人工核销码已经激活。");await loadOrder(currentOrder.id);}catch(error){console.error("模拟支付失败：",error);alert("支付失败：\n\n"+(error?.message||"未知错误"));}finally{paymentProcessing=false;updatePayButton();}}
+async function simulatePayment(){if(paymentProcessing||!currentOrder){return;}if(currentOrder.payment_status==="paid"){return;}if(currentOrder.order_status==="cancelled"||paymentExpired()){alert("支付时间已结束，本订单已失效，请重新下单。");updatePayButton();return;}const confirmed=window.confirm("开发调试模式\n\n"+"点击“确定”后，系统将模拟微信支付成功，"+"并把本订单写入数据库为“已支付”。\n\n"+"是否继续？");if(!confirmed){return;}paymentProcessing=true;const payButton=document.getElementById("payButton");payButton.disabled=true;payButton.textContent="正在模拟支付...";try{const data=await apiAuth("/api/customer/simulate-payment",{method:"POST",body:{order_id:currentOrder.id}});if(!data||data.success!==true){throw new Error(data?.message||data?.error||"模拟支付没有成功");}alert("支付成功！\n\n"+"当前为开发阶段模拟微信支付。\n"+"消费二维码和人工核销码已经激活。");await loadOrder(currentOrder.id);}catch(error){console.error("模拟支付失败：",error);alert("支付失败：\n\n"+(error?.message||"未知错误"));}finally{paymentProcessing=false;updatePayButton();}}
 function getOrderStatusDisplay(orderStatus,paymentStatus){if(paymentStatus==="paid"&&orderStatus==="completed"){return{title:"已完成",description:"本订单的全部服务次数已经完成。"};}if(paymentStatus==="paid"&&(orderStatus==="partially_used"||orderStatus==="processing")){return{title:"消费中",description:"订单正在使用中，可继续凭二维码或人工核销码到商户核销。"};}if(paymentStatus==="paid"){return{title:"待消费",description:"订单已经支付，可凭二维码或人工核销码到商户使用服务。"};}switch(orderStatus){case"pending_payment":return{title:"待支付",description:"订单已经创建，请核对订单信息后完成支付。"};case"confirmed":return{title:"已确认",description:"订单已经确认。"};case"partially_used":return{title:"消费中",description:"订单已经部分核销，可继续使用剩余服务次数。"};case"processing":return{title:"服务中",description:"订单正在服务过程中。"};case"completed":return{title:"已完成",description:"本订单已经完成。"};case"cancelled":return{title:"已取消",description:orderStatus==="cancelled"?"本订单已取消；如因支付超时取消，请重新下单。":"本订单已经取消。"};default:return{title:orderStatus||"订单已创建",description:"请查看订单详细信息。"};}}
 function getPaymentStatusText(status){switch(status){case"unpaid":return"未支付";case"paid":return"已支付";case"partial_refund":case"partially_refunded":return"部分退款";case"refunded":return"已退款";default:return status||"-";}}
 function getRecommendationFallback(type){switch(type){case"merchant":return"商户推荐";case"health_consultant":return"健康顾问";case"platform":default:return"平台";}}
@@ -437,6 +372,6 @@ function goCustomerHome(){window.location.href="./customer.html";}
 function redirectLogin(){const returnUrl=encodeURIComponent(window.location.href);window.location.href="./login.html?return="+returnUrl;}
 function startIdleTimer(){resetIdleTimer();["click","touchstart","keydown","scroll"].forEach(eventName=>{window.addEventListener(eventName,resetIdleTimer,{passive:true});});}
 function resetIdleTimer(){if(idleTimer){clearTimeout(idleTimer);}idleTimer=setTimeout(logoutByIdle,IDLE_TIMEOUT);}
-async function logoutByIdle(){try{await supabaseClient.auth.signOut();}catch(error){console.error("自动退出失败：",error);}finally{window.location.href="./login.html?reason=idle";}}
+async function logoutByIdle(){saveApiSession(null);window.location.href="./login.html?reason=idle";}
 </script></body>
 </html>
