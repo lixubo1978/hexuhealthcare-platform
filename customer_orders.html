@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>我的订单 - 荷序健康</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+<style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--pink:#ff6f9f;--pink-dark:#f05286;--pink-light:#fff0f5;--pink-soft:#fff7fa;--text:#49363e;--text-light:#9b7f89;--border:#f4e3e9;--white:#ffffff;--green:#31a875;--orange:#e79b2f;--red:#e75b70;--blue:#5788c7;--shadow:0 8px 24px rgba(210,120,150,0.09);}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;background:#fff8fb;color:var(--text);min-height:100vh;}
@@ -240,9 +240,8 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:2px}
 </div>
 </div>
 <div id="toast" class="toast"></div><script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const CUSTOMER_SESSION_KEY="hexu_customer_session_v1";
+let apiSession=loadApiSession();
 let currentUser=null;
 let currentCustomer=null;
 let allOrders=[];
@@ -253,79 +252,78 @@ let complaintSubmitting=false;
 const COMPLAINT_BUCKET="customer-complaints";
 const MAX_COMPLAINT_IMAGES=6;
 const MAX_COMPLAINT_FILE_SIZE=5*1024*1024;
+
+function loadApiSession(){
+  try{return JSON.parse(localStorage.getItem(CUSTOMER_SESSION_KEY)||"null");}
+  catch{return null;}
+}
+function saveApiSession(value){
+  apiSession=value||null;
+  if(apiSession)localStorage.setItem(CUSTOMER_SESSION_KEY,JSON.stringify(apiSession));
+  else localStorage.removeItem(CUSTOMER_SESSION_KEY);
+}
+function accessToken(){return apiSession?.access_token||"";}
+async function api(path,{method="GET",body,auth=true}={}){
+  const headers={Accept:"application/json"};
+  if(body!==undefined)headers["Content-Type"]="application/json";
+  if(auth){
+    const token=accessToken();
+    if(!token)throw new Error("请先登录");
+    headers.Authorization="Bearer "+token;
+  }
+  const response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"});
+  const raw=await response.text();
+  let data=null;
+  try{data=raw?JSON.parse(raw):null;}catch{data=raw;}
+  if(!response.ok){
+    const message=data?.message||data?.msg||data?.error_description||data?.error||"请求失败";
+    throw new Error(typeof message==="string"?message:"请求失败");
+  }
+  return data;
+}
+async function refreshApiSession(){
+  if(!apiSession?.refresh_token)return false;
+  try{
+    const data=await api("/api/auth/refresh",{method:"POST",auth:false,body:{refresh_token:apiSession.refresh_token}});
+    if(!data?.access_token)return false;
+    saveApiSession({...apiSession,...data});
+    return true;
+  }catch{return false;}
+}
+async function apiAuth(path,options={}){
+  try{return await api(path,{...options,auth:true});}
+  catch(error){
+    const message=String(error?.message||"");
+    if(/jwt|token|登录状态|unauthorized|401/i.test(message)&&await refreshApiSession()){
+      return api(path,{...options,auth:true});
+    }
+    throw error;
+  }
+}
 function escapeHtml(value){return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
 function money(value){const n=Number(value||0);return"¥"+n.toFixed(2).replace(/\.00$/,"");}
 function formatDate(value){if(!value)return"-";const d=new Date(value);if(Number.isNaN(d.getTime())){return"-";}const month=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");const hour=String(d.getHours()).padStart(2,"0");const minute=String(d.getMinutes()).padStart(2,"0");return`${month}/${day} ${hour}:${minute}`;}
 function showToast(message){const toast=document.getElementById("toast");toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>{toast.classList.remove("show");},2600);}
 function goHome(){window.location.href="./customer.html";}
 function openOrder(orderId){if(!orderId)return;window.location.href="./customer_order_detail.html?id="+encodeURIComponent(orderId);}
-async function requireCustomerLogin(){const{data:{session},error}=await sb.auth.getSession();if(error||!session||!session.user){window.location.replace("./login.html");return false;}currentUser=session.user;return true;}
-async function loadCustomer(){const{data,error}=await sb.from("customers").select(`
-      id,
-      customer_no,
-      phone,
-      nickname,
-      status,
-      created_at
-    `).eq("id",currentUser.id).maybeSingle();if(error){throw error;}if(!data){throw new Error("当前登录账号还没有建立客户资料，请重新登录。");}if(data.status&&data.status!=="active"){throw new Error("当前客户账号已停止使用。");}currentCustomer=data;}
-async function loadOrders(){const{data,error}=await sb.from("orders").select(`
-      id,
-      order_no,
-      customer_id,
-      merchant_id,
-      province_id,
-      city_id,
-      district_id,
-
-      total_amount,
-      subtotal_amount,
-      discount_rate,
-      discount_amount,
-      payable_amount,
-
-      order_status,
-      payment_status,
-      invoice_status,
-      review_status,
-
-      total_uses,
-      used_uses,
-      remaining_uses,
-
-      recommendation_source_type,
-      recommendation_source_no,
-      recommendation_source_entity_id,
-      recommendation_source_name_snapshot,
-
-      merchant_no_snapshot,
-      merchant_name_snapshot,
-      merchant_address_snapshot,
-
-      created_at,
-      updated_at,
-      paid_at,
-      completed_at
-    `).eq("customer_id",currentCustomer.id).order("created_at",{ascending:false});if(error){throw error;}allOrders=data||[];if(allOrders.length>0){const orderIds=allOrders.map(item=>item.id);const{data:itemRows,error:itemError}=await sb.from("order_items").select(`
-        id,
-        order_id,
-        product_id,
-        product_code_snapshot,
-        product_name_snapshot,
-        product_type,
-        quantity,
-        unit_price,
-        amount,
-        city_price_id,
-        original_amount,
-        discounted_amount
-      `).in("order_id",orderIds).order("id",{ascending:true});if(itemError){throw itemError;}const itemMap={};(itemRows||[]).forEach(item=>{const key=String(item.order_id);if(!itemMap[key]){itemMap[key]=[];}itemMap[key].push(item);});allOrders=allOrders.map(order=>({...order,items:itemMap[String(order.id)]||[],complaint:null}));try{const{data:complaints,error:complaintError}=await sb.from("customer_complaints").select(`
-          id,
-          order_id,
-          status,
-          platform_confirmed,
-          merchant_confirmed,
-          created_at
-        `).eq("customer_id",currentCustomer.id).in("order_id",orderIds);if(!complaintError){const complaintMap={};(complaints||[]).forEach(item=>{complaintMap[String(item.order_id)]=item;});allOrders=allOrders.map(order=>({...order,complaint:complaintMap[String(order.id)]||null}));}}catch(error){console.warn("读取投诉状态失败：",error);}}updateSummary();renderOrders();}
+async function requireCustomerLogin(){
+  if(!apiSession?.access_token){window.location.replace("./login.html?return="+encodeURIComponent(location.href));return false;}
+  currentUser=apiSession.user||null;
+  return true;
+}
+async function loadCustomer(){
+  const rows=await apiAuth("/api/customer/record");
+  const data=Array.isArray(rows)?rows[0]:rows;
+  if(!data)throw new Error("当前登录账号还没有建立客户资料，请重新登录。");
+  if(data.status&&data.status!=="active")throw new Error("当前客户账号已停止使用。");
+  currentCustomer=data;
+}
+async function loadOrders(){
+  const data=await apiAuth("/api/customer/orders");
+  allOrders=Array.isArray(data)?data:[];
+  updateSummary();
+  renderOrders();
+}
 function isUnpaid(order){return order.payment_status==="unpaid";}
 function isUsing(order){if(isUnpaid(order)){return false;}const remaining=Number(order.remaining_uses||0);return remaining>0&&order.order_status!=="completed"&&order.order_status!=="cancelled";}
 function isReview(order){return order.review_status==="pending"&&(order.order_status==="completed"||Number(order.remaining_uses||0)===0);}
@@ -547,9 +545,12 @@ function renderComplaintImages(){const container=document.getElementById("imageP
 function setComplaintSubmitting(submitting){complaintSubmitting=submitting;const submitButton=document.getElementById("complaintSubmitButton");const cancelButton=document.getElementById("complaintCancelButton");submitButton.disabled=submitting;cancelButton.disabled=submitting;submitButton.textContent=submitting?"正在提交...":"提交投诉";}
 function getFileExtension(file){switch(file.type){case"image/png":return"png";case"image/webp":return"webp";case"image/jpeg":default:return"jpg";}}
 function makeComplaintFileName(file,index){const extension=getFileExtension(file);const randomPart=window.crypto&&typeof window.crypto.randomUUID==="function"?window.crypto.randomUUID().replace(/-/g,""):Date.now().toString(36)+Math.random().toString(36).slice(2);return String(index+1).padStart(2,"0")+"_"+randomPart+"."+extension;}
-async function uploadComplaintImage(complaintId,file,index){const fileName=makeComplaintFileName(file,index);const storagePath=currentUser.id+"/"+complaintId+"/"+fileName;const{error:uploadError}=await sb.storage.from(COMPLAINT_BUCKET).upload(storagePath,file,{cacheControl:"3600",upsert:false,contentType:file.type});if(uploadError){throw new Error("图片上传失败："+uploadError.message);}const{data,error}=await sb.rpc("add_customer_complaint_image",{p_complaint_id:complaintId,p_storage_path:storagePath});if(error){try{await sb.storage.from(COMPLAINT_BUCKET).remove([storagePath]);}catch(removeError){console.warn("清理未登记图片失败：",removeError);}throw new Error("图片登记失败："+error.message);}if(!data||data.success!==true){throw new Error(data?.message||"投诉图片登记失败");}return storagePath;}
-async function submitComplaint(){if(complaintSubmitting||!complaintOrder){return;}const content=String(document.getElementById("complaintContent").value||"").trim();if(!content){showToast("请填写投诉内容。");document.getElementById("complaintContent").focus();return;}if(content.length>3000){showToast("投诉内容不能超过3000个字符。");return;}if(complaintFiles.length>MAX_COMPLAINT_IMAGES){showToast("每个投诉最多上传6张图片。");return;}const confirmed=window.confirm("确认提交这条投诉吗？\n\n"+"提交后平台和对应商户都会收到投诉报警。");if(!confirmed){return;}setComplaintSubmitting(true);try{const{data,error}=await sb.rpc("submit_customer_complaint",{p_order_id:Number(complaintOrder.id),p_complaint_content:content});if(error){throw error;}if(!data||data.success!==true){throw new Error(data?.message||"投诉提交失败");}const complaintId=Number(data.complaint_id);if(!Number.isInteger(complaintId)||complaintId<=0){throw new Error("投诉已经创建，但系统没有返回有效的投诉编号。");}let uploadedCount=0;let imageUploadError=null;for(let i=0;i<complaintFiles.length;i++){try{await uploadComplaintImage(complaintId,complaintFiles[i],i);uploadedCount++;}catch(error){console.error("投诉图片上传失败：",error);imageUploadError=error;break;}}const orderIndex=allOrders.findIndex(item=>Number(item.id)===Number(complaintOrder.id));if(orderIndex>=0){allOrders[orderIndex].complaint={id:complaintId,order_id:complaintOrder.id,status:"active",platform_confirmed:false,merchant_confirmed:false,created_at:new Date().toISOString()};}setComplaintSubmitting(false);document.getElementById("complaintMask").classList.add("hidden");document.body.style.overflow="";complaintOrder=null;complaintFiles=[];renderOrders();if(imageUploadError){alert("投诉已经提交成功。\n\n"+"平台和商户已经收到投诉记录。\n\n"+"但部分投诉图片上传失败：\n"+(imageUploadError?.message||"未知错误"));}else{alert("投诉提交成功。\n\n"+"平台和对应商户将收到报警信息。"+(uploadedCount>0?"\n已上传 "+uploadedCount+" 张投诉图片。":""));}}catch(error){console.error("提交投诉失败：",error);setComplaintSubmitting(false);const message=error?.message||"投诉提交失败";if(message.includes("已经提交过投诉")){alert("该订单已经提交过投诉，不能重复投诉。");document.getElementById("complaintMask").classList.add("hidden");document.body.style.overflow="";complaintOrder=null;complaintFiles=[];await loadOrders();return;}alert("投诉提交失败：\n\n"+message);}}
-function goOrderPage(){window.location.href="./customer_order.html";}
+async function uploadComplaintImage(){throw new Error("投诉图片接口正在迁移，请稍后再试。");}
+async function submitComplaint(){
+  if(complaintSubmitting||!complaintOrder)return;
+  showToast("投诉接口正在统一到客户API，请稍后再试。");
+}
+function goOrderPage(){window.location.href="./qr_login.html";}
 function showError(error){console.error(error);const message=error?.message||String(error)||"页面加载失败";document.getElementById("orderList").innerHTML=`
     <div class="state-box">
 
@@ -581,7 +582,6 @@ async function loadPage(){try{document.getElementById("orderList").innerHTML=`
         正在读取订单...
       </div>
     `;const loggedIn=await requireCustomerLogin();if(!loggedIn){return;}await loadCustomer();await loadOrders();}catch(error){showError(error);}}
-sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"||!session){window.location.replace("./login.html");}});
 document.addEventListener("DOMContentLoaded",loadPage);
 </script></body>
 </html>
