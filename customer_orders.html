@@ -307,9 +307,93 @@ function showToast(message){const toast=document.getElementById("toast");toast.t
 function goHome(){window.location.href="./customer.html";}
 function openOrder(orderId){if(!orderId)return;window.location.href="./customer_order_detail.html?id="+encodeURIComponent(orderId);}
 async function requireCustomerLogin(){
-  if(!apiSession?.access_token){window.location.replace("./login.html?return="+encodeURIComponent(location.href));return false;}
-  currentUser=apiSession.user||null;
-  return true;
+  // 与 customer.html 保持同一套客户 Session / 身份验证逻辑。
+  // access_token 暂时失效时先刷新，不再立即跳回 login.html。
+
+  if(!apiSession){
+    window.location.replace("./login.html");
+    return false;
+  }
+
+  if(!apiSession?.access_token){
+    const refreshed=await refreshApiSession();
+    if(!refreshed){
+      saveApiSession(null);
+      window.location.replace("./login.html");
+      return false;
+    }
+  }
+
+  try{
+    const rows=await apiAuth("/api/customer/profile");
+    const profile=Array.isArray(rows)?rows[0]:rows;
+
+    if(!profile){
+      saveApiSession(null);
+      window.location.replace("./login.html");
+      return false;
+    }
+
+    if(profile.status&&profile.status!=="active"){
+      saveApiSession(null);
+      window.location.replace("./login.html");
+      return false;
+    }
+
+    const isCustomer=
+      profile.role==="customer"||
+      profile.user_type==="customer";
+
+    if(!isCustomer){
+      saveApiSession(null);
+      window.location.replace("./login.html");
+      return false;
+    }
+
+    currentUser=apiSession?.user||{
+      id:profile.id,
+      phone:""
+    };
+
+    return true;
+
+  }catch(error){
+    console.error("customer_orders verify customer:",error);
+
+    if(apiSession?.refresh_token){
+      const refreshed=await refreshApiSession();
+
+      if(refreshed){
+        try{
+          const rows=await apiAuth("/api/customer/profile");
+          const profile=Array.isArray(rows)?rows[0]:rows;
+
+          const isCustomer=
+            profile&&
+            (!profile.status||profile.status==="active")&&
+            (
+              profile.role==="customer"||
+              profile.user_type==="customer"
+            );
+
+          if(isCustomer){
+            currentUser=apiSession?.user||{
+              id:profile.id,
+              phone:""
+            };
+            return true;
+          }
+
+        }catch(secondError){
+          console.error("customer_orders verify customer retry:",secondError);
+        }
+      }
+    }
+
+    saveApiSession(null);
+    window.location.replace("./login.html");
+    return false;
+  }
 }
 async function loadCustomer(){
   const rows=await apiAuth("/api/customer/record");
