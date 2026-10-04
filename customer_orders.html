@@ -408,7 +408,7 @@ async function loadOrders(){
   updateSummary();
   renderOrders();
 }
-function isUnpaid(order){return order.payment_status==="unpaid";}
+function isUnpaid(order){return order.order_status!=="cancelled"&&order.payment_status==="unpaid";}
 function isUsing(order){if(isUnpaid(order)){return false;}const remaining=Number(order.remaining_uses||0);return remaining>0&&order.order_status!=="completed"&&order.order_status!=="cancelled";}
 function isReview(order){return order.review_status==="pending"&&(order.order_status==="completed"||Number(order.remaining_uses||0)===0);}
 function isCompleted(order){return order.order_status==="completed"||Number(order.remaining_uses||0)===0&&!isUnpaid(order);}
