@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>商户分账规则 - 荷序健康平台管理中心</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}:root{--pink:#e64f7c;--text:#382a30;--border:#eee3e7;--bg:#fffafb;--green:#2e9d68;--red:#dc4c64;--orange:#b87920;--shadow:0 8px 28px rgba(111,63,78,.06)}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}
@@ -55,49 +55,21 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <div class="field"><label>软件服务（固定 %）</label><input class="ratio-input" type="number" value="0.8" readonly></div>
 </div><div id="totalBox" class="total-box"><span>六方比例合计（必须等于100%）</span><strong id="ratioTotal">0.8%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co",SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3",db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=600000;
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token",LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=600000;
 let currentUser=null,currentProfile=null,merchants=[],products=[],categories=[],rules=[],serviceAreas=[],cities=[],provinces=[],cityPrices=[],idleTimer=null,editingMerchantId=null,editingProductId=null,saving=false;
 const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const isUUID=v=>typeof v==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.trim());
-function toast(t,type=""){const e=$("toast");e.textContent=t;e.className="toast show "+type;clearTimeout(e._t);e._t=setTimeout(()=>e.className="toast",4000)}
-function loading(t){$("loading").textContent=t||"";$("loading").style.display=t?"flex":"none"}
-function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(async()=>{try{await db.auth.signOut()}catch(e){}alert("由于10分钟未操作，系统已自动退出。");location.href=LOGIN_PAGE},IDLE_LIMIT)}
-["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(x=>document.addEventListener(x,resetIdle,{passive:true}));
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
+function toast(t,type=""){const e=$("toast");e.textContent=t;e.className="toast show "+type;clearTimeout(e._t);e._t=setTimeout(()=>e.className="toast",4000)}function loading(t){$("loading").textContent=t||"";$("loading").style.display=t?"flex":"none"}
+function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{clearSession();alert("由于10分钟未操作，系统已自动退出。");location.href=LOGIN_PAGE},IDLE_LIMIT)}["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(x=>document.addEventListener(x,resetIdle,{passive:true}));
 const merchantName=m=>m?.merchant_name||m?.name||m?.full_name||m?.company_name||"未命名商户",merchantCode=m=>m?.merchant_code||m?.code||m?.merchant_no||"",merchantCityId=m=>m?.city_id??m?.service_city_id??m?.registered_city_id??null,productName=p=>p?.product_name||p?.name||p?.service_name||"未命名服务项目",productCode=p=>p?.product_code||p?.code||p?.product_no||"";
-function productCategory(p){const c=categories.find(x=>String(x.id)===String(p?.category_id));return c?.category_name||"未分类"}
-function cityById(id){return cities.find(x=>String(x.id)===String(id))}
-function provinceById(id){return provinces.find(x=>String(x.id)===String(id))}
+function productCategory(p){const c=categories.find(x=>String(x.id)===String(p?.category_id));return c?.category_name||"未分类"}function cityById(id){return cities.find(x=>String(x.id)===String(id))}function provinceById(id){return provinces.find(x=>String(x.id)===String(id))}
 function activeRule(mid,pid){return rules.find(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="active")}function historyRules(mid,pid){return rules.filter(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="inactive").sort((a,b)=>Number(b.version_no||0)-Number(a.version_no||0)||String(b.invalidated_at||"").localeCompare(String(a.invalidated_at||"")))}function fmt(v){return v?new Date(v).toLocaleString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}):"—"}function invalidator(r){return r?.invalidated_by_name||"未设置姓名"}
-function cityPriceHtml(m,p){
-const cityId=merchantCityId(m),undefinedPrice='<span class="badge badge-orange">未定义</span>';
-if(cityId==null||!serviceAreas.some(a=>a.status==="active"&&String(a.city_id)===String(cityId)))return undefinedPrice;
-const now=Date.now(),r=cityPrices.find(x=>String(x.city_id)===String(cityId)&&String(x.product_id)===String(p.id)&&x.status==="active"&&x.invalidated_at==null&&Date.parse(x.effective_from)<=now);
-if(!r||r.price==null||String(r.price).trim()==="")return undefinedPrice;
-const price=Number(r.price);
-return Number.isFinite(price)&&price>=0?`<span class="city-price">¥${price.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`:undefinedPrice
-}
-async function readCityPrices(){
-const rows=[],now=new Date().toISOString();
-for(;;){
-const {data,error}=await db.from("city_prices").select("id,city_id,product_id,price,status,effective_from,version_no,invalidated_at").eq("status","active").is("invalidated_at",null).lte("effective_from",now).order("version_no",{ascending:false}).order("id",{ascending:false}).range(rows.length,rows.length+499);
-if(error)return{data:null,error};
-if(!data?.length)return{data:rows,error:null};
-rows.push(...data)
-}
-}
-function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}
-function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市负责人 <b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">健康顾问 <b>${rv(r.order_source_ratio)}%</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
-async function init(){resetIdle();try{const {data:{session},error}=await db.auth.getSession();if(error)throw error;if(!session){location.replace(LOGIN_PAGE);return}currentUser=session.user;const {data:p,error:pe}=await db.from("profiles").select("id,full_name,role,status").eq("id",currentUser.id).single();if(pe||!p)throw new Error("无法读取当前账号权限。");if(p.status!=="active")throw new Error("当前账号已经停用。");if(!["founder","platform_admin"].includes(p.role)){alert("您没有商户分账规则管理权限。");location.replace(HOME_PAGE);return}currentProfile=p;await loadData();loading()}catch(e){console.error(e);loading();alert(e.message||"页面初始化失败。")}}
-async function loadData(){const [a,b,c,d,e,f,g,h]=await Promise.all([
-db.from("merchants").select("*").eq("status","active").order("id"),
-db.from("products").select("*").eq("status","active").order("id"),
-db.from("service_categories").select("id,category_name,status,parent_category_id").order("id"),
-db.from("merchant_product_rules").select("*").in("status",["active","inactive"]).order("created_at",{ascending:false}),
-db.from("service_areas").select("id,area_no,province_id,city_id,district_id,status").eq("status","active").is("district_id",null).order("area_no"),
-db.from("cities").select("id,province_id,city_code,city_name,status").eq("status","active").order("city_code"),
-db.from("provinces").select("id,province_code,province_name,status").eq("status","active").order("province_code"),
-readCityPrices()
-]);for(const [r,n] of [[a,"商户"],[b,"服务项目"],[c,"服务项目类型"],[d,"分账规则"],[e,"已开通服务城市"],[f,"城市"],[g,"省份"],[h,"城市标准价"]])if(r.error)throw new Error(n+"读取失败："+r.error.message);merchants=a.data||[];products=b.data||[];categories=c.data||[];rules=d.data||[];serviceAreas=e.data||[];cities=f.data||[];provinces=g.data||[];cityPrices=h.data||[];renderCity();renderMerchantFilter();renderCategoryFilters();renderAll()}
+function cityPriceHtml(m,p){const cityId=merchantCityId(m),undefinedPrice='<span class="badge badge-orange">未定义</span>';if(cityId==null||!serviceAreas.some(a=>a.status==="active"&&String(a.city_id)===String(cityId)))return undefinedPrice;const now=Date.now(),r=cityPrices.find(x=>String(x.city_id)===String(cityId)&&String(x.product_id)===String(p.id)&&x.status==="active"&&x.invalidated_at==null&&Date.parse(x.effective_from)<=now);if(!r||r.price==null||String(r.price).trim()==="")return undefinedPrice;const price=Number(r.price);return Number.isFinite(price)&&price>=0?`<span class="city-price">¥${price.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`:undefinedPrice}
+function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市负责人 <b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">健康顾问 <b>${rv(r.order_source_ratio)}%</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
+async function init(){resetIdle();try{if(!accessToken()){location.replace(LOGIN_PAGE);return}const identity=await api("/api/auth/business-identity");if(!identity?.user)throw new Error("无法读取当前账号权限。");currentUser=identity.user;currentProfile=identity.profile||{id:identity.user.id,role:identity.role,status:identity.status};if(currentProfile.status!=="active")throw new Error("当前账号已经停用。");if(!["founder","platform_admin"].includes(currentProfile.role)){alert("您没有商户分账规则管理权限。");location.replace(HOME_PAGE);return}await loadData();loading()}catch(e){console.error(e);loading();alert(e.message||"页面初始化失败。")}}
+async function loadData(){const d=await api("/api/admin/merchant-rules/data");merchants=d.merchants||[];products=d.products||[];categories=d.categories||[];rules=d.rules||[];serviceAreas=d.service_areas||[];cities=d.cities||[];provinces=d.provinces||[];cityPrices=d.city_prices||[];renderCity();renderMerchantFilter();renderCategoryFilters();renderAll()}
 function openedCities(){const m=new Map;serviceAreas.forEach(a=>{if(a.city_id&&!m.has(String(a.city_id)))m.set(String(a.city_id),a)});return [...m.values()]}
 function renderCity(){const s=$("cityFilter"),old=s.value,list=openedCities();s.innerHTML='<option value="">全部已开通服务城市</option>'+list.map(a=>{const c=cityById(a.city_id),p=provinceById(a.province_id||c?.province_id),no=a.area_no?String(a.area_no).padStart(3,"0"):"";return `<option value="${esc(a.city_id)}">${no?esc(no)+" | ":""}${p?.province_name?esc(p.province_name)+" · ":""}${esc(c?.city_name||"城市 "+a.city_id)}</option>`}).join("");if(old&&list.some(a=>String(a.city_id)===String(old)))s.value=old}
 function cityMerchants(){const c=$("cityFilter").value;return c?merchants.filter(m=>String(merchantCityId(m))===String(c)):merchants}
@@ -161,8 +133,7 @@ p_operator_ratio:r.operator,
 p_order_source_ratio:r.advisor
 };
 console.log("create_merchant_product_rule payload:",payload);
-const {data,error}=await db.rpc("create_merchant_product_rule",payload);
-if(error)throw error;
+const data=await api("/api/admin/merchant-rules/create",{method:"POST",body:payload});
 if(!data?.success)throw new Error(data?.error||"保存失败");
 $("ruleModal").classList.remove("show");editingMerchantId=null;editingProductId=null;
 await reloadRules();
@@ -176,14 +147,13 @@ if(!m||!p)return toast("无法读取商户或服务项目信息。","error");
 if(!confirm(`确认将这条分账规则设为无效？\n\n商户：${merchantName(m)}\n服务项目：${productName(p)}\n\n旧规则将作为历史记录保留，当前项目恢复为“未定义”。`))return;
 loading("正在将分账规则设为无效...");
 try{
-const {data,error}=await db.rpc("invalidate_merchant_product_rule",{p_rule_id:Number(ruleId)});
-if(error)throw error;
+const data=await api("/api/admin/merchant-rules/invalidate",{method:"POST",body:{p_rule_id:Number(ruleId)}});
 if(!data?.success)throw new Error(data?.error||"设置无效失败");
 await reloadRules();toast("已设为无效，原规则已保留为历史记录。")
 }catch(e){console.error(e);toast("设置无效失败："+(e.message||"未知错误"),"error")}
 finally{loading()}
 }
-async function reloadRules(){const {data,error}=await db.from("merchant_product_rules").select("*").in("status",["active","inactive"]).order("created_at",{ascending:false});if(error)throw error;rules=data||[];renderAll()}
+async function reloadRules(){const d=await api("/api/admin/merchant-rules/rules");rules=d.rules||[];renderAll()}
 $("merchantContainer").addEventListener("click",e=>{
 const set=e.target.closest(".set-rule-btn");
 if(set){openRuleByIndex(set.dataset.merchantIndex,set.dataset.productId);return}
@@ -202,7 +172,7 @@ $("modalCloseBtn").addEventListener("click",closeModal);
 $("cancelRuleBtn").addEventListener("click",closeModal);
 $("saveRuleBtn").addEventListener("click",saveRule);
 $("backBtn").addEventListener("click",()=>location.href=HOME_PAGE);
-$("logoutBtn").addEventListener("click",async()=>{try{await db.auth.signOut()}finally{location.href=LOGIN_PAGE}});
+$("logoutBtn").addEventListener("click",()=>{clearSession();location.href=LOGIN_PAGE});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("ruleModal").classList.contains("show"))closeModal()});
 init();
 </script>
