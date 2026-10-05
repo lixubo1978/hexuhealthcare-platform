@@ -17,7 +17,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:24px}
-body{margin:0;padding-bottom:70px;background:var(--cream);color:var(--text);font-family:var(--sans);line-height:1.8;-webkit-font-smoothing:antialiased}
+body{margin:0;padding-bottom:0;background:var(--cream);color:var(--text);font-family:var(--sans);line-height:1.8;-webkit-font-smoothing:antialiased}
 button,input{font:inherit}
 button,a,input{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer;color:inherit;border-radius:0}
@@ -50,7 +50,7 @@ h1,h2,h3,p{margin:0}
 .search-form input{width:100%;min-width:0;border:0;background:none;padding:8px 0;outline:none;font-size:13px;color:var(--text)}
 .search-form button{padding:8px 2px 8px 10px;background:none;border:0;color:var(--green);line-height:1}
 .search-form .icon{width:16px;height:16px}
-.login-link{font-size:13px;color:var(--green);white-space:nowrap}
+.login-link{font-size:15px;font-weight:700;color:var(--green);white-space:nowrap}
 .login-link:hover{text-decoration:underline}
 /* 导航 */
 .site-nav{background:#d5ead6;color:#254b39}
@@ -618,15 +618,6 @@ html{scroll-behavior:auto}
   <div class="dialog-body" id="dialogBody"></div>
 </dialog>
 <!-- 原有客户/商户浮动入口保留 -->
-<style>
-.booking-link{text-decoration:none;display:block}
-.booking-bar{position:fixed;left:0;bottom:0;z-index:9999;width:100%;height:70px;line-height:70px;background:#ffcc33;color:#8a3b00;font-size:24px;font-weight:bold;border-top:3px solid #d48806;overflow:hidden;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-</style>
-<a href="login.html" class="booking-link">
-  <div class="booking-bar">
-    <div style="text-align:center">欢迎登录</div>
-  </div>
-</a>
 <script>
 (()=>{
 'use strict';
