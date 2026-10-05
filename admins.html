@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#f4f0e6">
 <title>荷序健康 - 人员与商户授权</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
@@ -847,26 +846,26 @@ tbody tr:hover{background:#f2f6ef}
 <div id="toast" class="toast"></div>
 
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+let currentUser=null,currentProfile=null,profiles=[],merchants=[],consultants=[],assignments=[],provinces=[],cities=[],districts=[],serviceAreas=[];
+let editingStaffId=null,editingMerchantId=null,editingConsultantId=null,inactivityTimer=null;
 
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-
-let currentUser=null;
-let currentProfile=null;
-let profiles=[];
-let merchants=[];
-let consultants=[];
-let assignments=[];
-let provinces=[];
-let cities=[];
-let districts=[];
-let serviceAreas=[];
-let editingStaffId=null;
-let editingMerchantId=null;
-let editingConsultantId=null;
-let inactivityTimer=null;
-
+function loadBusinessSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function saveBusinessSession(v){if(v)localStorage.setItem(BUSINESS_SESSION_KEY,JSON.stringify(v));else localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadBusinessSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){
+    const token=accessToken();
+    if(!token)throw new Error("登录状态已失效，请重新登录。");
+    const headers={Accept:"application/json",Authorization:"Bearer "+token};
+    if(body!==undefined)headers["Content-Type"]="application/json";
+    let response;
+    try{response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}
+    catch{throw new Error("网络连接失败，请稍后重试。")}
+    const raw=await response.text();let data=null;
+    try{data=raw?JSON.parse(raw):null}catch{data=raw}
+    if(!response.ok)throw new Error(data?.error||data?.message||data?.msg||"请求失败");
+    return data;
+}
 function safeText(v){return v===null||v===undefined?"":String(v)}
 function escapeHtml(v){
     return safeText(v)
@@ -938,69 +937,22 @@ function getServiceAreaName(id){
 }
 
 async function callSystemUser(payload){
-    const {data:{session}}=await sb.auth.getSession();
-
-    if(!session?.access_token){
-        throw new Error("登录状态已失效，请重新登录。");
-    }
-
-    const response=await fetch(
-        SUPABASE_URL+"/functions/v1/create-system-user",
-        {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Bearer "+session.access_token
-            },
-            body:JSON.stringify(payload)
-        }
-    );
-
-    let result=null;
-    try{result=await response.json()}catch(_){}
-
-    if(!response.ok||!result||result.success!==true){
-        throw new Error(result?.error||result?.message||"服务器操作失败。");
-    }
-
-    return result;
+    return api("/api/admin/system-user",{method:"POST",body:payload});
 }
 
 async function initialize(){
     try{
-        const {data:{session},error}=await sb.auth.getSession();
-        if(error)throw error;
-
-        if(!session?.user){
-            location.href="login.html";
-            return;
-        }
-
-        currentUser=session.user;
-
-        const r=await sb.from("profiles").select("*").eq("id",currentUser.id).maybeSingle();
-        if(r.error)throw r.error;
-        if(!r.data)throw new Error("当前登录账号没有平台人员资料。");
-
-        currentProfile=r.data;
-
-        if(currentProfile.status!=="active"){
-            await sb.auth.signOut();
-            location.href="login.html";
-            return;
-        }
-
-        if(!["founder","platform_admin","platform_staff"].includes(currentProfile.role)){
-            throw new Error("当前账号没有访问本页面的权限。");
-        }
-
-        setupInactivityLogout();
-        applyPermissionUI();
-        await loadAllData();
+        if(!accessToken()){location.href="login.html";return}
+        const identity=await api("/api/auth/business-identity");
+        if(!identity?.success||!identity?.user)throw new Error(identity?.error||"无法确认当前登录账号。");
+        currentUser=identity.user;
+        currentProfile=identity.profile||{id:identity.user.id,role:identity.role,status:identity.status};
+        if(currentProfile.status!=="active"){saveBusinessSession(null);location.href="login.html";return}
+        if(!["founder","platform_admin","platform_staff"].includes(currentProfile.role))throw new Error("当前账号没有访问本页面的权限。");
+        setupInactivityLogout();applyPermissionUI();await loadAllData();
         document.getElementById("loading").classList.add("hidden");
     }catch(error){
-        console.error(error);
-        document.getElementById("loading").classList.add("hidden");
+        console.error(error);document.getElementById("loading").classList.add("hidden");
         showToast(error.message||"初始化失败。","error");
     }
 }
@@ -1014,91 +966,25 @@ function applyPermissionUI(){
     document.getElementById("createMerchantButton").style.display=business?"":"none";
    }
 
-async function logout(){
-    await sb.auth.signOut();
-    location.href="login.html";
-}
+async function logout(){saveBusinessSession(null);location.href="login.html"}
 function goHome(){location.href="wholemanagement.html"}
 
 function setupInactivityLogout(){
-    const reset=()=>{
-        clearTimeout(inactivityTimer);
-        inactivityTimer=setTimeout(async()=>{
-            await sb.auth.signOut();
-            alert("由于10分钟未操作，系统已自动退出。");
-            location.href="login.html";
-        },10*60*1000);
-    };
-
-    ["click","touchstart","keydown","mousemove","scroll"].forEach(e=>{
-        document.addEventListener(e,reset,{passive:true});
-    });
-    reset();
+    const reset=()=>{clearTimeout(inactivityTimer);inactivityTimer=setTimeout(()=>{saveBusinessSession(null);alert("由于10分钟未操作，系统已自动退出。");location.href="login.html"},10*60*1000)};
+    ["click","touchstart","keydown","mousemove","scroll"].forEach(e=>document.addEventListener(e,reset,{passive:true}));reset();
 }
 
 async function loadAllData(){
-    await loadRegions();
-    await Promise.all([
-        loadProfiles(),
-        loadMerchants(),
-        loadConsultants(),
-        loadAssignments(),
-        loadServiceAreas()
-    ]);
-    populateServiceAreas();
-    renderAll();
-}
-
-async function loadProfiles(){
-    const r=await sb.from("profiles")
-        .select("*")
-        .in("role",["founder","platform_admin","platform_staff","province_admin","city_admin"])
-        .order("staff_no",{ascending:true,nullsFirst:false});
-    if(r.error)throw r.error;
-    profiles=r.data||[];
-}
-async function loadMerchants(){
-    const r=await sb.from("merchants").select("*")
-        .order("record_no",{ascending:true,nullsFirst:false});
-    if(r.error)throw r.error;
-    merchants=r.data||[];
-}
-async function loadConsultants(){
-    const r=await sb.from("health_consultants").select("*")
-        .order("consultant_no",{ascending:true,nullsFirst:false});
-    if(r.error)throw r.error;
-    consultants=r.data||[];
-}
-async function loadAssignments(){
-    const r=await sb.from("admin_assignments").select("*");
-    if(r.error){
-        console.warn(r.error);
-        assignments=[];
-        return;
-    }
-    assignments=r.data||[];
-}
-async function loadRegions(){
-    const [p,c,d]=await Promise.all([
-        sb.from("provinces").select("*").eq("status","active").order("province_code"),
-        sb.from("cities").select("*").eq("status","active").order("city_code"),
-        sb.from("districts").select("*").eq("status","active").order("district_code")
-    ]);
-    if(p.error)throw p.error;
-    if(c.error)throw c.error;
-    if(d.error)throw d.error;
-    provinces=p.data||[];
-    cities=c.data||[];
-    districts=d.data||[];
-}
-async function loadServiceAreas(){
-    const r=await sb.from("service_areas").select("*").eq("status","active").order("id");
-    if(r.error){
-        console.warn(r.error);
-        serviceAreas=[];
-        return;
-    }
-    serviceAreas=r.data||[];
+    const data=await api("/api/admin/access-center-data");
+    profiles=Array.isArray(data?.profiles)?data.profiles:[];
+    merchants=Array.isArray(data?.merchants)?data.merchants:[];
+    consultants=Array.isArray(data?.consultants)?data.consultants:[];
+    assignments=Array.isArray(data?.assignments)?data.assignments:[];
+    provinces=Array.isArray(data?.provinces)?data.provinces:[];
+    cities=Array.isArray(data?.cities)?data.cities:[];
+    districts=Array.isArray(data?.districts)?data.districts:[];
+    serviceAreas=Array.isArray(data?.service_areas)?data.service_areas:[];
+    populateServiceAreas();renderAll();
 }
 function populateServiceAreas(){
     const html='<option value="">请选择服务区域</option>'+
