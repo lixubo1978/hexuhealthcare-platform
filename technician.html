@@ -110,13 +110,10 @@ body{background:#f4f0e6;color:#233633}.top{background:#fffcf7;border-color:#d3dc
 
 <div id="loading" class="loading">正在加载您的工作数据…</div>
 
-<script type="module">
-import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
-
-const URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const sb=createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-
+<script>
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const h={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)h["Content-Type"]="application/json";const r=await fetch(path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"});const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw new Error(d?.error||d?.message||"请求失败");return d}
 const $=id=>document.getElementById(id);
 const same=(a,b)=>String(a??"")===String(b??"");
 const on=s=>["active","approved","normal","enabled"].includes(String(s||"").toLowerCase());
@@ -168,25 +165,6 @@ function tag(v){
 }
 function merchantActive(m){
   return on(m?.status)&&["","online","active","normal","enabled"].includes(String(m?.listing_status||"").toLowerCase());
-}
-
-async function list(t,b){
-  let q=sb.from(t).select("*");
-  if(b)q=b(q);
-  const{data,error}=await q;
-  if(error)throw error;
-  return data||[];
-}
-async function one(t,b){
-  let q=sb.from(t).select("*");
-  if(b)q=b(q);
-  const{data,error}=await q.maybeSingle();
-  if(error)throw error;
-  return data||null;
-}
-async function safe(t,b){
-  try{return await list(t,b)}
-  catch(e){console.warn(t,e.message);return[]}
 }
 
 function area(){
@@ -286,68 +264,7 @@ function render(){
   }else empty("requestBody",6,"暂无商户变更申请");
 }
 
-async function recommended(){
-  const direct=await safe("orders",q=>q.eq("recommendation_source_type","service_technician").eq("recommendation_source_entity_id",String(S.tech.id)).order("created_at",{ascending:false}));
-  if(direct.length)return direct;
-  if(!S.tech.split_participant_id)return[];
-  const p=await safe("order_service_unit_split_participants",q=>q.eq("participant_id",S.tech.split_participant_id).eq("split_role","recommendation_source"));
-  const ids=[...new Set(p.map(x=>x.order_id).filter(Boolean))];
-  return ids.length?await safe("orders",q=>q.in("id",ids).order("created_at",{ascending:false})):[];
-}
-
-async function reload(mask=true){
-  if(mask)load(true);
-  clearError();
-
-  try{
-    const{data:{session}}=await sb.auth.getSession();
-    if(!session)return location.replace("./login.html");
-
-    S.session=session;
-    S.profile=await one("profiles",q=>q.eq("id",session.user.id));
-
-    if(!S.profile||S.profile.status!=="active"||S.profile.role!=="service_technician"){
-      throw Error("当前登录账号不是有效技术服务人员账号。");
-    }
-
-    S.tech=await one("service_technicians",q=>q.eq("auth_user_id",session.user.id));
-
-    if(!S.tech||S.tech.status!=="active"){
-      throw Error("没有读取到有效技术服务人员资料，请检查 service_technicians 的读取权限。");
-    }
-
-    const[
-      cities,areas,prices,merchants,links,auths,products,completed,requests
-    ]=await Promise.all([
-      safe("cities",q=>q.order("id")),
-      safe("service_areas",q=>q.order("id")),
-      safe("city_prices",q=>q.eq("status","active")),
-      safe("merchants",q=>q.eq("status","active")),
-      safe("merchant_technician_links",q=>q.eq("technician_id",S.tech.id)),
-      safe("technician_service_authorizations",q=>q.eq("technician_id",S.tech.id)),
-      safe("products",q=>q.eq("status","active").order("id")),
-      safe("order_service_units",q=>q.eq("technician_id",S.tech.id).order("updated_at",{ascending:false})),
-      safe("technician_merchant_change_requests",q=>q.eq("technician_id",S.tech.id).order("created_at",{ascending:false}))
-    ]);
-
-    Object.assign(S,{cities,areas,prices,merchants,links,auths,products,requests});
-    S.activeCities=new Set(prices.map(x=>String(x.city_id)));
-    S.completed=completed.filter(x=>["completed","done","finished","served","consumed"].includes(String(x.status||"").toLowerCase()));
-    S.recommended=await recommended();
-
-    render();
-
-    if(S.tech.must_change_password)openPassword(true);
-  }catch(e){
-    console.error(e);
-    error(`数据读取失败：${e.message||"未知错误"}。请点击“刷新数据”重试。`);
-    $("merchant").textContent="读取失败";
-    $("merchantSub").textContent="请检查数据库读取权限";
-  }finally{
-    if(mask)load(false);
-  }
-}
-
+async function reload(mask=true){if(mask)load(true);clearError();try{if(!accessToken())return location.replace("./login.html");const d=await api("/api/technician/dashboard");if(!d?.success||!d.tech)throw new Error(d?.error||"没有读取到有效技术服务人员资料。");S.session=loadSession();S.profile=d.profile;S.tech=d.tech;S.cities=d.cities||[];S.areas=d.areas||[];S.prices=d.prices||[];S.merchants=d.merchants||[];S.links=d.links||[];S.auths=d.authorizations||[];S.products=d.products||[];S.requests=d.requests||[];S.completed=d.completed||[];S.recommended=d.recommended||[];S.activeCities=new Set((d.active_city_ids||[]).map(String));render();if(S.tech.must_change_password)openPassword(true)}catch(e){console.error(e);error(`数据读取失败：${e.message||"未知错误"}。请点击“刷新数据”重试。`)}finally{if(mask)load(false)}}
 function openPassword(forced=false){
   forcePassword=forced;
   $("passwordTitle").textContent=forced?"首次登录，请修改密码":"修改密码";
@@ -360,34 +277,7 @@ function openPassword(forced=false){
   $("passwordModal").classList.add("show");
 }
 
-async function savePassword(){
-  const p=$("newPassword").value;
-  const c=$("confirmPassword").value;
-
-  if(p.length<8)return alert("新密码至少需要 8 位。");
-  if(p!==c)return alert("两次输入的新密码不一致。");
-
-  load(true,"正在修改密码…");
-
-  try{
-    const{error}=await sb.auth.updateUser({password:p});
-    if(error)throw error;
-
-    if(forcePassword){
-      const r=await sb.rpc("complete_my_technician_initial_password");
-      if(r.error)throw r.error;
-    }
-
-    alert("密码修改成功。");
-    $("passwordModal").classList.remove("show");
-    await reload();
-  }catch(e){
-    alert(`密码修改失败：${e.message||"未知错误"}`);
-  }finally{
-    load(false);
-  }
-}
-
+async function savePassword(){const p=$("newPassword").value,c=$("confirmPassword").value;if(p.length<8)return alert("新密码至少需要 8 位。");if(p!==c)return alert("两次输入的新密码不一致。");load(true,"正在修改密码…");try{const d=await api("/api/technician/change-password",{method:"POST",body:{password:p,complete_initial:forcePassword}});if(!d?.success)throw new Error(d?.error||"密码修改失败");alert("密码修改成功。");$("passwordModal").classList.remove("show");forcePassword=false;await reload()}catch(e){alert(`密码修改失败：${e.message||"未知错误"}`)}finally{load(false)}}
 function openRequest(){
   const a=area();
   const m=merchant();
@@ -421,92 +311,15 @@ function fillMerchants(){
   $("targetMerchant").innerHTML=`<option value="">请选择经营商户</option>${ms.map(m=>`<option value="${esc(m.id)}">${esc(mname(m))}${m.record_no?`（${esc(m.record_no)}）`:""}</option>`).join("")}`;
 }
 
-async function submit(){
-  const city=$("targetCity").value;
-  const mid=$("targetMerchant").value;
-  const note=$("note").value.trim();
-
-  if(!city||!mid)return alert("请选择目标已开通业务城市和目标经营商户。");
-
-  const tm=S.merchants.find(m=>same(m.id,mid));
-  const ta=S.areas.find(a=>same(a.id,tm?.service_area_id));
-  const currentLink=link();
-
-  if(!tm||!ta||!same(ta.city_id,city))return alert("目标商户与所选城市不一致。");
-  if(!merchantActive(tm))return alert("目标商户当前不是正常营业状态。");
-  if(currentLink&&same(currentLink.merchant_id,tm.id))return alert("该商户已是您的当前服务商户，无需提交变更申请。");
-
-  const pendingExists=S.requests.some(x=>
-    same(x.target_merchant_id,mid)&&
-    String(x.status||"").toLowerCase()==="pending_merchant"
-  );
-
-  if(pendingExists)return alert("该商户已有待处理申请，请等待商户处理后再提交。");
-
-  load(true,"正在提交变更配对关系申请…");
-
-  try{
-    const{error}=await sb.from("technician_merchant_change_requests").insert({
-      technician_id:S.tech.id,
-      from_service_area_id:S.tech.service_area_id||null,
-      from_merchant_id:currentLink?.merchant_id||null,
-      target_service_area_id:tm.service_area_id,
-      target_merchant_id:tm.id,
-      request_note:note||null,
-      status:"pending_merchant",
-      created_by:S.session.user.id
-    });
-
-    if(error)throw error;
-
-    alert("申请已提交，等待目标商户处理。商户拒绝不会影响您当前的配对关系，之后您可重新申请。");
-    $("requestModal").classList.remove("show");
-    await reload();
-  }catch(e){
-    alert(`提交申请失败：${e.message||"未知错误"}`);
-  }finally{
-    load(false);
-  }
-}
-
-function resetIdle(){
-  clearTimeout(idle);
-  idle=setTimeout(async()=>{
-    await sb.auth.signOut();
-    location.replace("./login.html");
-  },600000);
-}
-
-function realtime(){
-  if(S.channel)sb.removeChannel(S.channel);
-
-  let timer;
-  const r=()=>{
-    clearTimeout(timer);
-    timer=setTimeout(()=>reload(false),500);
-  };
-
-  S.channel=sb.channel(`technician-${S.tech.id}`)
-    .on("postgres_changes",{event:"*",schema:"public",table:"service_technicians",filter:`id=eq.${S.tech.id}`},r)
-    .on("postgres_changes",{event:"*",schema:"public",table:"technician_service_authorizations",filter:`technician_id=eq.${S.tech.id}`},r)
-    .on("postgres_changes",{event:"*",schema:"public",table:"merchant_technician_links",filter:`technician_id=eq.${S.tech.id}`},r)
-    .on("postgres_changes",{event:"*",schema:"public",table:"order_service_units",filter:`technician_id=eq.${S.tech.id}`},r)
-    .on("postgres_changes",{event:"*",schema:"public",table:"technician_merchant_change_requests",filter:`technician_id=eq.${S.tech.id}`},r)
-    .subscribe();
-
-  clearInterval(tick);
-  tick=setInterval(()=>reload(false),60000);
-}
-
+async function submit(){const city=$("targetCity").value,mid=$("targetMerchant").value,note=$("note").value.trim();if(!city||!mid)return alert("请选择目标已开通业务城市和目标经营商户。");load(true,"正在提交变更配对关系申请…");try{const d=await api("/api/technician/change-request",{method:"POST",body:{target_city_id:Number(city),target_merchant_id:mid,request_note:note||null}});if(!d?.success)throw new Error(d?.error||"申请提交失败");alert("申请已提交，等待目标商户处理。");$("requestModal").classList.remove("show");await reload()}catch(e){alert(`提交申请失败：${e.message||"未知错误"}`)}finally{load(false)}}
+function resetIdle(){clearTimeout(idle);idle=setTimeout(()=>{clearSession();location.replace("./login.html")},600000)}
+function realtime(){clearInterval(tick);tick=setInterval(()=>{if(!document.hidden)reload(false)},60000)}
 $("passwordBtn").onclick=()=>openPassword(false);
 $("passwordClose").onclick=()=>{if(!forcePassword)$("passwordModal").classList.remove("show")};
 $("passwordCancel").onclick=()=>{if(!forcePassword)$("passwordModal").classList.remove("show")};
 $("passwordSave").onclick=savePassword;
 $("refreshBtn").onclick=()=>reload();
-$("logoutBtn").onclick=async()=>{
-  await sb.auth.signOut();
-  location.replace("./login.html");
-};
+$("logoutBtn").onclick=()=>{clearInterval(tick);clearSession();location.replace("./login.html")};
 $("requestBtn").onclick=openRequest;
 $("targetCity").onchange=fillMerchants;
 $("submitRequest").onclick=submit;
@@ -523,9 +336,7 @@ $("requestModal").onclick=e=>{
   addEventListener(e,resetIdle,{passive:true});
 });
 
-addEventListener("beforeunload",()=>{
-  if(S.channel)sb.removeChannel(S.channel);
-});
+addEventListener("beforeunload",()=>clearInterval(tick));
 
 resetIdle();
 await reload();
