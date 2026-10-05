@@ -11,7 +11,7 @@
     <title>消费核销 - 荷序健康</title>
 
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
 
     <!-- QR 扫描 -->
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -879,182 +879,17 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
        Supabase
     ======================================================== */
 
-    const SUPABASE_URL =
-        "https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-
-
-    const SUPABASE_ANON_KEY =
-        "sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-
-
-    const sb =
-        window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
-
-
-    /* ========================================================
-       全局
-    ======================================================== */
-
-    let currentUser = null;
-
-    let currentMerchant = null;
-
-    let html5QrCode = null;
-
-    let scannerRunning = false;
-
-    let verificationBusy = false;
-
-
-    const IDLE_LIMIT =
-        10 * 60 * 1000;
-
-
-    let idleTimer = null;
-
-
-    /* ========================================================
-       初始化
-    ======================================================== */
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        init
-    );
-
-
-    async function init() {
-
-        try {
-
-            setupIdleLogout();
-
-
-            const {
-                data: sessionData,
-                error: sessionError
-            } =
-                await sb.auth.getSession();
-
-
-            if (
-                sessionError
-                ||
-                !sessionData?.session?.user
-            ) {
-
-                goLogin();
-
-                return;
-            }
-
-
-            currentUser =
-                sessionData.session.user;
-
-
-            const allowed =
-                await loadMerchant();
-
-
-            if (!allowed) {
-
-                showFatalError(
-                    "当前账号不是有效商户账号。"
-                );
-
-                hideLoading();
-
-                return;
-            }
-
-
-            renderMerchant();
-
-
-            hideLoading();
-
-
-        } catch (error) {
-
-            console.error(
-                "核销页面初始化失败：",
-                error
-            );
-
-
-            showFatalError(
-                error?.message
-                ||
-                "页面加载失败"
-            );
-
-
-            hideLoading();
-        }
-    }
-
-
-    /* ========================================================
-       商户验证
-    ======================================================== */
-
-    async function loadMerchant() {
-
-        const {
-            data,
-            error
-        } =
-            await sb
-                .from("merchants")
-                .select(`
-                    id,
-                    auth_user_id,
-                    merchant_code,
-                    merchant_name,
-                    status,
-                    record_no
-                `)
-                .eq(
-                    "auth_user_id",
-                    currentUser.id
-                )
-                .eq(
-                    "status",
-                    "active"
-                )
-                .maybeSingle();
-
-
-        if (error) {
-
-            console.error(
-                "读取商户失败：",
-                error
-            );
-
-            return false;
-        }
-
-
-        if (!data) {
-
-            return false;
-        }
-
-
-        currentMerchant =
-            data;
-
-
-        return true;
-    }
-
-
-    function renderMerchant() {
+    const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+let currentUser=null,currentMerchant=null,html5QrCode=null,scannerRunning=false,verificationBusy=false;
+const IDLE_LIMIT=10*60*1000;let idleTimer=null;
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
+document.addEventListener("DOMContentLoaded",init);
+async function init(){try{setupIdleLogout();if(!accessToken()){goLogin();return}const data=await api("/api/merchant/verify/context");if(!data?.success||!data?.merchant){showFatalError(data?.error||"当前账号不是有效商户账号。");hideLoading();return}currentUser=data.user||null;currentMerchant=data.merchant;renderMerchant();hideLoading()}catch(error){console.error("核销页面初始化失败：",error);showFatalError(error?.message||"页面加载失败");hideLoading()}}
+
+function renderMerchant() {
 
         document.getElementById(
             "merchantName"
@@ -1439,27 +1274,7 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 
         try {
 
-            const {
-                data,
-                error
-            } =
-                await sb.rpc(
-                    "verify_service_order",
-                    {
-                        p_verification_token:
-                            token
-                    }
-                );
-
-
-            if (error) {
-
-                throw new Error(
-                    error.message
-                    ||
-                    "核销失败"
-                );
-            }
+            const data=await api("/api/merchant/verify",{method:"POST",body:{verification_token:token}});
 
 
             if (
@@ -1882,31 +1697,7 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
     }
 
 
-    async function logoutByIdle() {
-
-        try {
-
-            await stopScanner();
-
-
-            await sb.auth.signOut();
-
-
-        } catch (error) {
-
-            console.error(
-                "自动退出失败：",
-                error
-            );
-
-
-        } finally {
-
-            window.location.href =
-                "./login.html?reason=idle";
-        }
-    }
-
+    async function logoutByIdle(){try{await stopScanner()}catch(error){console.error("自动退出失败：",error)}finally{clearSession();window.location.href="./login.html?reason=idle"}}
 
     /* ========================================================
        工具
