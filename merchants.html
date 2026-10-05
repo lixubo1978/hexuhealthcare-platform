@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商户经营统计｜荷序健康</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{--pink:#e7467a;--pink2:#ff789f;--deep:#74344d;--soft:#fff7fa;--line:#f0dfe5;--text:#3d3135;--muted:#998990;--green:#1d9c72;--greenbg:#e8f8f2;--blue:#3779c7;--bluebg:#eaf3ff;--orange:#c77a12;--orangebg:#fff3df;--red:#c7475d;--redbg:#fff0f3;--shadow:0 10px 30px rgba(111,56,77,.07)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:linear-gradient(180deg,#fffafd 0,#fff 45%,#fff9fb 100%)}button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
@@ -127,129 +127,25 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 </div>
 
 <script>
-const SUPABASE_URL='https://qbuqjwpkltbjhlfbyjyb.supabase.co';
-const SUPABASE_KEY='sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
 const $=id=>document.getElementById(id);
-const allowedRoles=['founder','platform_admin','province_admin','city_admin'];
-const roleNames={founder:'创始人',platform_admin:'平台管理员',province_admin:'省级管理员',city_admin:'城市管理员'};
+const allowedRoles=["founder","platform_admin","province_admin","city_admin"];
+const roleNames={founder:"创始人",platform_admin:"平台管理员",province_admin:"省级管理员",city_admin:"城市管理员"};
 let currentProfile=null,cities=[],dashboard=null,currentMerchant=null,idleTimer=null,lastActivity=Date.now();
-const esc=v=>String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-const num=v=>Number(v||0);
-const money=v=>'¥'+num(v).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
-const dt=v=>v?new Date(v).toLocaleString('zh-CN',{hour12:false}):'—';
-const showLoading=(text='正在读取数据…')=>{$('loadingText').textContent=text;$('loading').classList.remove('hidden')};
-const hideLoading=()=>$('loading').classList.add('hidden');
-const statusBadge=(text,type='gray')=>`<span class="badge badge-${type}">${esc(text)}</span>`;
-
-function roleLabel(role){return roleNames[role]||role||'未知身份'}
-function merchantType(value){return value==='organization'?'机构商户':value==='individual'?'个人商户':value||'未定义'}
-function orderStatus(value){return({pending_payment:'待支付',paid:'已支付',completed:'已完成',cancelled:'已取消',refunded:'已退款'}[value]||value||'—')}
-function paymentStatus(value){return({paid:'已支付',unpaid:'未支付',refunded:'已退款'}[value]||value||'—')}
-function splitStatus(value){return({pending:'待分账',generated:'已生成',processing:'处理中',completed:'已完成',failed:'失败'}[value]||value||'—')}
-
-function statusHtml(m){
-  const badges=[];
-  badges.push(m.status==='active'?statusBadge('正常','green'):statusBadge('无效','gray'));
-  badges.push(m.listing_status==='online'?statusBadge('已上线','blue'):statusBadge('已下线','red'));
-  badges.push(m.certification_status==='approved'?statusBadge('已认证','green'):statusBadge(m.certification_status||'待认证','orange'));
-  badges.push(m.account_opened?statusBadge('账户已开通','blue'):statusBadge('账户未开通','red'));
-  return badges.join('');
-}
-
-async function forceLogout(message){
-  if(idleTimer){clearInterval(idleTimer);idleTimer=null}
-  try{await db.auth.signOut()}catch(error){console.error(error)}
-  if(message)alert(message);
-  location.replace('login.html');
-}
-
-/* 修复：进入页面并通过身份验证后，从当前时刻重新计算10分钟 */
-function installIdleLogout(){
-  lastActivity=Date.now();
-  const updateActivity=()=>{lastActivity=Date.now()};
-  ['click','keydown','mousemove','mousedown','touchstart','scroll'].forEach(event=>{
-    window.addEventListener(event,updateActivity,{passive:true});
-  });
-  if(idleTimer)clearInterval(idleTimer);
-  idleTimer=setInterval(()=>{
-    if(Date.now()-lastActivity>=10*60*1000){
-      forceLogout('已超过10分钟无操作，系统已自动退出');
-    }
-  },15000);
-}
-
-/* 修复：profiles只读取确认存在的基础字段 */
-async function verifyAccess(){
-  const {data:sessionResult,error:sessionError}=await db.auth.getSession();
-  const session=sessionResult?.session;
-
-  if(sessionError){
-    console.error('读取登录状态失败：',sessionError);
-    alert('读取登录状态失败，请重新登录');
-    location.replace('login.html');
-    return false;
-  }
-
-  if(!session?.user){
-    location.replace('login.html');
-    return false;
-  }
-
-  const {data:profile,error:profileError}=await db
-    .from('profiles')
-    .select('id,role,status')
-    .eq('id',session.user.id)
-    .maybeSingle();
-
-  if(profileError){
-    console.error('读取账号权限失败：',profileError);
-    alert('读取账号权限失败：'+profileError.message);
-    hideLoading();
-    return false;
-  }
-
-  if(!profile){
-    alert('当前登录账号没有平台人员资料');
-    await db.auth.signOut();
-    location.replace('login.html');
-    return false;
-  }
-
-  if(profile.status!=='active'){
-    alert('当前管理账号已经停用');
-    await db.auth.signOut();
-    location.replace('login.html');
-    return false;
-  }
-
-  if(!allowedRoles.includes(profile.role)){
-    alert('当前账号没有访问商户经营统计页面的权限');
-    await db.auth.signOut();
-    location.replace('login.html');
-    return false;
-  }
-
-  currentProfile=profile;
-  $('viewerRole').textContent=roleLabel(profile.role);
-  installIdleLogout();
-  return true;
-}
-
-async function loadCities(){
-  const {data,error}=await db.rpc('get_merchant_management_cities');
-  if(error)throw error;
-
-  const result=data||{};
-  cities=Array.isArray(result.cities)?result.cities:[];
-
-  $('citySelect').innerHTML=cities.length
-    ?cities.map(c=>`<option value="${c.city_id}">${esc(String(c.city_code||'').padStart(3,'0'))}｜${esc(c.display_name)}</option>`).join('')
-    :'<option value="">暂无可管理的开通城市</option>';
-
-  if(!cities.length)throw new Error('当前账号没有可以查看的开通服务城市');
-  updateScope();
-}
+const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
+const num=v=>Number(v||0),money=v=>"¥"+num(v).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2}),dt=v=>v?new Date(v).toLocaleString("zh-CN",{hour12:false}):"—",showLoading=(text="正在读取数据…")=>{$("loadingText").textContent=text;$("loading").classList.remove("hidden")},hideLoading=()=>$("loading").classList.add("hidden"),statusBadge=(text,type="gray")=>`<span class="badge badge-${type}">${esc(text)}</span>`;
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw new Error(d?.error||d?.message||"请求失败");return d}
+function roleLabel(role){return roleNames[role]||role||"未知身份"}
+function merchantType(value){return value==="organization"?"机构商户":value==="individual"?"个人商户":value||"未定义"}
+function orderStatus(value){return({pending_payment:"待支付",paid:"已支付",completed:"已完成",cancelled:"已取消",refunded:"已退款"}[value]||value||"—")}
+function paymentStatus(value){return({paid:"已支付",unpaid:"未支付",refunded:"已退款"}[value]||value||"—")}
+function splitStatus(value){return({pending:"待分账",generated:"已生成",processing:"处理中",completed:"已完成",failed:"失败"}[value]||value||"—")}
+function statusHtml(m){const badges=[];badges.push(m.status==="active"?statusBadge("正常","green"):statusBadge("无效","gray"));badges.push(m.listing_status==="online"?statusBadge("已上线","blue"):statusBadge("已下线","red"));badges.push(m.certification_status==="approved"?statusBadge("已认证","green"):statusBadge(m.certification_status||"待认证","orange"));badges.push(m.account_opened?statusBadge("账户已开通","blue"):statusBadge("账户未开通","red"));return badges.join("")}
+async function forceLogout(message){if(idleTimer){clearInterval(idleTimer);idleTimer=null}clearSession();if(message)alert(message);location.replace("login.html")}
+function installIdleLogout(){lastActivity=Date.now();const updateActivity=()=>{lastActivity=Date.now()};["click","keydown","mousemove","mousedown","touchstart","scroll"].forEach(event=>window.addEventListener(event,updateActivity,{passive:true}));if(idleTimer)clearInterval(idleTimer);idleTimer=setInterval(()=>{if(Date.now()-lastActivity>=10*60*1000)forceLogout("已超过10分钟无操作，系统已自动退出")},15000)}
+async function verifyAccess(){if(!accessToken()){location.replace("login.html");return false}const identity=await api("/api/auth/business-identity");const profile=identity?.profile||{id:identity?.user?.id,role:identity?.role,status:identity?.status};if(!profile){alert("当前登录账号没有平台人员资料");clearSession();location.replace("login.html");return false}if(profile.status!=="active"){alert("当前管理账号已经停用");clearSession();location.replace("login.html");return false}if(!allowedRoles.includes(profile.role)){alert("当前账号没有访问商户经营统计页面的权限");clearSession();location.replace("login.html");return false}currentProfile=profile;$("viewerRole").textContent=roleLabel(profile.role);installIdleLogout();return true}
+async function loadCities(){const result=await api("/api/admin/merchants/cities");cities=Array.isArray(result.cities)?result.cities:[];$("citySelect").innerHTML=cities.length?cities.map(c=>`<option value="${c.city_id}">${esc(String(c.city_code||"").padStart(3,"0"))}｜${esc(c.display_name)}</option>`).join(""):'<option value="">暂无可管理的开通城市</option>';if(!cities.length)throw new Error("当前账号没有可以查看的开通服务城市");updateScope()}
 
 function updateScope(){
   const city=cities.find(item=>String(item.city_id)===$('citySelect').value);
@@ -363,15 +259,7 @@ async function queryDashboard(){
   showLoading('正在统计商户经营数据…');
 
   try{
-    const {data,error}=await db.rpc('get_merchant_management_dashboard',{
-      p_city_id:cityId,
-      p_date_from:dateFrom,
-      p_date_to:dateTo,
-      p_keyword:$('keyword').value.trim()||null
-    });
-
-    if(error)throw error;
-
+    const data=await api("/api/admin/merchants/dashboard",{method:"POST",body:{p_city_id:cityId,p_date_from:dateFrom,p_date_to:dateTo,p_keyword:$("keyword").value.trim()||null}});
     dashboard=data||{};
     if(dashboard.success===false)throw new Error(dashboard.error||'统计失败');
 
@@ -430,16 +318,7 @@ async function loadOrders(){
   $('orderList').innerHTML='<div class="empty">正在读取商户订单…</div>';
 
   try{
-    const {data,error}=await db.rpc('get_merchant_management_orders',{
-      p_merchant_id:currentMerchant.merchant_id,
-      p_city_id:Number($('citySelect').value),
-      p_date_from:$('dateFrom').value||null,
-      p_date_to:$('dateTo').value||null,
-      p_relation_type:$('relationFilter').value
-    });
-
-    if(error)throw error;
-
+    const data=await api("/api/admin/merchants/orders",{method:"POST",body:{p_merchant_id:currentMerchant.merchant_id,p_city_id:Number($("citySelect").value),p_date_from:$("dateFrom").value||null,p_date_to:$("dateTo").value||null,p_relation_type:$("relationFilter").value}});
     const orders=Array.isArray(data?.orders)?data.orders:[];
 
     $('modalSub').textContent=`商户编号 ${currentMerchant.merchant_no} · 当前显示 ${orders.length} 笔订单`;
@@ -546,10 +425,6 @@ $('orderModal').addEventListener('click',event=>{
 
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&!$('orderModal').classList.contains('hidden'))closeModal();
-});
-
-db.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT')location.replace('login.html');
 });
 
 (async()=>{
