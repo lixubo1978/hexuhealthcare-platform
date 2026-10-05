@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#fff6f9">
 <title>健康顾问工作台 - 荷序健康</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{--pink-50:#fff6f9;--pink-100:#ffe8f0;--pink-200:#fbd2e0;--pink-500:#e85d8f;--pink-600:#d94d7d;--pink-700:#b93667;--purple:#8b49bc;--green:#278f67;--orange:#d9821b;--red:#dc304b;--text:#302830;--sub:#746a71;--light:#a49aa1;--border:#eee2e7;--shadow:0 10px 32px rgba(120,47,78,.07)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -131,69 +131,23 @@ body,.loading-mask{background:#f4f0e6}.topbar{background:rgba(255,252,247,.97);b
 <div id="toast" class="toast"></div>
 
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const LOGIN_PAGE="./login.html";
-const IDLE_LIMIT=10*60*1000;
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-let idleTimer=null;
-let dashboardData=null;
-let allOrders=[];
-let passwordForced=false;
-let toastTimer=null;
-
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+const LOGIN_PAGE="./login.html",IDLE_LIMIT=10*60*1000;
+let idleTimer=null,dashboardData=null,allOrders=[],passwordForced=false,toastTimer=null;
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function saveSession(v){if(v)localStorage.setItem(BUSINESS_SESSION_KEY,JSON.stringify(v));else localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
 function esc(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function money(value){return new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY",minimumFractionDigits:2}).format(Number(value)||0)}
 function dateTime(value){if(!value)return"—";const date=new Date(value);return Number.isNaN(date.getTime())?"—":date.toLocaleString("zh-CN",{hour12:false})}
 function resetIdleTimer(){clearTimeout(idleTimer);idleTimer=setTimeout(autoLogout,IDLE_LIMIT)}
-async function autoLogout(){try{await supabaseClient.auth.signOut()}catch(error){console.error(error)}alert("由于10分钟未操作，系统已自动退出。");window.location.replace(LOGIN_PAGE)}
+async function autoLogout(){saveSession(null);alert("由于10分钟未操作，系统已自动退出。");window.location.replace(LOGIN_PAGE)}
 ["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(name=>document.addEventListener(name,resetIdleTimer,{passive:true}));
-
-function showToast(message){
-const toast=document.getElementById("toast");
-clearTimeout(toastTimer);
-toast.textContent=message;
-toast.classList.add("show");
-toastTimer=setTimeout(()=>toast.classList.remove("show"),2600);
-}
-function statusInfo(status){
-const value=String(status||"").toLowerCase();
-if(["completed","success","executed","paid"].includes(value))return{text:"已完成",className:"status-green"};
-if(["pending","created","waiting","unpaid"].includes(value))return{text:"待处理",className:"status-orange"};
-if(["processing","splitting","in_progress"].includes(value))return{text:"处理中",className:"status-purple"};
-if(["failed","rejected","cancelled","canceled"].includes(value))return{text:"失败/取消",className:"status-red"};
-return{text:status||"未定义",className:"status-gray"};
-}
-
-async function initialize(){
-resetIdleTimer();
-try{
-const{data:{session},error}=await supabaseClient.auth.getSession();
-if(error||!session){window.location.replace(LOGIN_PAGE);return}
-await loadDashboard(false);
-document.getElementById("loadingMask").style.display="none";
-}catch(error){
-console.error("健康顾问工作台初始化失败：",error);
-try{await supabaseClient.auth.signOut()}catch(e){console.error(e)}
-alert(error.message||"当前账号没有健康顾问工作台访问权限。");
-window.location.replace(LOGIN_PAGE);
-}
-}
-
-async function loadDashboard(showSuccess){
-const{data,error}=await supabaseClient.rpc("get_my_health_consultant_dashboard");
-if(error)throw error;
-if(!data?.success)throw new Error(data?.message||"健康顾问数据读取失败");
-dashboardData=data;
-allOrders=Array.isArray(data.orders)?data.orders:[];
-renderProfile(data);
-renderOrders();
-if(data.consultant?.must_change_password===true){
-openPasswordModal(true);
-}else if(showSuccess){
-showToast("数据已刷新");
-}
-}
+function showToast(message){const toast=document.getElementById("toast");clearTimeout(toastTimer);toast.textContent=message;toast.classList.add("show");toastTimer=setTimeout(()=>toast.classList.remove("show"),2600)}
+function statusInfo(status){const value=String(status||"").toLowerCase();if(["completed","success","executed","paid"].includes(value))return{text:"已完成",className:"status-green"};if(["pending","created","waiting","unpaid"].includes(value))return{text:"待处理",className:"status-orange"};if(["processing","splitting","in_progress"].includes(value))return{text:"处理中",className:"status-purple"};if(["failed","rejected","cancelled","canceled"].includes(value))return{text:"失败/取消",className:"status-red"};return{text:status||"未定义",className:"status-gray"}}
+async function initialize(){resetIdleTimer();try{if(!accessToken()){window.location.replace(LOGIN_PAGE);return}await loadDashboard(false);document.getElementById("loadingMask").style.display="none"}catch(error){console.error("健康顾问工作台初始化失败：",error);saveSession(null);alert(error.message||"当前账号没有健康顾问工作台访问权限。");window.location.replace(LOGIN_PAGE)}}
+async function loadDashboard(showSuccess){const data=await api("/api/consultant/dashboard");if(!data?.success)throw new Error(data?.message||data?.error||"健康顾问数据读取失败");dashboardData=data;allOrders=Array.isArray(data.orders)?data.orders:[];renderProfile(data);renderOrders();if(data.consultant?.must_change_password===true)openPasswordModal(true);else if(showSuccess)showToast("数据已刷新")}
 
 function renderProfile(data){
 const consultant=data.consultant||{};
@@ -329,50 +283,20 @@ box.classList.remove("show");
 }
 
 async function saveNewPassword(){
-hidePasswordError();
-const password=document.getElementById("newPassword").value;
-const confirmPassword=document.getElementById("confirmPassword").value;
-if(password.length<8){showPasswordError("新密码至少需要8位。");return}
-if(password!==confirmPassword){showPasswordError("两次输入的新密码不一致。");return}
-const button=document.getElementById("savePasswordButton");
-button.disabled=true;
-button.textContent="正在修改...";
-try{
-const{data:{user}}=await supabaseClient.auth.getUser();
-const oldData=user?.user_metadata||{};
-const{error:updateError}=await supabaseClient.auth.updateUser({
-password,
-data:{...oldData,must_change_password:false}
-});
-if(updateError)throw updateError;
-const{data,error}=await supabaseClient.rpc("complete_health_consultant_password_change");
-if(error)throw new Error(`密码已经修改，但状态同步失败：${error.message}`);
-if(!data?.success)throw new Error(data?.message||"密码状态更新失败");
-passwordForced=false;
-document.getElementById("passwordMask").classList.remove("show");
-document.body.style.overflow="";
-if(dashboardData?.consultant)dashboardData.consultant.must_change_password=false;
-showToast("密码修改成功，请妥善保管新密码");
-}catch(error){
-console.error("修改密码失败：",error);
-showPasswordError(error.message||"密码修改失败，请稍后重试。");
-}finally{
-button.disabled=false;
-button.textContent="确认修改密码";
-}
+ hidePasswordError();const password=document.getElementById("newPassword").value,confirmPassword=document.getElementById("confirmPassword").value;
+ if(password.length<8){showPasswordError("新密码至少需要8位。");return}if(password!==confirmPassword){showPasswordError("两次输入的新密码不一致。");return}
+ const button=document.getElementById("savePasswordButton");button.disabled=true;button.textContent="正在修改...";
+ try{const data=await api("/api/consultant/change-password",{method:"POST",body:{password}});if(!data?.success)throw new Error(data?.message||data?.error||"密码修改失败");if(data.session)saveSession(data.session);passwordForced=false;document.getElementById("passwordMask").classList.remove("show");document.body.style.overflow="";if(dashboardData?.consultant)dashboardData.consultant.must_change_password=false;showToast("密码修改成功，请妥善保管新密码")}
+ catch(error){console.error("修改密码失败：",error);showPasswordError(error.message||"密码修改失败，请稍后重试。")}
+ finally{button.disabled=false;button.textContent="确认修改密码"}
 }
 
-async function logout(){
-if(!confirm("确定退出健康顾问工作台吗？"))return;
-try{await supabaseClient.auth.signOut()}catch(error){console.error(error)}
-window.location.replace(LOGIN_PAGE);
-}
+async function logout(){if(!confirm("确定退出健康顾问工作台吗？"))return;saveSession(null);window.location.replace(LOGIN_PAGE)}
 
 document.getElementById("searchInput").addEventListener("input",renderOrders);
 document.getElementById("statusFilter").addEventListener("change",renderOrders);
 document.getElementById("confirmPassword").addEventListener("keydown",event=>{if(event.key==="Enter")saveNewPassword()});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!passwordForced)closePasswordModal()});
-supabaseClient.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")window.location.replace(LOGIN_PAGE)});
 document.addEventListener("DOMContentLoaded",initialize);
 </script>
 
