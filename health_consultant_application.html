@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>申请成为健康顾问 - 荷序健康</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;background:#f5f6f8;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif}
@@ -217,155 +217,11 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 </main>
 
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
-auth:{
-persistSession:true,
-autoRefreshToken:true,
-detectSessionInUrl:true
-}
-});
-
-const STORAGE_BUCKET="health-consultant-applications";
-let compressedIdCardFile=null;
-let currentPreviewUrl="";
-
-document.addEventListener("DOMContentLoaded",async()=>{
-bindEvents();
-await loadActiveServiceCities();
-});
-
-function bindEvents(){
-document.getElementById("serviceCitySelect").addEventListener("change",serviceCityChanged);
-document.getElementById("idCardFile").addEventListener("change",imageChanged);
-}
-
-async function loadActiveServiceCities(){
-const select=document.getElementById("serviceCitySelect");
-const serviceAreaInput=document.getElementById("serviceAreaId");
-
-select.disabled=true;
-select.innerHTML='<option value="">正在读取已开通业务的城市...</option>';
-serviceAreaInput.value="";
-hideMessage();
-
-try{
-const [areaRes,cityRes,provinceRes]=await Promise.all([
-db
-.from("service_areas")
-.select("id,area_no,province_id,city_id,district_id,status")
-.eq("status","active")
-.is("district_id",null)
-.order("area_no",{ascending:true}),
-
-db
-.from("cities")
-.select("id,province_id,city_code,city_name,status")
-.eq("status","active")
-.order("city_code",{ascending:true}),
-
-db
-.from("provinces")
-.select("id,province_code,province_name,status")
-.eq("status","active")
-.order("province_code",{ascending:true})
-]);
-
-if(areaRes.error){
-throw new Error("服务区域读取失败："+areaRes.error.message);
-}
-
-if(cityRes.error){
-throw new Error("城市读取失败："+cityRes.error.message);
-}
-
-if(provinceRes.error){
-throw new Error("省份读取失败："+provinceRes.error.message);
-}
-
-const areas=areaRes.data||[];
-const cities=cityRes.data||[];
-const provinces=provinceRes.data||[];
-
-if(areas.length===0){
-select.innerHTML='<option value="">暂无已开通服务城市</option>';
-showError("平台目前没有已开通业务的城市。");
-return;
-}
-
-const cityMap=new Map();
-const provinceMap=new Map();
-
-cities.forEach(city=>{
-cityMap.set(String(city.id),city);
-});
-
-provinces.forEach(province=>{
-provinceMap.set(String(province.id),province);
-});
-
-const availableAreas=areas
-.map(area=>{
-const city=cityMap.get(String(area.city_id));
-const province=provinceMap.get(String(area.province_id));
-
-if(!city){
-return null;
-}
-
-return{
-serviceAreaId:area.id,
-cityId:area.city_id,
-areaNo:area.area_no,
-cityName:city.city_name||"未命名城市",
-provinceName:province?.province_name||""
-};
-})
-.filter(Boolean)
-.sort((a,b)=>Number(a.areaNo||0)-Number(b.areaNo||0));
-
-select.innerHTML='<option value="">请选择服务城市</option>';
-
-const addedServiceAreas=new Set();
-
-availableAreas.forEach(item=>{
-const serviceAreaKey=String(item.serviceAreaId);
-
-if(addedServiceAreas.has(serviceAreaKey)){
-return;
-}
-
-addedServiceAreas.add(serviceAreaKey);
-
-const option=document.createElement("option");
-const areaNo=item.areaNo?String(item.areaNo).padStart(3,"0"):"";
-
-option.value=serviceAreaKey;
-option.dataset.cityId=String(item.cityId);
-option.textContent=
-(areaNo?areaNo+" | ":"")+
-(item.provinceName?item.provinceName+" · ":"")+
-item.cityName;
-
-select.appendChild(option);
-});
-
-if(select.options.length===1){
-select.innerHTML='<option value="">暂无可选择城市</option>';
-showError("已开通的服务区域没有找到对应的城市名称，请联系平台管理员检查城市数据。");
-return;
-}
-
-select.disabled=false;
-hideMessage();
-}catch(error){
-console.error("服务城市读取失败：",error);
-select.disabled=true;
-select.innerHTML='<option value="">服务城市读取失败</option>';
-showError("服务城市读取失败："+formatSupabaseError(error));
-}
-}
+let compressedIdCardFile=null,currentPreviewUrl="";
+document.addEventListener("DOMContentLoaded",async()=>{bindEvents();await loadActiveServiceCities()});
+function bindEvents(){document.getElementById("serviceCitySelect").addEventListener("change",serviceCityChanged);document.getElementById("idCardFile").addEventListener("change",imageChanged)}
+async function publicApi(path,{method="GET",body}={}){const headers={Accept:"application/json"};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试")}const raw=await r.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
+async function loadActiveServiceCities(){const select=document.getElementById("serviceCitySelect"),serviceAreaInput=document.getElementById("serviceAreaId");select.disabled=true;select.innerHTML='<option value="">正在读取已开通业务的城市...</option>';serviceAreaInput.value="";hideMessage();try{const data=await publicApi("/api/public/health-consultant-application/cities"),availableAreas=Array.isArray(data?.cities)?data.cities:[];if(!availableAreas.length){select.innerHTML='<option value="">暂无已开通服务城市</option>';showError("平台目前没有已开通业务的城市。");return}select.innerHTML='<option value="">请选择服务城市</option>';availableAreas.forEach(item=>{const option=document.createElement("option"),areaNo=item.area_no?String(item.area_no).padStart(3,"0"):"";option.value=String(item.service_area_id);option.dataset.cityId=String(item.city_id);option.textContent=(areaNo?areaNo+" | ":"")+(item.province_name?item.province_name+" · ":"")+item.city_name;select.appendChild(option)});select.disabled=false;hideMessage()}catch(error){console.error("服务城市读取失败：",error);select.disabled=true;select.innerHTML='<option value="">服务城市读取失败</option>';showError("服务城市读取失败："+(error?.message||"未知错误"))}}
 
 function serviceCityChanged(){
 const selectedServiceAreaId=String(this.value||"").trim();
@@ -534,107 +390,8 @@ throw new Error("请确认所填写的申请资料真实有效。");
 }
 }
 
-async function uploadIdCardImage(){
-const now=new Date();
-const year=now.getFullYear();
-const month=String(now.getMonth()+1).padStart(2,"0");
-
-const randomName=
-window.crypto&&typeof window.crypto.randomUUID==="function"
-?window.crypto.randomUUID()
-:`${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const filePath=`applications/${year}/${month}/${randomName}.webp`;
-
-const {error}=await db
-.storage
-.from(STORAGE_BUCKET)
-.upload(
-filePath,
-compressedIdCardFile,
-{
-contentType:"image/webp",
-cacheControl:"3600",
-upsert:false
-}
-);
-
-if(error){
-throw new Error("身份证照片上传失败："+formatSupabaseError(error));
-}
-
-return filePath;
-}
-
-async function submitApplication(){
-const button=document.getElementById("submitButton");
-
-if(button.disabled){
-return;
-}
-
-hideMessage();
-
-let uploadedPath="";
-
-try{
-validateForm();
-
-button.disabled=true;
-button.textContent="正在上传身份证照片...";
-
-uploadedPath=await uploadIdCardImage();
-
-button.textContent="正在提交申请...";
-
-const applicationData={
-service_area_id:Number(getValue("serviceAreaId")),
-applicant_name:getValue("applicantName"),
-id_card_number:getValue("idCardNumber"),
-id_card_front_path:uploadedPath,
-phone:getValue("phone"),
-individual_business_name:getValue("businessName"),
-tax_no:getValue("taxNo"),
-bank_name:getValue("bankName"),
-bank_account:getValue("bankAccount"),
-status:"pending"
-};
-
-const {error}=await db
-.from("health_consultant_applications")
-.insert(applicationData);
-
-if(error){
-throw new Error("申请资料提交失败："+formatSupabaseError(error));
-}
-
-document.getElementById("applicationPage").style.display="none";
-document.getElementById("successPage").style.display="block";
-
-window.scrollTo({
-top:0,
-behavior:"smooth"
-});
-}catch(error){
-console.error(error);
-
-if(uploadedPath){
-const {error:removeError}=await db
-.storage
-.from(STORAGE_BUCKET)
-.remove([uploadedPath]);
-
-if(removeError){
-console.error("清理未提交的身份证图片失败：",removeError);
-}
-}
-
-showError(error.message||"申请提交失败，请重新尝试。");
-
-button.disabled=false;
-button.textContent="提交申请";
-}
-}
+function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||"");resolve(value.includes(",")?value.split(",")[1]:value)};reader.onerror=()=>reject(new Error("身份证图片读取失败"));reader.readAsDataURL(file)})}
+async function submitApplication(){const button=document.getElementById("submitButton");if(button.disabled)return;hideMessage();try{validateForm();button.disabled=true;button.textContent="正在提交申请...";const base64=await fileToBase64(compressedIdCardFile);const data=await publicApi("/api/public/health-consultant-application/submit",{method:"POST",body:{service_area_id:Number(getValue("serviceAreaId")),applicant_name:getValue("applicantName"),id_card_number:getValue("idCardNumber"),phone:getValue("phone"),individual_business_name:getValue("businessName"),tax_no:getValue("taxNo"),bank_name:getValue("bankName"),bank_account:getValue("bankAccount"),image_content_type:"image/webp",image_base64:base64}});if(!data?.success)throw new Error(data?.error||data?.message||"申请提交失败");document.getElementById("applicationPage").style.display="none";document.getElementById("successPage").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}catch(error){console.error(error);showError(error.message||"申请提交失败，请重新尝试。");button.disabled=false;button.textContent="提交申请"}}
 
 function getValue(id){
 const element=document.getElementById(id);
