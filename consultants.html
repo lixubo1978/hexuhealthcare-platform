@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>健康顾问经营统计 - 荷序健康平台管理中心</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
 :root{--pink:#e64f7c;--pink-dark:#b93667;--pink-light:#fff0f5;--pink-border:#ffd4e1;--purple:#8e4bc1;--text:#382a30;--muted:#9b8990;--border:#eee3e7;--bg:#fffafb;--green:#26966a;--orange:#d58a21;--red:#dc4c64;--blue:#3879c9;--shadow:0 8px 28px rgba(111,63,78,.06)}
@@ -193,9 +193,7 @@ tbody tr:hover{background:#f2f6ef}
 </div>
 <div id="toast" class="toast"></div>
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
 const LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=10*60*1000;
 const ALLOWED_ROLES=["founder","platform_admin","province_admin","city_admin"];
 let currentUser=null,currentProfile=null,dashboardData=null,consultants=[],availableCities=[],idleTimer=null,searchTimer=null,requestNo=0;
@@ -214,32 +212,16 @@ function showLoading(text="正在读取健康顾问经营数据..."){$("loading"
 function hideLoading(){$("loading").style.display="none"}
 function setBusy(el,busy,label){if(!el)return;if(busy){el.dataset.old=el.textContent;el.textContent=label||"处理中...";el.disabled=true}else{el.textContent=el.dataset.old||el.textContent;el.disabled=false}}
 function parseData(data){if(typeof data==="string"){try{return JSON.parse(data)}catch{return {}}}return data||{}}
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const token=accessToken();if(!token)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+token};if(body!==undefined)headers["Content-Type"]="application/json";let response;try{response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await response.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!response.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
 function goBack(){location.href=HOME_PAGE}
-async function logout(){try{await supabaseClient.auth.signOut()}finally{location.href=LOGIN_PAGE}}
+async function logout(){clearSession();location.href=LOGIN_PAGE}
 function resetIdleTimer(){clearTimeout(idleTimer);idleTimer=setTimeout(autoLogout,IDLE_LIMIT)}
-async function autoLogout(){try{await supabaseClient.auth.signOut()}catch(error){console.error(error)}alert("由于10分钟未操作，系统已自动退出。");location.href=LOGIN_PAGE}
+async function autoLogout(){clearSession();alert("由于10分钟未操作，系统已自动退出。");location.href=LOGIN_PAGE}
 ["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(name=>document.addEventListener(name,resetIdleTimer,{passive:true}));
-async function initialize(){
-resetIdleTimer();
-try{
-const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
-if(sessionError)throw sessionError;
-if(!session){location.replace(LOGIN_PAGE);return}
-currentUser=session.user;
-const {data:profile,error:profileError}=await supabaseClient.from("profiles").select("id,full_name,role,status").eq("id",currentUser.id).maybeSingle();
-if(profileError||!profile)throw new Error("无法读取当前管理账号资料。");
-if(profile.status!=="active")throw new Error("当前管理账号已经停用。");
-if(!ALLOWED_ROLES.includes(profile.role)){alert("您没有健康顾问经营统计页面访问权限。");location.replace(HOME_PAGE);return}
-currentProfile=profile;
-$("roleText").textContent=roleName(profile.role);
-await loadDashboard(true);
-}catch(error){
-console.error("初始化失败：",error);
-hideLoading();
-alert(error.message||"页面初始化失败。");
-if(String(error.message||"").includes("登录"))location.replace(LOGIN_PAGE);
-}
-}
+async function initialize(){resetIdleTimer();try{if(!accessToken()){location.replace(LOGIN_PAGE);return}const identity=await api("/api/auth/business-identity");if(!identity?.user)throw new Error("无法读取当前管理账号资料。");currentUser=identity.user;currentProfile=identity.profile||{id:identity.user.id,full_name:identity.user.user_metadata?.full_name||"",role:identity.role,status:identity.status};if(currentProfile.status!=="active")throw new Error("当前管理账号已经停用。");if(!ALLOWED_ROLES.includes(currentProfile.role)){alert("您没有健康顾问经营统计页面访问权限。");location.replace(HOME_PAGE);return}$("roleText").textContent=roleName(currentProfile.role);await loadDashboard(true)}catch(error){console.error("初始化失败：",error);hideLoading();alert(error.message||"页面初始化失败。");if(String(error.message||"").includes("登录"))location.replace(LOGIN_PAGE)}}
 function rpcParams(){
 const cityValue=$("citySelect").value;
 return {p_city_id:cityValue?Number(cityValue):null,p_date_from:$("dateFrom").value||null,p_date_to:$("dateTo").value||null,p_keyword:$("keyword").value.trim()||null};
@@ -252,8 +234,7 @@ if(initial)showLoading();
 try{
 const params=rpcParams();
 if(params.p_date_from&&params.p_date_to&&params.p_date_from>params.p_date_to)throw new Error("开始日期不能晚于结束日期。");
-const {data,error}=await supabaseClient.rpc("get_consultant_management_dashboard",params);
-if(error)throw error;
+const data=await api("/api/admin/consultants/dashboard",{method:"POST",body:params});
 if(thisRequest!==requestNo)return;
 dashboardData=parseData(data);
 if(!dashboardData.success)throw new Error(dashboardData.error||"健康顾问经营数据读取失败。");
@@ -387,8 +368,7 @@ $("modalLoading").classList.remove("hidden");
 $("orderDesktop").classList.add("hidden");
 $("orderMobile").innerHTML="";
 try{
-const {data,error}=await supabaseClient.rpc("get_consultant_management_orders",{p_consultant_no:Number(consultantNo),p_city_id:Number(cityId),p_date_from:$("dateFrom").value||null,p_date_to:$("dateTo").value||null});
-if(error)throw error;
+const data=await api("/api/admin/consultants/orders",{method:"POST",body:{p_consultant_no:Number(consultantNo),p_city_id:Number(cityId),p_date_from:$("dateFrom").value||null,p_date_to:$("dateTo").value||null}});
 const result=parseData(data),orders=Array.isArray(result.orders)?result.orders:[];
 renderOrders(orders);
 }catch(error){
@@ -451,7 +431,6 @@ $("dateFrom").addEventListener("keydown",e=>{if(e.key==="Enter")loadDashboard()}
 $("dateTo").addEventListener("keydown",e=>{if(e.key==="Enter")loadDashboard()});
 $("orderModal").addEventListener("click",e=>{if(e.target===$("orderModal"))closeOrderModal()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeOrderModal()});
-supabaseClient.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.replace(LOGIN_PAGE)});
 initialize();
 </script>
 </body>
