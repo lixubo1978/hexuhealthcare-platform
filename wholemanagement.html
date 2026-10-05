@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#f4f0e6">
 <title>荷序健康管理平台</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{--pink-50:#f4f0e6;--pink-100:#e4efea;--pink-300:#b5cec4;--pink-500:#176968;--pink-600:#0b5051;--pink-700:#103537;--rose-dark:#103537;--text-main:#233633;--text-sub:#64716a;--text-light:#748078;--border:#d3ddd7;--danger:#e2263f;--purple:#0b5051;--orange:#176968;--shadow:0 10px 30px rgba(35,54,51,.06)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -295,38 +295,25 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 </nav>
 
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-const LOGIN_PAGE="login.html";
-const IDLE_LIMIT=10*60*1000;
-const ID_IMAGE_BUCKET="health-consultant-applications";
-let idleTimer=null;
-let consultantApplications=[];
-let rejectingApplicationId=null;
-
+const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+const LOGIN_PAGE="login.html",IDLE_LIMIT=10*60*1000;
+let idleTimer=null,consultantApplications=[],rejectingApplicationId=null;
 function esc(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function valueText(value){return value===null||value===undefined||String(value).trim()===""?"—":String(value)}
 function formatTime(value){if(!value)return"—";const date=new Date(value);return Number.isNaN(date.getTime())?"—":date.toLocaleString("zh-CN",{hour12:false})}
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const token=accessToken();if(!token)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+token};if(body!==undefined)headers["Content-Type"]="application/json";let response;try{response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await response.text();let data=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!response.ok)throw new Error(data?.error||data?.message||"请求失败");return data}
 function resetIdleTimer(){clearTimeout(idleTimer);idleTimer=setTimeout(autoLogout,IDLE_LIMIT)}
-async function autoLogout(){try{await supabaseClient.auth.signOut()}catch(error){console.error(error)}alert("由于10分钟未操作，系统已自动退出。");window.location.href=LOGIN_PAGE}
+async function autoLogout(){clearSession();alert("由于10分钟未操作，系统已自动退出。");window.location.href=LOGIN_PAGE}
 ["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(name=>document.addEventListener(name,resetIdleTimer,{passive:true}));
-
 function roleText(role){return{founder:"创始人",platform_admin:"平台管理员",platform_staff:"平台员工",province_admin:"省管理员",city_admin:"市管理员"}[role]||role}
 function isManagementRole(role){return["founder","platform_admin","platform_staff","province_admin","city_admin"].includes(role)}
 function isPlatformManager(role){return["founder","platform_admin"].includes(role)}
 function applyMenuPermissions(role){if(!isPlatformManager(role))document.querySelectorAll(".platform-only").forEach(el=>el.classList.add("hidden"))}
 
-async function loadAssignment(userId,role){
-if(isPlatformManager(role))return{provinceName:"全国",cityName:"全国"};
-if(role==="platform_staff")return{provinceName:"按授权",cityName:"按授权"};
-const{data,error}=await supabaseClient.from("admin_assignments").select("province_id,city_id").eq("user_id",userId).eq("status","active").limit(1).maybeSingle();
-if(error||!data)return{provinceName:"未配置",cityName:"未配置"};
-let provinceName="未配置",cityName="全部城市";
-if(data.province_id){const{data:province}=await supabaseClient.from("provinces").select("province_name").eq("id",data.province_id).maybeSingle();if(province)provinceName=province.province_name}
-if(data.city_id){const{data:city}=await supabaseClient.from("cities").select("city_name").eq("id",data.city_id).maybeSingle();if(city)cityName=city.city_name}
-return{provinceName,cityName};
-}
+async function loadAssignment(userId,role){const data=await api("/api/admin/management/assignment");return{provinceName:data.province_name||"未配置",cityName:data.city_name||"未配置"}}
 
 function isActivationItem(item){return item.needs_activation===true||item.account_status==="pending_activation"||item.application_status==="approved"}
 function updateConsultantAlert(){
@@ -347,9 +334,8 @@ document.getElementById("consultantAlertDesc").textContent=`当前辖区有${par
 async function loadConsultantAlert(profile){
 if(!["founder","platform_admin","province_admin","city_admin"].includes(profile.role)){consultantApplications=[];updateConsultantAlert();return}
 try{
-const{data,error}=await supabaseClient.rpc("get_pending_health_consultant_applications");
-if(error)throw error;
-consultantApplications=Array.isArray(data)?data:[];
+const data=await api("/api/admin/management/consultant-applications");
+consultantApplications=Array.isArray(data?.applications)?data.applications:[];
 updateConsultantAlert();
 }catch(error){console.warn("健康顾问待处理数据读取失败：",error);consultantApplications=[];updateConsultantAlert()}
 }
@@ -358,18 +344,7 @@ function openConsultantModal(){document.getElementById("consultantModal").classL
 function closeConsultantModal(){document.getElementById("consultantModal").classList.remove("show");document.body.style.overflow=""}
 function consultantMaskClicked(event){if(event.target===event.currentTarget)closeConsultantModal()}
 
-async function createPhotoUrl(path){
-if(!path)return null;
-let clean=String(path).trim();
-const objectMarker=`/storage/v1/object/${ID_IMAGE_BUCKET}/`;
-const signMarker=`/storage/v1/object/sign/${ID_IMAGE_BUCKET}/`;
-if(clean.includes(objectMarker))clean=decodeURIComponent(clean.split(objectMarker)[1].split("?")[0]);
-if(clean.includes(signMarker))clean=decodeURIComponent(clean.split(signMarker)[1].split("?")[0]);
-if(clean.startsWith(`${ID_IMAGE_BUCKET}/`))clean=clean.slice(ID_IMAGE_BUCKET.length+1);
-const{data,error}=await supabaseClient.storage.from(ID_IMAGE_BUCKET).createSignedUrl(clean,600);
-if(error)throw error;
-return data?.signedUrl||null;
-}
+async function createPhotoUrl(path){if(!path)return null;const data=await api("/api/admin/management/consultant-photo",{method:"POST",body:{path:String(path)}});return data?.url||null}
 
 async function loadPhoto(applicationId,path){
 const box=document.getElementById(`idPhoto-${applicationId}`);
@@ -435,17 +410,7 @@ const button=document.getElementById(`approveBtn-${applicationId}`);
 setButtonsDisabled(applicationId,true);
 if(button)button.textContent=activation?"正在创建登录账户...":"正在审批并创建账户...";
 try{
-const{data,error}=await supabaseClient.functions.invoke("approve-health-consultant",{body:{application_id:Number(applicationId),review_note:null}});
-if(error){
-let message=error.message||"Edge Function调用失败";
-try{
-if(error.context instanceof Response){
-const detail=await error.context.json();
-message=detail?.message||message;
-}
-}catch(parseError){console.warn(parseError)}
-throw new Error(message);
-}
+const data=await api("/api/admin/management/consultant-approve",{method:"POST",body:{application_id:Number(applicationId),review_note:null}});
 if(!data?.success)throw new Error(data?.message||"审批及自动开户失败");
 consultantApplications=consultantApplications.filter(record=>Number(record.id)!==Number(applicationId));
 updateConsultantAlert();
@@ -493,8 +458,7 @@ button.disabled=true;
 button.textContent="正在处理...";
 setButtonsDisabled(applicationId,true);
 try{
-const{data,error}=await supabaseClient.rpc("reject_health_consultant_application",{p_application_id:applicationId,p_review_note:reason});
-if(error)throw error;
+const data=await api("/api/admin/management/consultant-reject",{method:"POST",body:{application_id:applicationId,review_note:reason}});
 if(!data?.success)throw new Error(data?.message||"拒绝申请失败");
 consultantApplications=consultantApplications.filter(record=>Number(record.id)!==applicationId);
 updateConsultantAlert();
@@ -522,58 +486,16 @@ module.textContent=`${safe} 条待确认`;module.classList.add("show");
 async function loadComplaintAlert(profile){
 if(!isPlatformManager(profile.role)){updateComplaintAlertUI(0);return}
 try{
-const{data,error}=await supabaseClient.rpc("get_platform_complaint_alert_count");
-if(error){console.warn("投诉提醒读取失败：",error);updateComplaintAlertUI(0);return}
-let count=0;
-if(typeof data==="number"||typeof data==="string")count=Number(data)||0;
-else if(data&&typeof data==="object")count=Number(data.count??data.pending_count??data.alert_count??0);
+const data=await api("/api/admin/management/complaint-alert");
+let count=Number(data?.count||0);
 updateComplaintAlertUI(count);
 }catch(error){console.warn("投诉提醒读取失败：",error);updateComplaintAlertUI(0)}
 }
 
-async function initializePage(){
-resetIdleTimer();
-try{
-const{data:{session},error:sessionError}=await supabaseClient.auth.getSession();
-if(sessionError||!session){window.location.href=LOGIN_PAGE;return}
-const user=session.user;
-const{data:profile,error:profileError}=await supabaseClient.from("profiles").select("id,full_name,role,status").eq("id",user.id).maybeSingle();
-if(profileError||!profile){await supabaseClient.auth.signOut();alert("当前账号没有平台管理人员资料。");window.location.href=LOGIN_PAGE;return}
-if(profile.status!=="active"){await supabaseClient.auth.signOut();alert("当前账号已停用。");window.location.href=LOGIN_PAGE;return}
-if(!isManagementRole(profile.role)){await supabaseClient.auth.signOut();alert("当前账号没有管理平台访问权限。");window.location.href=LOGIN_PAGE;return}
-const assignment=await loadAssignment(user.id,profile.role);
-const displayName=profile.full_name||user.email||"管理人员",roleName=roleText(profile.role);
-document.getElementById("topUserName").textContent=displayName;
-document.getElementById("topUserRole").textContent=roleName;
-document.getElementById("cardRole").textContent=roleName;
-document.getElementById("cardProvince").textContent=assignment.provinceName;
-document.getElementById("cardCity").textContent=assignment.cityName;
-document.getElementById("cardEmail").textContent=user.email||"-";
-document.getElementById("welcomeTitle").textContent=`欢迎回来，${displayName}`;
-let description="";
-if(profile.role==="founder")description="您当前拥有全国平台最高管理权限，可管理全国产品、人员、地区和业务数据。";
-else if(profile.role==="platform_admin")description="您当前拥有平台管理权限，可管理全国产品目录、地区和业务数据。";
-else if(profile.role==="province_admin")description=`您当前负责 ${assignment.provinceName}，可以查看本省辖区内各城市业务数据。`;
-else if(profile.role==="city_admin")description=`您当前负责 ${assignment.cityName}，可以管理本市价格并查看本市业务数据。`;
-else description="您已进入荷序健康平台管理中心，请按照已授权范围使用管理功能。";
-document.getElementById("welcomeDesc").textContent=description;
-applyMenuPermissions(profile.role);
-await Promise.all([loadComplaintAlert(profile),loadConsultantAlert(profile)]);
-document.getElementById("loadingMask").style.display="none";
-}catch(error){
-console.error("页面初始化失败：",error);
-alert("系统初始化失败，请重新登录。");
-window.location.href=LOGIN_PAGE;
-}
-}
+async function initializePage(){resetIdleTimer();try{if(!accessToken()){window.location.href=LOGIN_PAGE;return}const identity=await api("/api/auth/business-identity");const user=identity?.user,profile=identity?.profile||{id:user?.id,full_name:user?.user_metadata?.full_name||"",role:identity?.role,status:identity?.status};if(!user||!profile){clearSession();alert("当前账号没有平台管理人员资料。");window.location.href=LOGIN_PAGE;return}if(profile.status!=="active"){clearSession();alert("当前账号已停用。");window.location.href=LOGIN_PAGE;return}if(!isManagementRole(profile.role)){clearSession();alert("当前账号没有管理平台访问权限。");window.location.href=LOGIN_PAGE;return}const assignment=await loadAssignment(user.id,profile.role);const displayName=profile.full_name||user.email||"管理人员",roleName=roleText(profile.role);document.getElementById("topUserName").textContent=displayName;document.getElementById("topUserRole").textContent=roleName;document.getElementById("cardRole").textContent=roleName;document.getElementById("cardProvince").textContent=assignment.provinceName;document.getElementById("cardCity").textContent=assignment.cityName;document.getElementById("cardEmail").textContent=user.email||"-";document.getElementById("welcomeTitle").textContent=`欢迎回来，${displayName}`;let description="";if(profile.role==="founder")description="您当前拥有全国平台最高管理权限，可管理全国产品、人员、地区和业务数据。";else if(profile.role==="platform_admin")description="您当前拥有平台管理权限，可管理全国产品目录、地区和业务数据。";else if(profile.role==="province_admin")description=`您当前负责 ${assignment.provinceName}，可以查看本省辖区内各城市业务数据。`;else if(profile.role==="city_admin")description=`您当前负责 ${assignment.cityName}，可以管理本市价格并查看本市业务数据。`;else description="您已进入荷序健康平台管理中心，请按照已授权范围使用管理功能。";document.getElementById("welcomeDesc").textContent=description;applyMenuPermissions(profile.role);await Promise.all([loadComplaintAlert(profile),loadConsultantAlert(profile)]);document.getElementById("loadingMask").style.display="none"}catch(error){console.error("页面初始化失败：",error);alert("系统初始化失败，请重新登录。");window.location.href=LOGIN_PAGE}}
 
-async function logout(){
-if(!confirm("确定退出管理平台吗？"))return;
-try{await supabaseClient.auth.signOut()}catch(error){console.error("退出登录失败：",error)}
-window.location.href=LOGIN_PAGE;
-}
+async function logout(){if(!confirm("确定退出管理平台吗？"))return;clearSession();window.location.href=LOGIN_PAGE}
 
-supabaseClient.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")window.location.href=LOGIN_PAGE});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"){if(document.getElementById("rejectModal").classList.contains("show"))closeRejectModal();else if(document.getElementById("consultantModal").classList.contains("show"))closeConsultantModal()}});
 document.addEventListener("DOMContentLoaded",initializePage);
 </script>
