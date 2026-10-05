@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#fff7fa">
 <title>荷序健康 - 服务区域管理</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 <style>
 :root{
@@ -428,167 +428,17 @@ body,.loading{background:#f4f0e6}.topbar{background:rgba(255,252,247,.97)}.brand
 <div id="toast" class="toast"></div>
 
 <script>
-const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3";
+const LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",CITY_PRICE_PAGE="./cityprices.html",BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
+let currentUser=null,currentProfile=null,provinces=[],cities=[],areas=[],products=[];
+function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}
+function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}
+function accessToken(){return loadSession()?.access_token||""}
+async function api(path,{method="GET",body}={}){const t=accessToken();if(!t)throw new Error("登录状态已失效，请重新登录。");const headers={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)headers["Content-Type"]="application/json";let r;try{r=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"})}catch{throw new Error("网络连接失败，请稍后重试。")}const raw=await r.text();let d=null;try{d=raw?JSON.parse(raw):null}catch{d=raw}if(!r.ok)throw new Error(d?.error||d?.message||"请求失败");return d}
 
-const supabaseClient=window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  {
-    auth:{
-      persistSession:true,
-      autoRefreshToken:true
-    }
-  }
-);
-
-const LOGIN_PAGE="./login.html";
-const HOME_PAGE="./wholemanagement.html";
-const CITY_PRICE_PAGE="./cityprices.html";
-
-let currentUser=null;
-let currentProfile=null;
-let provinces=[];
-let cities=[];
-let areas=[];
-let products=[];
-
-/* ===================== 初始化 ===================== */
-
-async function initialize(){
-  try{
-    const {data:{session}}=await supabaseClient.auth.getSession();
-
-    if(!session){
-      location.replace(LOGIN_PAGE);
-      return;
-    }
-
-    currentUser=session.user;
-
-    const {data:profile,error:profileError}=await supabaseClient
-      .from("profiles")
-      .select("id,full_name,role,status")
-      .eq("id",currentUser.id)
-      .single();
-
-    if(profileError||!profile){
-      throw new Error("无法读取当前账号权限。");
-    }
-
-    if(profile.status!=="active"){
-      throw new Error("当前账号已经停用。");
-    }
-
-    if(!["founder","platform_admin"].includes(profile.role)){
-      alert("您没有服务区域管理权限。");
-      location.replace(HOME_PAGE);
-      return;
-    }
-
-    currentProfile=profile;
-
-    await loadProvinces();
-    await loadCities();
-    await loadProducts();
-    await loadAreas();
-
-    fillProvinceSelect();
-    document.getElementById("loading").style.display="none";
-
-  }catch(error){
-    console.error("页面初始化失败：",error);
-    document.getElementById("loading").style.display="none";
-    alert(error.message||"页面初始化失败。");
-  }
-}
-
-/* ===================== 省份 ===================== */
-
-async function loadProvinces(){
-  const {data,error}=await supabaseClient
-    .from("provinces")
-    .select("id,province_code,province_name,status")
-    .eq("status","active")
-    .order("province_code",{ascending:true});
-
-  if(error){
-    throw new Error("省份数据读取失败："+error.message);
-  }
-
-  provinces=data||[];
-}
-
-/* ===================== 城市 ===================== */
-
-async function loadCities(){
-  const {data,error}=await supabaseClient
-    .from("cities")
-    .select("id,province_id,city_code,city_name,status")
-    .eq("status","active")
-    .order("city_code",{ascending:true});
-
-  if(error){
-    throw new Error("城市数据读取失败："+error.message);
-  }
-
-  cities=data||[];
-}
-
-/* ===================== 产品 ===================== */
-
-async function loadProducts(){
-  const {data,error}=await supabaseClient
-    .from("products")
-    .select("id,product_name,status")
-    .eq("status","active");
-
-  if(error){
-    throw new Error("产品名录读取失败："+error.message);
-  }
-
-  products=data||[];
-  document.getElementById("productCount").textContent=products.length;
-}
-
-/* ===================== 服务区域 ===================== */
-
-async function loadAreas(){
-  const {data,error}=await supabaseClient
-    .from("service_areas")
-    .select(`
-      id,
-      area_no,
-      province_id,
-      city_id,
-      district_id,
-      status,
-      merchant_split_enabled,
-      created_by,
-      created_at,
-      invalidated_at
-    `)
-    .order("area_no",{ascending:true});
-
-  if(error){
-    throw new Error("服务区域读取失败："+error.message);
-  }
-
-  areas=data||[];
-
-  renderStats();
-  renderAreas();
-}
-
-function renderStats(){
-  document.getElementById("totalCount").textContent=areas.length;
-
-  document.getElementById("activeCount").textContent=
-    areas.filter(item=>item.status==="active").length;
-
-  document.getElementById("inactiveCount").textContent=
-    areas.filter(item=>item.status==="inactive").length;
-}
+async function initialize(){try{if(!accessToken()){location.replace(LOGIN_PAGE);return}const identity=await api("/api/auth/business-identity");if(!identity?.user)throw new Error("无法读取当前账号权限。");currentUser=identity.user;currentProfile=identity.profile||{id:identity.user.id,role:identity.role,status:identity.status};if(currentProfile.status!=="active")throw new Error("当前账号已经停用。");if(!["founder","platform_admin"].includes(currentProfile.role)){alert("您没有服务区域管理权限。");location.replace(HOME_PAGE);return}await loadRegionData();fillProvinceSelect();document.getElementById("loading").style.display="none"}catch(error){console.error("页面初始化失败：",error);document.getElementById("loading").style.display="none";alert(error.message||"页面初始化失败。")}}
+async function loadRegionData(){const d=await api("/api/admin/regions/data");provinces=d.provinces||[];cities=d.cities||[];areas=d.areas||[];products=d.products||[];document.getElementById("productCount").textContent=products.length;renderStats();renderAreas()}
+async function loadAreas(){const d=await api("/api/admin/regions/areas");areas=d.areas||[];renderStats();renderAreas()}
+function renderStats(){document.getElementById("totalCount").textContent=areas.length;document.getElementById("activeCount").textContent=areas.filter(x=>x.status==="active").length;document.getElementById("inactiveCount").textContent=areas.filter(x=>x.status==="inactive").length}
 
 /* ===================== 列表 ===================== */
 
@@ -964,17 +814,7 @@ async function createArea(){
   button.textContent="正在开通...";
 
   try{
-    const {data,error}=await supabaseClient.rpc(
-      "create_service_area_with_prices",
-      {
-        p_province_id:provinceId,
-        p_city_id:cityId
-      }
-    );
-
-    if(error){
-      throw error;
-    }
+    const data=await api("/api/admin/regions/create",{method:"POST",body:{p_province_id:provinceId,p_city_id:cityId}});
 
     if(data?.success===false){
       throw new Error(
@@ -1065,16 +905,7 @@ async function invalidateArea(id){
       "info"
     );
 
-    const {data,error}=await supabaseClient.rpc(
-      "invalidate_service_area",
-      {
-        p_service_area_id:Number(id)
-      }
-    );
-
-    if(error){
-      throw error;
-    }
+    const data=await api("/api/admin/regions/invalidate",{method:"POST",body:{p_service_area_id:Number(id)}});
 
     if(data?.success===false){
       throw new Error(
@@ -1206,40 +1037,14 @@ function goHome(){
   location.href=HOME_PAGE;
 }
 
-async function logout(){
-  if(!confirm("确定退出登录吗？")){
-    return;
-  }
-
-  await supabaseClient.auth.signOut();
-  location.replace(LOGIN_PAGE);
-}
+async function logout(){if(!confirm("确定退出登录吗？"))return;clearSession();location.replace(LOGIN_PAGE)}
 
 /* ===================== 10分钟无操作退出 ===================== */
 
 let idleTimer;
 
-function resetIdle(){
-  clearTimeout(idleTimer);
-
-  idleTimer=setTimeout(async()=>{
-    await supabaseClient.auth.signOut();
-
-    alert("由于10分钟未操作，系统已经自动退出。");
-
-    location.replace(LOGIN_PAGE);
-
-  },10*60*1000);
-}
-
-["click","touchstart","keydown","mousemove","scroll"]
-.forEach(event=>{
-  document.addEventListener(
-    event,
-    resetIdle,
-    {passive:true}
-  );
-});
+function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{clearSession();alert("由于10分钟未操作，系统已经自动退出。");location.replace(LOGIN_PAGE)},10*60*1000)}
+["click","touchstart","keydown","mousemove","scroll"].forEach(event=>document.addEventListener(event,resetIdle,{passive:true}));
 
 /* ===================== 启动 ===================== */
 
