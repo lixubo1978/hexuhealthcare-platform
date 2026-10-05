@@ -52,8 +52,8 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <div class="field"><label>商户（%）</label><input id="storeRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>服务人员（%）</label><input id="operatorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>健康顾问（%）</label><input id="advisorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
-<div class="field"><label>软件服务（固定 %）</label><input class="ratio-input" type="number" value="2" readonly></div>
-</div><div id="totalBox" class="total-box"><span>六方比例合计（必须等于100%）</span><strong id="ratioTotal">2%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
+<div class="field"><label>软件服务（固定 %）</label><input class="ratio-input" type="number" value="0.8" readonly></div>
+</div><div id="totalBox" class="total-box"><span>六方比例合计（必须等于100%）</span><strong id="ratioTotal">0.8%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
 <script>
 const SUPABASE_URL="https://qbuqjwpkltbjhlfbyjyb.supabase.co",SUPABASE_ANON_KEY="sb_publishable_fqMc6n_yKymvZEb-6u6DDQ_CJZpEbl3",db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=600000;
 let currentUser=null,currentProfile=null,merchants=[],products=[],categories=[],rules=[],serviceAreas=[],cities=[],provinces=[],cityPrices=[],idleTimer=null,editingMerchantId=null,editingProductId=null,saving=false;
@@ -134,7 +134,7 @@ calcTotal();$("ruleModal").classList.add("show")
 }
 function closeModal(){if(saving)return;$("ruleModal").classList.remove("show");editingMerchantId=null;editingProductId=null}
 function ratios(){return{platform:Number($("platformRatio").value),city:Number($("cityManagerRatio").value),store:Number($("storeRatio").value),operator:Number($("operatorRatio").value),advisor:Number($("advisorRatio").value)}}
-function calcTotal(){const r=ratios(),v=Object.values(r),valid=v.every(n=>Number.isFinite(n)&&n>=0&&n<=100),total=valid?v.reduce((a,b)=>a+b,0)+2:NaN;$("ratioTotal").textContent=Number.isFinite(total)?rv(total)+"%":"无效";$("totalBox").classList.toggle("bad",!Number.isFinite(total)||Math.abs(total-100)>.000001);return{r,total,valid}}
+function calcTotal(){const r=ratios(),v=Object.values(r),valid=v.every(n=>Number.isFinite(n)&&n>=0&&n<=100),total=valid?v.reduce((a,b)=>a+b,0)+0.8:NaN;$("ratioTotal").textContent=Number.isFinite(total)?rv(total)+"%":"无效";$("totalBox").classList.toggle("bad",!Number.isFinite(total)||Math.abs(total-100)>.000001);return{r,total,valid}}
 async function saveRule(){
 if(saving)return;
 if(!editingMerchantId||!isUUID(editingMerchantId)){console.error("保存被阻止，editingMerchantId异常：",editingMerchantId);return toast("商户ID异常，禁止保存分账规则。请关闭窗口后重新点击设置分账。","error")}
