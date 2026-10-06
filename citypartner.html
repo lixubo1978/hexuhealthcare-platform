@@ -1,1 +1,53 @@
 
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<title>荷序健康 - 城市主理人工作台</title>
+<style>
+:root{--g:#0b5051;--d:#103537;--c:#f4f0e6;--p:#fffcf7;--l:#d3dcd4;--m:#68766e}
+*{box-sizing:border-box}body{margin:0;background:var(--c);color:#233633;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+button,input{font:inherit}.hidden{display:none!important}.top{min-height:78px;padding:12px 26px;background:var(--p);border-bottom:1px solid var(--l);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:42px;height:42px;object-fit:contain}.brand b{font-size:21px;letter-spacing:2px;color:var(--g)}.brand small{display:block;margin-top:4px;color:var(--m)}
+.btn{min-height:42px;padding:0 15px;border:1px solid #b5c9bc;background:var(--p);color:var(--g);cursor:pointer}.btn.primary{background:var(--g);color:#fff;border-color:var(--g)}
+.main{max-width:1380px;margin:auto;padding:28px}.hero{padding:30px 34px;background:linear-gradient(110deg,#073a3c,#0b5051 64%,#205955);color:#fff}.hero h1{margin:7px 0 12px;font-family:"Songti SC","STSong",serif;font-size:32px;font-weight:400}.hero p{margin:0;color:#d0e0d8;font-size:12px;line-height:1.9}.eyebrow{font-size:11px;letter-spacing:2px;color:#c8ddd2}
+.alert{margin-top:18px;padding:15px 17px;border:1px solid #dfbd92;background:#fff7e9;color:#80511a;display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:13px;line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin:24px 0;border:1px solid var(--l);background:var(--p)}.stat{padding:20px 23px;border-right:1px solid var(--l);min-height:105px}.stat:last-child{border:0}.stat label{font-size:11px;color:var(--m)}.stat b{display:block;margin-top:9px;font:500 28px Georgia,serif;color:var(--g)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:var(--p);border:1px solid #9ab3a5;border-top:3px solid var(--g)}.full{grid-column:1/-1}.head{padding:18px 20px;border-bottom:1px solid var(--l);display:flex;justify-content:space-between;align-items:center;gap:12px}.head h2{margin:0;font-size:17px;color:var(--d)}.head p{margin:5px 0 0;color:var(--m);font-size:11px}.body{padding:18px 20px}.tags{display:flex;flex-wrap:wrap;gap:8px}.tag{padding:7px 10px;border:1px solid #b8cbbd;background:#eaf0e9;color:var(--g);font-size:12px}
+.entry{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:17px;border:1px solid var(--l);background:#fff}.entry b{color:var(--d)}.entry p{margin:5px 0 0;color:var(--m);font-size:11px}
+.wrap{overflow:auto}table{width:100%;min-width:850px;border-collapse:collapse}th{padding:13px;background:#edf1e8;color:#52695e;text-align:left;font-size:11px}td{padding:14px 13px;border-top:1px solid #e3e7de;font-size:12px}.ratio{font-weight:700;color:var(--g)}.empty{padding:42px;text-align:center;color:var(--m)}
+.mask{display:none;position:fixed;inset:0;z-index:30;background:rgba(16,53,55,.5);align-items:center;justify-content:center;padding:18px}.mask.show{display:flex}.modal{width:min(540px,100%);background:var(--p);border:1px solid #aac0b2}.mh{padding:17px 20px;background:var(--g);color:#fff;display:flex;justify-content:space-between;align-items:center}.mh h3{margin:0;font-family:"Songti SC","STSong",serif;font-weight:400}.x{border:0;background:transparent;color:#fff;font-size:24px}.form{padding:20px}.field{margin-bottom:14px}.field label{display:block;margin-bottom:7px;font-size:12px;color:#52695e}.input{width:100%;min-height:48px;padding:0 12px;border:1px solid #c4d2c7}.foot{padding:14px 20px;border-top:1px solid var(--l);display:flex;justify-content:flex-end;gap:8px}.loading{position:fixed;inset:0;z-index:50;background:rgba(244,240,230,.93);display:grid;place-items:center;color:var(--g);font-weight:700}
+@media(max-width:800px){.top{padding:10px 13px}.brand small{display:none}.main{padding:16px 11px}.hero{padding:24px 21px}.hero h1{font-size:27px}.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2n){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--l)}.grid{grid-template-columns:1fr}.full{grid-column:auto}.alert{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div id="loading" class="loading">正在读取城市主理人工作台…</div>
+<header class="top"><div class="brand"><img src="./logo.jpeg" alt="荷序健康"><div><b>荷序健康</b><small>城市主理人工作台</small></div></div><button class="btn" onclick="logout()">退出</button></header>
+<main class="main">
+<section class="hero"><div class="eyebrow">CITY PARTNER WORKSPACE</div><h1 id="welcome">城市主理人工作台</h1><p>管理已授权城市的技术服务人员，并查看自己实际参与的商户服务项目。城市授权范围与分账参与关系相互独立。</p></section>
+<div id="passwordAlert" class="alert hidden"><div><b>密码安全提醒</b><br>当前仍处于初始密码状态。未修改前，每次进入工作台都会继续提醒。</div><button class="btn primary" onclick="openPassword()">立即修改密码</button></div>
+<section class="stats"><div class="stat"><label>授权城市</label><b id="statCities">0</b></div><div class="stat"><label>授权城市技术人员</label><b id="statTechs">0</b></div><div class="stat"><label>参与分成门店</label><b id="statMerchants">0</b></div><div class="stat"><label>参与项目规则</label><b id="statRules">0</b></div></section>
+<div class="grid">
+<section class="panel"><div class="head"><div><h2>我的授权城市</h2><p>决定技术服务人员的管理范围。</p></div></div><div class="body"><div id="cityTags" class="tags"></div></div></section>
+<section class="panel"><div class="head"><div><h2>技术服务人员管理</h2><p>创建、编辑、项目授权、商户配对和工作城市变更。</p></div></div><div class="body"><div class="entry"><div><b>进入技术服务人员管理</b><p>系统自动限制在你的授权城市。</p></div><button class="btn primary" onclick="location.href='technicians.html'">进入管理</button></div></div></section>
+<section class="panel full"><div class="head"><div><h2>我的参与门店与项目</h2><p>按 merchant_product_rules.citypartner_id 判断；比例为 0% 仍表示参与。</p></div></div><div class="wrap"><table><thead><tr><th>城市</th><th>门店</th><th>服务项目</th><th>主理人比例</th><th>版本</th><th>状态</th></tr></thead><tbody id="ruleRows"></tbody></table></div><div id="ruleEmpty" class="empty hidden">当前没有指定给你的有效商户项目规则。</div></section>
+</div>
+</main>
+<div id="passwordModal" class="mask"><div class="modal"><div class="mh"><h3>修改登录密码</h3><button class="x" onclick="closePassword()">×</button></div><form onsubmit="changePassword(event)"><div class="form"><div class="field"><label>新密码</label><input id="pw1" class="input" type="password" minlength="8" maxlength="72" required></div><div class="field"><label>再次输入新密码</label><input id="pw2" class="input" type="password" minlength="8" maxlength="72" required></div></div><div class="foot"><button type="button" class="btn" onclick="closePassword()">取消</button><button class="btn primary" type="submit">确认修改</button></div></form></div></div>
+<script>
+const KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token",$=id=>document.getElementById(id);let d=null;
+function sess(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}}function token(){return sess()?.access_token||""}function clear(){localStorage.removeItem(KEY)}
+async function api(path,{method="GET",body}={}){const t=token();if(!t)throw Error("登录状态已失效");const h={Accept:"application/json",Authorization:"Bearer "+t};if(body!==undefined)h["Content-Type"]="application/json";const r=await fetch(path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"}),raw=await r.text();let x=null;try{x=raw?JSON.parse(raw):null}catch{x=raw}if(!r.ok)throw Error(x?.error||x?.message||"请求失败");return x}
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function merchant(id){return d.merchants.find(x=>String(x.id)===String(id))}function product(id){return d.products.find(x=>String(x.id)===String(id))}
+function cityName(id){return d.authorized_cities.find(x=>String(x.id)===String(id))?.city_name||"—"}
+function render(){const cp=d.citypartner||{},name=cp.citypartner_name||d.profile?.full_name||"城市主理人";$("welcome").textContent=`${name} · 城市主理人工作台`;$("statCities").textContent=d.authorized_cities.length;$("statTechs").textContent=d.technician_count||0;$("statMerchants").textContent=d.merchants.length;$("statRules").textContent=d.rules.length;$("cityTags").innerHTML=d.authorized_cities.length?d.authorized_cities.map(c=>`<span class="tag">${esc(c.city_name||c.city_code||c.id)}</span>`).join(""):'<span style="color:#68766e">暂未授权城市</span>';$("passwordAlert").classList.toggle("hidden",!d.mustChangePassword);
+$("ruleRows").innerHTML=d.rules.map(r=>{const m=merchant(r.merchant_id),p=product(r.product_id),cid=d.merchant_cities?.[String(r.merchant_id)];return `<tr><td>${esc(cityName(cid))}</td><td>${esc(m?.merchant_name||m?.record_no||"—")}</td><td>${esc(p?.product_name||p?.product_code||"—")}</td><td class="ratio">${Number(r.city_manager_ratio||0).toLocaleString("zh-CN",{maximumFractionDigits:4})}%</td><td>V${esc(r.version_no??"—")}</td><td>有效</td></tr>`}).join("");$("ruleEmpty").classList.toggle("hidden",d.rules.length>0)}
+async function boot(){try{if(!token())return location.replace("login.html");d=await api("/api/citypartner/dashboard");render()}catch(e){alert(e.message||"工作台读取失败");location.replace("login.html")}finally{$("loading").classList.add("hidden")}}
+function openPassword(){$("pw1").value="";$("pw2").value="";$("passwordModal").classList.add("show")}function closePassword(){$("passwordModal").classList.remove("show")}
+async function changePassword(e){e.preventDefault();const a=$("pw1").value,b=$("pw2").value;if(a.length<8||a.length>72)return alert("新密码长度必须为8至72位。");if(a!==b)return alert("两次输入的密码不一致。");try{await api("/api/auth/update-password",{method:"POST",body:{password:a}});alert("密码修改成功。以后不再显示初始密码提醒。");closePassword();d.mustChangePassword=false;render()}catch(x){alert("修改密码失败："+(x.message||"未知错误"))}}
+function logout(){clear();location.replace("login.html")}boot();
+</script>
+</body></html>
