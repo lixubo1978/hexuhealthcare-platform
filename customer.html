@@ -1064,6 +1064,128 @@ html,body,.app{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing
 button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 @media(max-width:360px){.topbar{padding-left:14px;padding-right:14px}.brand-title{font-size:20px}.brand-area{gap:8px}.hero{padding:24px 20px}.primary-left{gap:9px}.primary-title{font-size:16px}.section-title{font-size:21px}.order-actions{flex-wrap:wrap}.order-btn{min-width:90px}}
 
+
+/* ================================
+   客户中心首页紧凑版
+   欢迎信息并入顶部，取消大欢迎卡
+   ================================ */
+.topbar{
+    min-height:68px;
+    padding:10px 16px;
+}
+.brand-area{
+    gap:9px;
+}
+.logo{
+    width:38px;
+    height:38px;
+}
+.brand-text{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    column-gap:10px;
+    row-gap:2px;
+}
+.brand-title{
+    font-size:20px;
+}
+.brand-subtitle{
+    width:100%;
+    margin-top:1px;
+}
+.top-customer-name{
+    font:400 17px/1.3 var(--hexu-serif);
+    color:var(--hexu-deep);
+    white-space:nowrap;
+}
+.hero{
+    display:none !important;
+}
+.primary-wrap{
+    margin:12px 16px 0;
+}
+.primary-order-btn{
+    min-height:60px;
+    padding:7px 12px 7px 14px;
+}
+.primary-icon{
+    width:36px;
+    height:36px;
+    font-size:19px;
+}
+.primary-left{
+    gap:10px;
+}
+.primary-title{
+    font-size:16px;
+}
+.primary-desc{
+    margin-top:1px;
+    line-height:1.35;
+}
+.primary-arrow{
+    width:30px;
+    height:30px;
+}
+.section{
+    margin:14px 16px 0;
+}
+.section-title-row{
+    margin-bottom:7px;
+    padding-bottom:6px;
+}
+.section-title{
+    font-size:20px;
+    line-height:1.35;
+}
+.section-link{
+    min-height:30px;
+    padding:3px 2px;
+}
+.stat-card{
+    min-height:72px;
+    padding:8px 6px 7px;
+}
+.stat-icon{
+    height:20px;
+    font-size:17px;
+}
+.stat-value{
+    margin-top:3px;
+    font-size:22px;
+}
+.stat-label{
+    margin-top:4px;
+    font-size:10px;
+}
+.notice-card{
+    margin-top:8px;
+    padding:8px 10px;
+    gap:8px;
+    align-items:center;
+}
+.notice-icon{
+    width:28px;
+    height:28px;
+}
+.notice-title{
+    font-size:12px;
+}
+.notice-text{
+    margin-top:2px;
+    font-size:10px;
+    line-height:1.45;
+}
+.orders-list{
+    padding:9px;
+    gap:9px;
+}
+@media(max-width:360px){
+    .top-customer-name{font-size:15px}
+    .brand-title{font-size:18px}
+}
+
 </style>
 </head>
 
@@ -1088,6 +1210,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 
             <div class="brand-text">
                 <div class="brand-title">荷序健康</div>
+                <div id="topCustomerName" class="top-customer-name">尊敬的客户</div>
                 <div class="brand-subtitle">安心服务 · 温暖相伴</div>
             </div>
         </div>
@@ -1898,6 +2021,16 @@ function renderCustomerHeader() {
         )
         .textContent =
         name;
+
+    const topCustomerName =
+        document.getElementById(
+            "topCustomerName"
+        );
+
+    if (topCustomerName) {
+        topCustomerName.textContent =
+            name;
+    }
 
 
     const customerNo =
