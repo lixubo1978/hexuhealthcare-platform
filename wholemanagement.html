@@ -15,7 +15,7 @@ body{width:100%;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"S
 button,input,select,textarea{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}a{color:inherit}.hidden{display:none!important}
 .topbar{min-height:72px;background:rgba(255,252,247,.95);backdrop-filter:blur(18px);border-bottom:1px solid rgba(11,80,81,.08);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 28px;position:sticky;top:0;z-index:1000}
 .brand{display:flex;align-items:center;gap:13px;min-width:0}.brand-logo{width:44px;height:44px;flex:0 0 44px;border-radius:13px;object-fit:contain;background:#fffcf7;box-shadow:0 6px 18px rgba(11,80,81,.12)}.brand-title{font-size:20px;font-weight:720;letter-spacing:1.5px}.brand-subtitle{margin-top:3px;font-size:11px;color:var(--text-light)}
-.top-right{display:flex;align-items:center;gap:14px}.user-info{text-align:right;max-width:240px}.user-name{font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user-role{margin-top:4px;font-size:11px;color:var(--pink-600);font-weight:600}.logout-btn{min-width:88px;min-height:48px;padding:0 18px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--pink-500),var(--pink-600));color:#fff;font-size:13px;font-weight:650}
+.top-right{display:flex;align-items:center;gap:14px}.user-info{text-align:right;max-width:240px}.user-name{font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user-role{margin-top:4px;font-size:11px;color:var(--pink-600);font-weight:600}.password-btn{min-width:88px;min-height:48px;padding:0 18px;border:1px solid var(--pink-600);border-radius:13px;background:#fffcf7;color:var(--pink-600);font-size:13px;font-weight:650}.logout-btn{min-width:88px;min-height:48px;padding:0 18px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--pink-500),var(--pink-600));color:#fff;font-size:13px;font-weight:650}
 .page{display:flex;width:100%;min-height:calc(100vh - 72px)}.sidebar{width:238px;flex:0 0 238px;background:rgba(255,252,247,.92);border-right:1px solid var(--border);padding:12px 10px 18px;position:sticky;top:72px;height:calc(100vh - 72px);overflow-y:auto}
 .menu-title{padding:8px 10px 3px;font-size:9px;font-weight:700;letter-spacing:1px;color:#748078}.menu-item{min-height:37px;display:flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:1px;border-radius:10px;text-decoration:none;color:#344c45;font-size:12px;font-weight:520}.menu-item:hover{background:var(--pink-50);color:var(--pink-700)}.menu-item.active{background:linear-gradient(135deg,var(--pink-100),#f4f0e6);color:var(--pink-700);font-weight:650;box-shadow:inset 3px 0 0 var(--pink-500)}.menu-icon{width:21px;flex:0 0 21px;text-align:center;font-size:16px}
 .complaint-menu-item{color:#c51f39;font-weight:650}.complaint-menu-badge{margin-left:auto;min-width:22px;height:22px;display:none;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:#e2263f;color:#fff;font-size:10px;font-weight:800}.complaint-menu-badge.show{display:inline-flex}
@@ -57,7 +57,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 .top-right{gap:22px}
 .user-name{font-size:13px;color:var(--hexu-deep)}
 .user-role{font-size:10px;letter-spacing:1px}
-.logout-btn{min-width:96px;min-height:40px;padding:0 18px;border:1px solid var(--hexu-green);border-radius:0;background:var(--hexu-green);font-size:12px;letter-spacing:1px;color:var(--hexu-paper)}
+.password-btn{min-width:88px;min-height:40px;padding:0 16px;border:1px solid var(--hexu-green);border-radius:0;background:var(--hexu-paper);color:var(--hexu-green);font-size:12px;letter-spacing:1px}.logout-btn{min-width:96px;min-height:40px;padding:0 18px;border:1px solid var(--hexu-green);border-radius:0;background:var(--hexu-green);font-size:12px;letter-spacing:1px;color:var(--hexu-paper)}
 .logout-btn:hover{background:var(--hexu-deep)}
 .page{min-height:calc(100vh - 88px)}
 .sidebar{width:240px;flex-basis:240px;top:88px;height:calc(100vh - 88px);padding:22px 12px;background:var(--hexu-green);border-right:0;overflow-y:auto;scrollbar-color:#75958b var(--hexu-green);scrollbar-width:thin}
@@ -150,7 +150,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
   .brand-title{font-size:20px;letter-spacing:1px;white-space:nowrap}
   .brand-subtitle,.user-info{display:none}
   .top-right{gap:0}
-  .logout-btn{min-width:76px;min-height:40px;padding:0 10px;font-size:11px;white-space:nowrap}
+  .password-btn,.logout-btn{min-width:76px;min-height:40px;padding:0 10px;font-size:11px;white-space:nowrap}
   .page{display:block;height:auto;min-height:0}
   .sidebar{display:none}
   .main{height:auto;padding:18px 14px 24px;overflow:visible}
@@ -204,13 +204,13 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 @media(max-width:760px){
   .module-grid{padding:12px;gap:12px;}
 }
-</style>
+.password-mask{display:none;position:fixed;inset:0;z-index:7000;background:rgba(16,53,55,.58);padding:18px;align-items:center;justify-content:center}.password-mask.show{display:flex}.password-modal{width:min(460px,100%);background:var(--hexu-paper);border:1px solid var(--hexu-line);box-shadow:0 25px 70px rgba(0,0,0,.25)}.password-head{padding:18px 20px;background:var(--hexu-green);color:var(--hexu-paper);display:flex;align-items:center;justify-content:space-between}.password-head strong{font-family:var(--hexu-serif);font-size:21px;font-weight:400}.password-close{width:34px;height:34px;border:1px solid #83a69a;background:transparent;color:#fff;font-size:20px}.password-body{padding:22px}.password-note{margin-bottom:16px;color:#64716a;font-size:12px;line-height:1.7}.password-field{margin-bottom:14px}.password-field label{display:block;margin-bottom:6px;font-size:12px;font-weight:600}.password-field input{width:100%;height:44px;padding:0 12px;border:1px solid #cbd8d0;background:#fff;outline:none}.password-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.password-cancel,.password-save{height:43px;border-radius:0;font-weight:650}.password-cancel{border:1px solid var(--hexu-line);background:var(--hexu-cream);color:#52685f}.password-save{border:1px solid var(--hexu-green);background:var(--hexu-green);color:#fff}.password-save:disabled{opacity:.55}</style>
 </head>
 <body>
 <div id="loadingMask" class="loading-mask"><div class="spinner"></div><div class="loading-text">正在验证管理权限...</div></div>
 <header class="topbar">
 <div class="brand"><img src="./logo.jpeg" class="brand-logo" alt="荷序健康 Logo"><div><div class="brand-title">荷序健康</div><div class="brand-subtitle">全国业务管理平台</div></div></div>
-<div class="top-right"><div class="user-info"><div id="topUserName" class="user-name">-</div><div id="topUserRole" class="user-role">-</div></div><button class="logout-btn" type="button" onclick="logout()">退出登录</button></div>
+<div class="top-right"><div class="user-info"><div id="topUserName" class="user-name">-</div><div id="topUserRole" class="user-role">-</div></div><button class="password-btn" type="button" onclick="openPasswordModal()">修改密码</button><button class="logout-btn" type="button" onclick="logout()">退出登录</button></div>
 </header>
 <div class="page">
 <aside class="sidebar">
@@ -293,7 +293,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 </div>
 </div>
 
-<nav class="mobile-bottom-nav">
+<div id="passwordModal" class="password-mask" onclick="passwordMaskClicked(event)"><div class="password-modal"><div class="password-head"><strong>修改登录密码</strong><button class="password-close" type="button" onclick="closePasswordModal()">×</button></div><div class="password-body"><div class="password-note">请输入新的登录密码。密码长度为 8 至 72 位。</div><div class="password-field"><label>新密码</label><input id="newPassword" type="password" autocomplete="new-password" maxlength="72" placeholder="至少 8 位"></div><div class="password-field"><label>再次输入新密码</label><input id="confirmPassword" type="password" autocomplete="new-password" maxlength="72" placeholder="再次输入新密码"></div><div class="password-actions"><button class="password-cancel" type="button" onclick="closePasswordModal()">取消</button><button id="passwordSaveBtn" class="password-save" type="button" onclick="savePassword()">确认修改</button></div></div></div></div><nav class="mobile-bottom-nav">
 <a href="wholemanagement.html" class="mobile-nav-item active"><span class="mobile-nav-icon">🏠</span>首页</a>
 <a href="cityprices.html" class="mobile-nav-item"><span class="mobile-nav-icon">💗</span>定价</a>
 <a href="orders.html" class="mobile-nav-item"><span class="mobile-nav-icon">🧾</span>订单</a>
@@ -500,9 +500,13 @@ updateComplaintAlertUI(count);
 
 async function initializePage(){resetIdleTimer();try{if(!accessToken()){window.location.href=LOGIN_PAGE;return}const identity=await api("/api/auth/business-identity");const user=identity?.user,profile=identity?.profile||{id:user?.id,full_name:user?.user_metadata?.full_name||"",role:identity?.role,status:identity?.status};if(!user||!profile){clearSession();alert("当前账号没有平台管理人员资料。");window.location.href=LOGIN_PAGE;return}if(profile.status!=="active"){clearSession();alert("当前账号已停用。");window.location.href=LOGIN_PAGE;return}if(!isManagementRole(profile.role)){clearSession();alert("当前账号没有管理平台访问权限。");window.location.href=LOGIN_PAGE;return}const assignment=await loadAssignment(user.id,profile.role);const displayName=profile.full_name||user.email||"管理人员",roleName=roleText(profile.role);document.getElementById("topUserName").textContent=displayName;document.getElementById("topUserRole").textContent=roleName;document.getElementById("cardRole").textContent=roleName;document.getElementById("cardProvince").textContent=assignment.provinceName;document.getElementById("cardCity").textContent=assignment.cityName;document.getElementById("cardEmail").textContent=user.email||"-";document.getElementById("welcomeTitle").textContent=`欢迎回来，${displayName}`;let description="";if(profile.role==="founder")description="您当前拥有全国平台最高管理权限，可管理全国产品、人员、地区和业务数据。";else if(profile.role==="platform_admin")description="您当前拥有平台管理权限，可管理全国产品目录、地区和业务数据。";else if(profile.role==="province_admin")description=`您当前负责 ${assignment.provinceName}，可以查看本省辖区内各城市业务数据。`;else if(profile.role==="city_admin")description=`您当前负责 ${assignment.cityName}，可以管理本市价格并查看本市业务数据。`;else description="您已进入荷序健康平台管理中心，请按照已授权范围使用管理功能。";document.getElementById("welcomeDesc").textContent=description;applyMenuPermissions(profile.role);await Promise.all([loadComplaintAlert(profile),loadConsultantAlert(profile)]);document.getElementById("loadingMask").style.display="none"}catch(error){console.error("页面初始化失败：",error);alert("系统初始化失败，请重新登录。");window.location.href=LOGIN_PAGE}}
 
+function openPasswordModal(){document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";document.getElementById("passwordModal").classList.add("show");setTimeout(()=>document.getElementById("newPassword").focus(),50)}
+function closePasswordModal(){document.getElementById("passwordModal").classList.remove("show")}
+function passwordMaskClicked(event){if(event.target===event.currentTarget)closePasswordModal()}
+async function savePassword(){const p=document.getElementById("newPassword").value,c=document.getElementById("confirmPassword").value;if(p.length<8){alert("新密码至少需要8位。");return}if(p.length>72){alert("新密码不能超过72位。");return}if(p!==c){alert("两次输入的新密码不一致。");return}const b=document.getElementById("passwordSaveBtn");b.disabled=true;b.textContent="正在修改...";try{await api("/api/auth/update-password",{method:"POST",body:{password:p}});closePasswordModal();alert("密码修改成功。下次登录请使用新密码。")}catch(e){alert("密码修改失败："+(e.message||"请稍后重试"))}finally{b.disabled=false;b.textContent="确认修改"}}
 async function logout(){if(!confirm("确定退出管理平台吗？"))return;clearSession();window.location.href=LOGIN_PAGE}
 
-document.addEventListener("keydown",event=>{if(event.key==="Escape"){if(document.getElementById("rejectModal").classList.contains("show"))closeRejectModal();else if(document.getElementById("consultantModal").classList.contains("show"))closeConsultantModal()}});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"){if(document.getElementById("passwordModal").classList.contains("show"))closePasswordModal();else if(document.getElementById("rejectModal").classList.contains("show"))closeRejectModal();else if(document.getElementById("consultantModal").classList.contains("show"))closeConsultantModal()}});
 document.addEventListener("DOMContentLoaded",initializePage);
 </script>
 
