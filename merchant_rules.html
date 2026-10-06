@@ -48,7 +48,8 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <div id="toast" class="toast"></div>
 <div id="ruleModal" class="modal-mask"><div class="modal"><div class="modal-head"><div class="modal-title">设置分账规则</div><button class="modal-close" id="modalCloseBtn">×</button></div><div class="modal-body"><div id="ruleTarget" class="rule-target"></div><div class="ratio-grid">
 <div class="field"><label>运营平台（%）</label><input id="platformRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
-<div class="field"><label>城市负责人（%）</label><input id="cityManagerRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
+<div class="field"><label>城市主理人（可不选）</label><select id="citypartnerSelect" class="ratio-input"><option value="">无城市主理人</option></select></div>
+<div class="field"><label>城市主理人（%）</label><input id="cityManagerRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>商户（%）</label><input id="storeRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>服务人员（%）</label><input id="operatorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>健康顾问（%）</label><input id="advisorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
@@ -56,7 +57,7 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 </div><div id="totalBox" class="total-box"><span>六方比例合计（必须等于100%）</span><strong id="ratioTotal">0.8%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
 <script>
 const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token",LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=600000;
-let currentUser=null,currentProfile=null,merchants=[],products=[],categories=[],rules=[],serviceAreas=[],cities=[],provinces=[],cityPrices=[],idleTimer=null,editingMerchantId=null,editingProductId=null,saving=false;
+let currentUser=null,currentProfile=null,merchants=[],products=[],categories=[],rules=[],serviceAreas=[],cities=[],provinces=[],cityPrices=[],citypartners=[],citypartnerCities=[],idleTimer=null,editingMerchantId=null,editingProductId=null,saving=false;
 const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const isUUID=v=>typeof v==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.trim());
 function loadSession(){try{return JSON.parse(localStorage.getItem(BUSINESS_SESSION_KEY)||"null")}catch{return null}}function clearSession(){localStorage.removeItem(BUSINESS_SESSION_KEY)}function accessToken(){return loadSession()?.access_token||""}
@@ -67,9 +68,9 @@ const merchantName=m=>m?.merchant_name||m?.name||m?.full_name||m?.company_name||
 function productCategory(p){const c=categories.find(x=>String(x.id)===String(p?.category_id));return c?.category_name||"未分类"}function cityById(id){return cities.find(x=>String(x.id)===String(id))}function provinceById(id){return provinces.find(x=>String(x.id)===String(id))}
 function activeRule(mid,pid){return rules.find(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="active")}function historyRules(mid,pid){return rules.filter(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="inactive").sort((a,b)=>Number(b.version_no||0)-Number(a.version_no||0)||String(b.invalidated_at||"").localeCompare(String(a.invalidated_at||"")))}function fmt(v){return v?new Date(v).toLocaleString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}):"—"}function invalidator(r){return r?.invalidated_by_name||"未设置姓名"}
 function cityPriceHtml(m,p){const cityId=merchantCityId(m),undefinedPrice='<span class="badge badge-orange">未定义</span>';if(cityId==null||!serviceAreas.some(a=>a.status==="active"&&String(a.city_id)===String(cityId)))return undefinedPrice;const now=Date.now(),r=cityPrices.find(x=>String(x.city_id)===String(cityId)&&String(x.product_id)===String(p.id)&&x.status==="active"&&x.invalidated_at==null&&Date.parse(x.effective_from)<=now);if(!r||r.price==null||String(r.price).trim()==="")return undefinedPrice;const price=Number(r.price);return Number.isFinite(price)&&price>=0?`<span class="city-price">¥${price.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`:undefinedPrice}
-function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市负责人 <b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">健康顾问 <b>${rv(r.order_source_ratio)}%</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
+function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}function citypartnerName(id){const cp=citypartners.find(x=>String(x.id)===String(id));return cp?(cp.citypartner_name||cp.full_name||("城市主理人 "+cp.citypartner_no)):"无"}function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市主理人 ${r.citypartner_id?`<b>${esc(citypartnerName(r.citypartner_id))}</b> `:""}<b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">健康顾问 <b>${rv(r.order_source_ratio)}%</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
 async function init(){resetIdle();try{if(!accessToken()){location.replace(LOGIN_PAGE);return}const identity=await api("/api/auth/business-identity");if(!identity?.user)throw new Error("无法读取当前账号权限。");currentUser=identity.user;currentProfile=identity.profile||{id:identity.user.id,role:identity.role,status:identity.status};if(currentProfile.status!=="active")throw new Error("当前账号已经停用。");if(!["founder","platform_admin"].includes(currentProfile.role)){alert("您没有商户分账规则管理权限。");location.replace(HOME_PAGE);return}await loadData();loading()}catch(e){console.error(e);loading();alert(e.message||"页面初始化失败。")}}
-async function loadData(){const d=await api("/api/admin/merchant-rules/data");merchants=d.merchants||[];products=d.products||[];categories=d.categories||[];rules=d.rules||[];serviceAreas=d.service_areas||[];cities=d.cities||[];provinces=d.provinces||[];cityPrices=d.city_prices||[];renderCity();renderMerchantFilter();renderCategoryFilters();renderAll()}
+async function loadData(){const d=await api("/api/admin/merchant-rules/data");merchants=d.merchants||[];products=d.products||[];categories=d.categories||[];rules=d.rules||[];serviceAreas=d.service_areas||[];cities=d.cities||[];provinces=d.provinces||[];cityPrices=d.city_prices||[];citypartners=d.citypartners||[];citypartnerCities=d.citypartner_cities||[];renderCity();renderMerchantFilter();renderCategoryFilters();renderAll()}
 function openedCities(){const m=new Map;serviceAreas.forEach(a=>{if(a.city_id&&!m.has(String(a.city_id)))m.set(String(a.city_id),a)});return [...m.values()]}
 function renderCity(){const s=$("cityFilter"),old=s.value,list=openedCities();s.innerHTML='<option value="">全部已开通服务城市</option>'+list.map(a=>{const c=cityById(a.city_id),p=provinceById(a.province_id||c?.province_id),no=a.area_no?String(a.area_no).padStart(3,"0"):"";return `<option value="${esc(a.city_id)}">${no?esc(no)+" | ":""}${p?.province_name?esc(p.province_name)+" · ":""}${esc(c?.city_name||"城市 "+a.city_id)}</option>`}).join("");if(old&&list.some(a=>String(a.city_id)===String(old)))s.value=old}
 function cityMerchants(){const c=$("cityFilter").value;return c?merchants.filter(m=>String(merchantCityId(m))===String(c)):merchants}
@@ -81,6 +82,8 @@ function renderAll(){renderStats();renderList()}
 function renderStats(){const ms=cityMerchants(),total=ms.length*products.length;let n=0;ms.forEach(m=>products.forEach(p=>{if(activeRule(m.id,p.id))n++}));$("statMerchants").textContent=ms.length;$("statProducts").textContent=products.length;$("statRules").textContent=n;$("statUndefined").textContent=Math.max(0,total-n)}
 function filteredMerchants(){const id=$("merchantFilter").value,list=cityMerchants();return id?list.filter(m=>String(m.id)===String(id)):list}
 function filteredProducts(m){const k=$("searchInput").value.trim().toLowerCase(),list=categoryProducts();if(!k)return list;if((merchantName(m)+" "+merchantCode(m)).toLowerCase().includes(k))return list;return list.filter(p=>(productName(p)+" "+productCode(p)+" "+productCategory(p)).toLowerCase().includes(k))}
+function citypartnersForMerchant(m){const cityId=merchantCityId(m);if(cityId==null)return[];const ids=new Set(citypartnerCities.filter(x=>x.status==="active"&&String(x.city_id)===String(cityId)).map(x=>String(x.citypartner_id)));return citypartners.filter(cp=>cp.status==="active"&&ids.has(String(cp.id)))}
+function renderCitypartnerSelect(m){const s=$("citypartnerSelect"),list=citypartnersForMerchant(m);s.innerHTML='<option value="">无城市主理人</option>'+list.map(cp=>`<option value="${esc(cp.id)}">${cp.citypartner_no?esc(cp.citypartner_no)+" | ":""}${esc(cp.citypartner_name||cp.full_name||("城市主理人 "+cp.id))}</option>`).join("")}
 function renderList(){
 const box=$("merchantContainer"),blocks=[];
 filteredMerchants().forEach(m=>{
@@ -101,6 +104,7 @@ if(activeRule(realMerchantId,p.id)){toast("该商户与服务项目已经存在�
 editingMerchantId=realMerchantId;
 editingProductId=String(p.id);
 $("ruleTarget").innerHTML=`商户：<b>${esc(merchantName(m))}</b><br>服务项目类型：<b>${esc(productCategory(p))}</b><br>服务项目：<b>${esc(productName(p))}</b>${productCode(p)?`（${esc(productCode(p))}）`:""}`;
+renderCitypartnerSelect(m);$("citypartnerSelect").value="";
 ["platformRatio","cityManagerRatio","storeRatio","operatorRatio","advisorRatio"].forEach(id=>$(id).value="0");
 calcTotal();$("ruleModal").classList.add("show")
 }
@@ -117,7 +121,9 @@ if(!merchant||!isUUID(String(merchant.id).trim()))return toast("当前商户UUID
 if(!product)return toast("当前服务项目不存在，禁止保存。","error");
 const merchantId=String(merchant.id).trim(),productId=Number(product.id);
 const {r,total,valid}=calcTotal();
+const citypartnerId=$("citypartnerSelect").value?Number($("citypartnerSelect").value):null;
 if(!valid)return toast("所有分账比例必须在0%至100%之间。","error");
+if(citypartnerId===null&&Math.abs(r.city)>.000001)return toast("未选择城市主理人时，城市主理人分账比例必须为0%。","error");
 if(Math.abs(total-100)>.000001)return toast("六方分账比例合计必须等于100%。","error");
 if(activeRule(merchantId,productId))return toast("该商户与服务项目已经存在有效分账规则，请刷新页面。","error");
 if(!confirm(`确认保存这条分账规则？\n\n商户：${merchantName(merchant)}\n服务项目：${productName(product)}\n\n保存后将立即生效并锁定。`))return;
@@ -126,6 +132,7 @@ try{
 const payload={
 p_merchant_id:merchantId,
 p_product_id:productId,
+p_citypartner_id:citypartnerId,
 p_city_manager_ratio:r.city,
 p_platform_ratio:r.platform,
 p_store_ratio:r.store,
