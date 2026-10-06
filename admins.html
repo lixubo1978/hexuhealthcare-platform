@@ -515,7 +515,7 @@ tbody tr:hover{background:#f2f6ef}
 <div class="tabs">
     <button id="staffTab" class="tab active" onclick="activateTab('staff')">公司人员</button>
     <button id="merchantTab" class="tab" onclick="activateTab('merchant')">商户授权</button>
-    <button id="consultantTab" class="tab" onclick="activateTab('consultant')">健康顾问</button>
+    <button id="consultantTab" class="tab" onclick="activateTab('consultant')">健康顾问</button><button id="citypartnerTab" class="tab" onclick="activateTab('citypartner')">城市主理人</button>
 </div>
 
 <section id="staffSection">
@@ -628,7 +628,7 @@ tbody tr:hover{background:#f2f6ef}
 </div>
 </section>
 
-</main>
+<section id="citypartnerSection" class="hidden"><div class="stats"><div class="stat"><div class="stat-title">城市主理人总数</div><div id="citypartnerTotal" class="stat-number">0</div></div><div class="stat"><div class="stat-title">正常使用</div><div id="citypartnerActive" class="stat-number">0</div></div><div class="stat"><div class="stat-title">已设无效</div><div id="citypartnerInactive" class="stat-number">0</div></div><div class="stat"><div class="stat-title">已授权城市</div><div id="citypartnerCityTotal" class="stat-number">0</div></div></div><div class="panel"><div class="panel-toolbar"><input id="citypartnerSearch" class="input" placeholder="搜索编号、姓名或邮箱" oninput="renderCitypartners()"><select id="citypartnerStatusFilter" class="select" onchange="renderCitypartners()"><option value="">全部状态</option><option value="active">正常</option><option value="inactive">无效</option></select><button class="primary-button" onclick="openCitypartnerModal()">＋ 创建城市主理人</button></div><div class="table-scroll"><table><thead><tr><th>编号</th><th>城市主理人</th><th>登录邮箱</th><th>授权城市</th><th>状态</th><th>操作</th></tr></thead><tbody id="citypartnerTable"></tbody></table></div><div id="citypartnerEmpty" class="empty hidden">暂无城市主理人。</div></div></section></main>
 
 <!-- 公司人员弹窗 -->
 <div id="staffModal" class="modal-mask">
@@ -843,7 +843,7 @@ tbody tr:hover{background:#f2f6ef}
 </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div id="citypartnerModal" class="modal-mask"><div class="modal"><div class="modal-head"><div id="citypartnerModalTitle" class="modal-title">创建城市主理人</div><button class="modal-close" onclick="closeModal('citypartnerModal')">×</button></div><div class="modal-body"><div class="form-group"><label class="form-label">姓名 *</label><input id="citypartnerName" class="form-control"></div><div id="citypartnerEmailGroup" class="form-group"><label class="form-label">登录邮箱 *</label><input id="citypartnerEmail" class="form-control" type="email"></div><div class="consultant-preview">初始密码：12345678；未修改前每次登录提醒修改密码。</div><div class="form-section-title">授权已开通服务城市</div><div id="citypartnerCityChecks" class="cp-checks"></div></div><div class="modal-footer"><button class="cancel-button" onclick="closeModal('citypartnerModal')">取消</button><button id="saveCitypartnerButton" class="save-button" onclick="saveCitypartner()">创建账号</button></div></div></div><div id="toast" class="toast"></div>
 
 <script>
 const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token";
@@ -1710,5 +1710,18 @@ document.addEventListener("keydown",event=>{
 initialize();
 </script>
 
+<style>.tabs{grid-template-columns:repeat(4,1fr)!important}.cp-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cp-check{padding:10px;border:1px solid var(--border);background:#fffcf7}.cp-check input{margin-right:7px}@media(max-width:760px){.cp-checks{grid-template-columns:1fr}}</style>
+<script>
+let citypartners=[],citypartnerCities=[],citypartnerProfiles=[],editingCitypartnerId=null;
+const oldLoadAllData=loadAllData;loadAllData=async function(){const data=await api("/api/admin/access-center-data");profiles=data.profiles||[];merchants=data.merchants||[];consultants=data.consultants||[];assignments=data.assignments||[];provinces=data.provinces||[];cities=data.cities||[];districts=data.districts||[];serviceAreas=data.service_areas||[];citypartners=data.citypartners||[];citypartnerCities=data.citypartner_cities||[];citypartnerProfiles=data.citypartner_profiles||[];populateServiceAreas();renderAll();renderCitypartners()};
+const oldActivateTab=activateTab;activateTab=function(tab){["staff","merchant","consultant","citypartner"].forEach(n=>{document.getElementById(n+"Tab")?.classList.toggle("active",n===tab);document.getElementById(n+"Section")?.classList.toggle("hidden",n!==tab)})};
+function cpProfile(cp){return citypartnerProfiles.find(p=>String(p.id)===String(cp.auth_user_id))||null}function cpCities(id){return citypartnerCities.filter(x=>String(x.citypartner_id)===String(id)&&x.status==="active").map(x=>getCityName(x.city_id)).filter(Boolean)}
+function renderCitypartners(){const q=document.getElementById("citypartnerSearch")?.value.trim().toLowerCase()||"",st=document.getElementById("citypartnerStatusFilter")?.value||"",list=citypartners.filter(cp=>{const p=cpProfile(cp);return(!st||cp.status===st)&&(!q||[cp.citypartner_no,cp.citypartner_name,p?.login_email].join(" ").toLowerCase().includes(q))});document.getElementById("citypartnerTotal").textContent=citypartners.length;document.getElementById("citypartnerActive").textContent=citypartners.filter(x=>x.status==="active").length;document.getElementById("citypartnerInactive").textContent=citypartners.filter(x=>x.status!=="active").length;document.getElementById("citypartnerCityTotal").textContent=new Set(citypartnerCities.filter(x=>x.status==="active").map(x=>x.city_id)).size;const can=["founder","platform_admin"].includes(currentProfile.role);document.getElementById("citypartnerTable").innerHTML=list.map(cp=>{const p=cpProfile(cp),cs=cpCities(cp.id).join("、")||"—";return `<tr><td class="number-cell">${escapeHtml(cp.citypartner_no)}</td><td class="person-name">${escapeHtml(cp.citypartner_name)}</td><td>${escapeHtml(p?.login_email||"—")}</td><td>${escapeHtml(cs)}</td><td><span class="badge ${cp.status==="active"?"status-active":"status-other"}">${statusLabel(cp.status)}</span></td><td>${can&&cp.status==="active"?`<button class="action edit-action" onclick="openCitypartnerModal(${cp.id})">编辑授权</button><button class="action edit-action" onclick="resetCitypartnerPassword(${cp.id})">修改密码</button><button class="action danger-action" onclick="invalidateCitypartner(${cp.id})">设为无效</button>`:"—"}</td></tr>`}).join("");document.getElementById("citypartnerEmpty").classList.toggle("hidden",!!list.length)}
+function cityChecks(selected=[]){const ids=new Set(selected.map(String)),seen=new Set(),arr=serviceAreas.filter(a=>a.status==="active"&&a.city_id&&!seen.has(String(a.city_id))&&seen.add(String(a.city_id)));document.getElementById("citypartnerCityChecks").innerHTML=arr.map(a=>`<label class="cp-check"><input type="checkbox" value="${a.city_id}" ${ids.has(String(a.city_id))?"checked":""}>${escapeHtml(getCityName(a.city_id)||("城市 "+a.city_id))}</label>`).join("")||"暂无已开通服务城市"}
+function openCitypartnerModal(id=null){editingCitypartnerId=id;const cp=id?citypartners.find(x=>Number(x.id)===Number(id)):null;document.getElementById("citypartnerModalTitle").textContent=cp?"编辑城市主理人":"创建城市主理人";document.getElementById("citypartnerName").value=cp?.citypartner_name||"";document.getElementById("citypartnerEmailGroup").classList.toggle("hidden",!!cp);document.getElementById("citypartnerEmail").value="";document.getElementById("saveCitypartnerButton").textContent=cp?"保存修改":"创建账号";cityChecks(cp?citypartnerCities.filter(x=>String(x.citypartner_id)===String(cp.id)&&x.status==="active").map(x=>x.city_id):[]);document.getElementById("citypartnerModal").classList.add("show")}
+async function saveCitypartner(){const name=document.getElementById("citypartnerName").value.trim(),city_ids=[...document.querySelectorAll("#citypartnerCityChecks input:checked")].map(x=>Number(x.value)),b=document.getElementById("saveCitypartnerButton");if(!name)return showToast("请输入姓名。","error");if(!city_ids.length)return showToast("请至少授权一个城市。","error");const body={action:editingCitypartnerId?"update":"create",citypartner_id:editingCitypartnerId,citypartner_name:name,city_ids};if(!editingCitypartnerId){body.email=document.getElementById("citypartnerEmail").value.trim();if(!body.email)return showToast("请输入登录邮箱。","error")}try{setButtonLoading(b,true,"正在保存...",editingCitypartnerId?"保存修改":"创建账号");await api("/api/admin/citypartners/action",{method:"POST",body});closeModal("citypartnerModal");editingCitypartnerId=null;await loadAllData();showToast("城市主理人保存成功。","success")}catch(e){showToast(e.message,"error")}finally{b.disabled=false}}
+async function resetCitypartnerPassword(id){if(!confirm("确定将密码重置为 12345678 吗？\n重置后，在本人修改密码前，每次登录都应提醒修改密码。"))return;try{await api("/api/admin/citypartners/action",{method:"POST",body:{action:"reset_password",citypartner_id:id}});showToast("密码已重置为 12345678。","success")}catch(e){showToast(e.message,"error")}}
+async function invalidateCitypartner(id){if(!confirm("确定将该城市主理人设为无效吗？"))return;try{await api("/api/admin/citypartners/action",{method:"POST",body:{action:"invalidate",citypartner_id:id}});await loadAllData();showToast("已设为无效。","success")}catch(e){showToast(e.message,"error")}}
+</script>
 </body>
 </html>
