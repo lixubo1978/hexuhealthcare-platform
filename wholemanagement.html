@@ -205,6 +205,17 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
   .module-grid{padding:12px;gap:12px;}
 }
 .password-mask{display:none;position:fixed;inset:0;z-index:7000;background:rgba(16,53,55,.58);padding:18px;align-items:center;justify-content:center}.password-mask.show{display:flex}.password-modal{width:min(460px,100%);background:var(--hexu-paper);border:1px solid var(--hexu-line);box-shadow:0 25px 70px rgba(0,0,0,.25)}.password-head{padding:18px 20px;background:var(--hexu-green);color:var(--hexu-paper);display:flex;align-items:center;justify-content:space-between}.password-head strong{font-family:var(--hexu-serif);font-size:21px;font-weight:400}.password-close{width:34px;height:34px;border:1px solid #83a69a;background:transparent;color:#fff;font-size:20px}.password-body{padding:22px}.password-note{margin-bottom:16px;color:#64716a;font-size:12px;line-height:1.7}.password-field{margin-bottom:14px}.password-field label{display:block;margin-bottom:6px;font-size:12px;font-weight:600}.password-field input{width:100%;height:44px;padding:0 12px;border:1px solid #cbd8d0;background:#fff;outline:none}.password-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.password-cancel,.password-save{height:43px;border-radius:0;font-weight:650}.password-cancel{border:1px solid var(--hexu-line);background:var(--hexu-cream);color:#52685f}.password-save{border:1px solid var(--hexu-green);background:var(--hexu-green);color:#fff}.password-save:disabled{opacity:.55}</style>
+<style id="wholemanagement-compact-header-v1">
+.welcome{display:none!important}
+.user-role{display:none!important}
+.info-grid{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--hexu-line);margin-top:0}
+.main{padding-top:18px}
+@media(min-width:761px){.main{padding-top:14px}.info-grid{margin-bottom:18px}}
+@media(max-width:760px){.info-grid{grid-template-columns:1fr}}
+</style>
+<style id="wholemanagement-remove-info-v2">
+.content-wrap>.section-heading{margin-top:0}
+</style>
 </head>
 <body>
 <div id="loadingMask" class="loading-mask"><div class="spinner"></div><div class="loading-text">正在验证管理权限...</div></div>
@@ -246,12 +257,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 <div id="complaintAlertCount" class="complaint-alert-count">0</div><div class="complaint-alert-arrow">›</div>
 </a>
 <section class="welcome"><div class="welcome-tag">HEXU HEALTHCARE MANAGEMENT</div><h1 id="welcomeTitle">欢迎进入荷序健康管理平台</h1><p id="welcomeDesc">正在加载您的管理权限和辖区信息。</p></section>
-<section class="info-grid">
-<div class="info-card"><div class="info-label">当前身份</div><div id="cardRole" class="info-value info-small">-</div></div>
-<div class="info-card"><div class="info-label">管理省份</div><div id="cardProvince" class="info-value info-small">-</div></div>
-<div class="info-card"><div class="info-label">管理城市</div><div id="cardCity" class="info-value info-small">-</div></div>
-<div class="info-card"><div class="info-label">登录账户</div><div id="cardEmail" class="info-value info-small">-</div></div>
-</section>
+
 <div class="section-heading"><div class="section-title">管理功能</div><div class="section-hint">点击进入相应模块</div></div>
 <section class="module-grid">
 <a class="module-card platform-only" href="admins.html"><div class="module-top"><div class="module-icon">👤</div><div class="module-arrow">›</div></div><div class="module-name">商户授权/平台管理人员授权/顾问查看</div><div class="module-desc">创建和管理平台、市各级管理人员及辖区权限，授权商户，查看各城市健康顾问。</div></a>
@@ -498,7 +504,7 @@ updateComplaintAlertUI(count);
 }catch(error){console.warn("投诉提醒读取失败：",error);updateComplaintAlertUI(0)}
 }
 
-async function initializePage(){resetIdleTimer();try{if(!accessToken()){window.location.href=LOGIN_PAGE;return}const identity=await api("/api/auth/business-identity");const user=identity?.user,profile=identity?.profile||{id:user?.id,full_name:user?.user_metadata?.full_name||"",role:identity?.role,status:identity?.status};if(!user||!profile){clearSession();alert("当前账号没有平台管理人员资料。");window.location.href=LOGIN_PAGE;return}if(profile.status!=="active"){clearSession();alert("当前账号已停用。");window.location.href=LOGIN_PAGE;return}if(!isManagementRole(profile.role)){clearSession();alert("当前账号没有管理平台访问权限。");window.location.href=LOGIN_PAGE;return}const assignment=await loadAssignment(user.id,profile.role);const displayName=profile.full_name||user.email||"管理人员",roleName=roleText(profile.role);document.getElementById("topUserName").textContent=displayName;document.getElementById("topUserRole").textContent=roleName;document.getElementById("cardRole").textContent=roleName;document.getElementById("cardProvince").textContent=assignment.provinceName;document.getElementById("cardCity").textContent=assignment.cityName;document.getElementById("cardEmail").textContent=user.email||"-";document.getElementById("welcomeTitle").textContent=`欢迎回来，${displayName}`;let description="";if(profile.role==="founder")description="您当前拥有全国平台最高管理权限，可管理全国产品、人员、地区和业务数据。";else if(profile.role==="platform_admin")description="您当前拥有平台管理权限，可管理全国产品目录、地区和业务数据。";else if(profile.role==="province_admin")description=`您当前负责 ${assignment.provinceName}，可以查看本省辖区内各城市业务数据。`;else if(profile.role==="city_admin")description=`您当前负责 ${assignment.cityName}，可以管理本市价格并查看本市业务数据。`;else description="您已进入荷序健康平台管理中心，请按照已授权范围使用管理功能。";document.getElementById("welcomeDesc").textContent=description;applyMenuPermissions(profile.role);await Promise.all([loadComplaintAlert(profile),loadConsultantAlert(profile)]);document.getElementById("loadingMask").style.display="none"}catch(error){console.error("页面初始化失败：",error);alert("系统初始化失败，请重新登录。");window.location.href=LOGIN_PAGE}}
+async function initializePage(){resetIdleTimer();try{if(!accessToken()){window.location.href=LOGIN_PAGE;return}const identity=await api("/api/auth/business-identity");const user=identity?.user,profile=identity?.profile||{id:user?.id,full_name:user?.user_metadata?.full_name||"",role:identity?.role,status:identity?.status};if(!user||!profile){clearSession();alert("当前账号没有平台管理人员资料。");window.location.href=LOGIN_PAGE;return}if(profile.status!=="active"){clearSession();alert("当前账号已停用。");window.location.href=LOGIN_PAGE;return}if(!isManagementRole(profile.role)){clearSession();alert("当前账号没有管理平台访问权限。");window.location.href=LOGIN_PAGE;return}const assignment=await loadAssignment(user.id,profile.role);const displayName=profile.full_name||user.email||"管理人员",roleName=roleText(profile.role);document.getElementById("topUserName").textContent=displayName;document.getElementById("topUserRole").textContent="";document.getElementById("welcomeTitle").textContent=`欢迎回来，${displayName}`;let description="";if(profile.role==="founder")description="您当前拥有全国平台最高管理权限，可管理全国产品、人员、地区和业务数据。";else if(profile.role==="platform_admin")description="您当前拥有平台管理权限，可管理全国产品目录、地区和业务数据。";else if(profile.role==="province_admin")description=`您当前负责 ${assignment.provinceName}，可以查看本省辖区内各城市业务数据。`;else if(profile.role==="city_admin")description=`您当前负责 ${assignment.cityName}，可以管理本市价格并查看本市业务数据。`;else description="您已进入荷序健康平台管理中心，请按照已授权范围使用管理功能。";document.getElementById("welcomeDesc").textContent=description;applyMenuPermissions(profile.role);await Promise.all([loadComplaintAlert(profile),loadConsultantAlert(profile)]);document.getElementById("loadingMask").style.display="none"}catch(error){console.error("页面初始化失败：",error);alert("系统初始化失败，请重新登录。");window.location.href=LOGIN_PAGE}}
 
 function openPasswordModal(){document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";document.getElementById("passwordModal").classList.add("show");setTimeout(()=>document.getElementById("newPassword").focus(),50)}
 function closePasswordModal(){document.getElementById("passwordModal").classList.remove("show")}
