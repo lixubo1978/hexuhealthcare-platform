@@ -1353,7 +1353,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 
         <div class="profile-desc">
             首次使用荷序健康，请先完善基本资料。
-            姓名、所在省和所在市为必填信息。
+            只有昵称为必填信息，其他资料均可选填。
         </div>
 
         <div class="required-tip">
@@ -1364,7 +1364,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
         <div class="form-group">
 
             <div class="form-label">
-                客户姓名
+                昵称
                 <span class="required">*</span>
             </div>
 
@@ -1374,7 +1374,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
                 type="text"
                 maxlength="100"
                 autocomplete="name"
-                placeholder="请输入您的姓名"
+                placeholder="请输入昵称"
             >
 
         </div>
@@ -1403,7 +1403,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 
                 <div class="form-label">
                     所在省
-                    <span class="required">*</span>
+                    <span class="optional">选填</span>
                 </div>
 
                 <select
@@ -1423,7 +1423,7 @@ button:focus-visible{outline:2px solid #609b8c;outline-offset:3px}
 
                 <div class="form-label">
                     所在市
-                    <span class="required">*</span>
+                    <span class="optional">选填</span>
                 </div>
 
                 <select
@@ -2054,24 +2054,7 @@ function renderCustomerHeader() {
  * 不单独相信 profile_completed。
  * 姓名、省、市必须真实存在。
  */
-function isCustomerProfileComplete() {
-
-    const name =
-        String(
-            currentCustomer?.real_name ||
-            currentCustomer?.nickname ||
-            ""
-        ).trim();
-
-
-    return (
-        !!name &&
-        currentCustomer?.province_id !== null &&
-        currentCustomer?.province_id !== undefined &&
-        currentCustomer?.city_id !== null &&
-        currentCustomer?.city_id !== undefined
-    );
-}
+function isCustomerProfileComplete() {return !!String(currentCustomer?.nickname||currentCustomer?.real_name||"").trim();}
 
 
 /* ============================================================
@@ -2494,44 +2477,12 @@ async function saveCustomerProfile() {
     if (!name) {
 
         toast(
-            "请填写客户姓名"
+            "请填写昵称"
         );
 
         document
             .getElementById(
                 "profileRealName"
-            )
-            .focus();
-
-        return;
-    }
-
-
-    if (!provinceId) {
-
-        toast(
-            "请选择所在省份"
-        );
-
-        document
-            .getElementById(
-                "profileProvince"
-            )
-            .focus();
-
-        return;
-    }
-
-
-    if (!cityId) {
-
-        toast(
-            "请选择所在城市"
-        );
-
-        document
-            .getElementById(
-                "profileCity"
             )
             .focus();
 
@@ -2561,18 +2512,17 @@ async function saveCustomerProfile() {
                 {
                     method: "POST",
                     body: {
-                        real_name:
+                        nickname:
                             name,
 
+                        real_name:
+                            null,
+
                         province_id:
-                            Number(
-                                provinceId
-                            ),
+                            provinceId ? Number(provinceId) : null,
 
                         city_id:
-                            Number(
-                                cityId
-                            ),
+                            cityId ? Number(cityId) : null,
 
                         address:
                             address || null,
