@@ -150,16 +150,16 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <input id="idCardNumber" type="text" maxlength="30" autocomplete="off" placeholder="请输入身份证号码">
 </div>
 <div class="form-item full">
-<label>身份证正面照片<span class="required">*</span></label>
+<label>营业执照照片<span class="required">*</span></label>
 <div class="upload-area">
 <div class="upload-icon">📷</div>
-<div class="upload-title">上传身份证正面照片</div>
-<div class="upload-description">身份证正面必须清晰完整。<br>手机拍照或从相册选择均可。</div>
-<label class="select-image-button" for="idCardFile">选择身份证照片</label>
+<div class="upload-title">上传营业执照照片</div>
+<div class="upload-description">营业执照必须清晰完整。<br>手机拍照或从相册选择均可。</div>
+<label class="select-image-button" for="idCardFile">选择营业执照照片</label>
 <input id="idCardFile" type="file" accept="image/jpeg,image/png,image/webp">
 <div id="previewArea" class="preview-area">
 <img id="previewImage" alt="身份证正面预览">
-<div id="imageStatus" class="image-status">身份证照片已选择</div>
+<div id="imageStatus" class="image-status">营业执照照片已选择</div>
 </div>
 </div>
 </div>
@@ -197,7 +197,7 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <section class="card">
 <div class="agreement">
 <input id="agreement" type="checkbox">
-<div class="agreement-text">本人确认以上填写资料及上传的身份证资料真实、准确、完整，并同意荷序健康平台对本次健康顾问申请进行审核。</div>
+<div class="agreement-text">本人确认以上填写资料及上传的营业执照资料真实、准确、完整，并同意荷序健康平台对本次健康顾问申请进行审核。</div>
 </div>
 <button id="submitButton" class="submit-button" type="button" onclick="submitApplication()">提交申请</button>
 <button class="return-button" type="button" onclick="goLogin()">返回登录页面</button>
@@ -245,7 +245,7 @@ if(!file.type.startsWith("image/")){
 event.target.value="";
 compressedIdCardFile=null;
 hideImagePreview();
-showError("身份证必须上传图片文件。");
+showError("营业执照必须上传图片文件。");
 return;
 }
 
@@ -261,7 +261,7 @@ document.getElementById("previewImage").src=currentPreviewUrl;
 document.getElementById("previewArea").style.display="block";
 
 const kb=Math.round(compressedIdCardFile.size/1024);
-document.getElementById("imageStatus").textContent=`身份证照片已准备完成 · ${kb} KB`;
+document.getElementById("imageStatus").textContent=`营业执照照片已准备完成 · ${kb} KB`;
 
 hideMessage();
 }catch(error){
@@ -269,7 +269,7 @@ console.error(error);
 event.target.value="";
 compressedIdCardFile=null;
 hideImagePreview();
-showError("身份证图片处理失败，请重新选择照片。");
+showError("营业执照图片处理失败，请重新选择照片。");
 }
 }
 
@@ -327,7 +327,7 @@ return;
 
 resolve(new File(
 [blob],
-"id-card-front.webp",
+"business-license.webp",
 {type:"image/webp"}
 ));
 },"image/webp",.82);
@@ -366,7 +366,7 @@ throw new Error("请填写身份证号码。");
 }
 
 if(!compressedIdCardFile){
-throw new Error("请上传身份证正面照片。");
+throw new Error("请上传营业执照照片。");
 }
 
 if(!getValue("businessName")){
@@ -390,7 +390,7 @@ throw new Error("请确认所填写的申请资料真实有效。");
 }
 }
 
-function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||"");resolve(value.includes(",")?value.split(",")[1]:value)};reader.onerror=()=>reject(new Error("身份证图片读取失败"));reader.readAsDataURL(file)})}
+function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||"");resolve(value.includes(",")?value.split(",")[1]:value)};reader.onerror=()=>reject(new Error("营业执照图片读取失败"));reader.readAsDataURL(file)})}
 async function submitApplication(){const button=document.getElementById("submitButton");if(button.disabled)return;hideMessage();try{validateForm();button.disabled=true;button.textContent="正在提交申请...";const base64=await fileToBase64(compressedIdCardFile);const data=await publicApi("/api/public/health-consultant-application/submit",{method:"POST",body:{service_area_id:Number(getValue("serviceAreaId")),applicant_name:getValue("applicantName"),id_card_number:getValue("idCardNumber"),phone:getValue("phone"),individual_business_name:getValue("businessName"),tax_no:getValue("taxNo"),bank_name:getValue("bankName"),bank_account:getValue("bankAccount"),image_content_type:"image/webp",image_base64:base64}});if(!data?.success)throw new Error(data?.error||data?.message||"申请提交失败");document.getElementById("applicationPage").style.display="none";document.getElementById("successPage").style.display="block";window.scrollTo({top:0,behavior:"smooth"})}catch(error){console.error(error);showError(error.message||"申请提交失败，请重新尝试。");button.disabled=false;button.textContent="提交申请"}}
 
 function getValue(id){
