@@ -355,29 +355,10 @@ updateConsultantAlert();
 }
 
 function openConsultantModal(){document.getElementById("consultantModal").classList.add("show");document.body.style.overflow="hidden";renderConsultantList()}
-function closeConsultantModal(){document.getElementById("consultantModal").classList.remove("show");document.body.style.overflow="";releaseConsultantPhotos()}
+function closeConsultantModal(){document.getElementById("consultantModal").classList.remove("show");document.body.style.overflow=""}
 function consultantMaskClicked(event){if(event.target===event.currentTarget)closeConsultantModal()}
 
-const consultantPhotoObjectUrls=new Map();
-async function createPhotoUrl(path){
-  if(!path)return null;
-  const token=accessToken();
-  if(!token)throw new Error("登录状态已失效");
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),20000);
-  try{
-    const response=await fetch("/api/admin/management/consultant-photo-proxy",{
-      method:"POST",cache:"no-store",signal:controller.signal,
-      headers:{Authorization:"Bearer "+token,"Content-Type":"application/json",Accept:"image/webp,image/png,image/jpeg"},
-      body:JSON.stringify({path:String(path)})
-    });
-    if(!response.ok){let detail="图片读取失败";try{const d=await response.json();detail=d.error||detail}catch{}throw new Error(detail)}
-    const blob=await response.blob();
-    if(!blob.type.startsWith("image/"))throw new Error("返回内容不是图片");
-    return URL.createObjectURL(blob);
-  }finally{clearTimeout(timeout)}
-}
-function releaseConsultantPhotos(){for(const u of consultantPhotoObjectUrls.values())URL.revokeObjectURL(u);consultantPhotoObjectUrls.clear()}
+async function createPhotoUrl(path){if(!path)return null;const data=await api("/api/admin/management/consultant-photo",{method:"POST",body:{path:String(path)}});return data?.url||null}
 
 async function loadPhoto(applicationId,path){
 const box=document.getElementById(`idPhoto-${applicationId}`);
@@ -386,15 +367,11 @@ if(!path){box.innerHTML='<div class="photo-error">申请人没有上传营业执
 try{
 const url=await createPhotoUrl(path);
 if(!url)throw new Error("没有生成照片地址");
-if(!document.getElementById("consultantModal").classList.contains("show")){URL.revokeObjectURL(url);return}
-const previous=consultantPhotoObjectUrls.get(String(applicationId));if(previous)URL.revokeObjectURL(previous);
-consultantPhotoObjectUrls.set(String(applicationId),url);
-box.innerHTML=`<a href="${esc(url)}" target="_blank" rel="noopener"><img class="id-photo" src="${esc(url)}" alt="营业执照照片"></a><div style="margin-top:7px;color:#748078;font-size:11px">图片已通过平台安全代理加载，关闭窗口后释放临时链接</div>`;
-}catch(error){console.warn("身份证照片读取失败：",error);box.innerHTML='<div class="photo-error">身份证照片读取失败，请确认照片路径和存储权限。</div>'}
+box.innerHTML=`<a href="${esc(url)}" target="_blank" rel="noopener"><img class="id-photo" src="${esc(url)}" alt="营业执照照片" onerror="this.closest('a').style.display='none';this.closest('a').insertAdjacentHTML('afterend','<div class=&quot;photo-error&quot;>图片加载失败，请检查营业执照文件是否存在或存储权限。</div>')"></a><div style="margin-top:7px;color:#748078;font-size:11px">安全链接10分钟内有效，点击照片可放大查看</div>`;
+}catch(error){console.warn("营业执照照片读取失败：",error);box.innerHTML='<div class="photo-error">营业执照照片读取失败，请确认照片路径和存储权限。</div>'}
 }
 
 function renderConsultantList(){
-releaseConsultantPhotos();
 const box=document.getElementById("consultantList");
 if(!consultantApplications.length){box.innerHTML='<div class="consultant-empty">当前辖区没有待审批或待开户事项</div>';return}
 box.innerHTML=consultantApplications.map(item=>{
