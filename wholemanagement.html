@@ -216,7 +216,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 <style id="wholemanagement-remove-info-v2">
 .content-wrap>.section-heading{margin-top:0}
 </style>
-</head>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script></head>
 <body>
 <div id="loadingMask" class="loading-mask"><div class="spinner"></div><div class="loading-text">正在验证管理权限...</div></div>
 <header class="topbar">
@@ -379,6 +379,7 @@ const activation=isActivationItem(item);
 const city=[item.province_name,item.city_name].filter(Boolean).join(" · ")||"未识别辖区";
 const badge=activation?'<span class="status-badge status-activation">已审批 · 待开户</span>':'<span class="status-badge status-pending">待审批</span>';
 const warning=activation?`<div class="activation-warning">该申请已经审批并生成永久编号 <strong>${esc(valueText(item.consultant_no))}</strong>，但登录账户尚未创建。点击下方按钮完成自动开户。${item.activation_error?`<div class="activation-error">上次开户失败：${esc(item.activation_error)}</div>`:""}</div>`:"";
+const emailField=`<div class="consultant-field full"><span>唯一登录邮箱（必填）</span><input id="consultantEmail-${esc(item.id)}" type="email" style="width:100%;padding:10px;border:1px solid #9bb6a9" placeholder="申请人邮箱" value="${esc(item.login_email||'')}"></div>`;
 const action=activation
 ?`<div class="action-row single"><button id="approveBtn-${esc(item.id)}" class="approve-btn activation" type="button" onclick="approveOrActivate(${Number(item.id)})">创建登录账户</button></div>`
 :`<div class="action-row"><button id="approveBtn-${esc(item.id)}" class="approve-btn" type="button" onclick="approveOrActivate(${Number(item.id)})">批准并自动创建账户</button><button id="rejectBtn-${esc(item.id)}" class="reject-btn" type="button" onclick="openRejectModal(${Number(item.id)})">拒绝申请</button></div>`;
@@ -386,6 +387,7 @@ return `<div class="consultant-card">
 <div class="consultant-top"><div><div class="consultant-name">${esc(valueText(item.applicant_name))}</div>${badge}</div><div class="consultant-city">${esc(city)}</div></div>
 <div class="consultant-grid">
 ${warning}
+${emailField}
 <div class="consultant-field"><span>手机号码：</span>${esc(valueText(item.phone))}</div>
 <div class="consultant-field"><span>身份证号码：</span>${esc(valueText(item.id_card_number))}</div>
 <div class="consultant-field"><span>个体工商户名称：</span>${esc(valueText(item.individual_business_name))}</div>
@@ -413,37 +415,17 @@ if(reject)reject.disabled=disabled;
 }
 
 async function approveOrActivate(applicationId){
-const item=consultantApplications.find(record=>Number(record.id)===Number(applicationId));
-if(!item)return;
-const activation=isActivationItem(item);
-const message=activation
-?`确认为 ${item.applicant_name} 创建健康顾问登录账户吗？\n\n永久编号：${item.consultant_no}\n初始密码：12345678`
-:`确认批准 ${item.applicant_name} 的健康顾问申请并自动创建登录账户吗？\n\n系统将生成永久唯一编号，初始密码为12345678。`;
-if(!window.confirm(message))return;
-const button=document.getElementById(`approveBtn-${applicationId}`);
+const item=consultantApplications.find(x=>Number(x.id)===Number(applicationId));if(!item)return;
+const el=document.getElementById('consultantEmail-'+applicationId),email=String(el?.value||'').trim().toLowerCase();
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('请输入有效的登录邮箱');return;}
+if(!confirm('批准开户？\n登录邮箱：'+email+'\n初始密码：12345678\n同时生成专属推荐二维码。'))return;
 setButtonsDisabled(applicationId,true);
-if(button)button.textContent=activation?"正在创建登录账户...":"正在审批并创建账户...";
-try{
-const data=await api("/api/admin/management/consultant-approve",{method:"POST",body:{application_id:Number(applicationId),review_note:null}});
-if(!data?.success)throw new Error(data?.message||"审批及自动开户失败");
-consultantApplications=consultantApplications.filter(record=>Number(record.id)!==Number(applicationId));
-updateConsultantAlert();
-document.getElementById("consultantList").innerHTML=`<div class="result-box">
-<div style="font-size:18px;font-weight:800">健康顾问账户创建成功</div>
-<div style="margin-top:8px;color:#64716a">登录用户名</div>
-<div class="result-number">${esc(data.login_username||data.consultant_no)}</div>
-<div style="color:#64716a">初始密码</div>
-<div class="result-password">${esc(data.initial_password||"12345678")}</div>
-<div>${esc(valueText(data.applicant_name))}　${esc(valueText(data.phone))}</div>
-<div class="result-warning">请联系申请人本人，口头告知登录用户名和初始密码。<br>首次登录后必须立即修改密码。<br>永久顾问编号不可修改、不可回收复用。</div>
-<button class="approve-btn" style="margin-top:18px" type="button" onclick="renderConsultantList()">继续处理其他事项</button>
-</div>`;
-}catch(error){
-console.error("健康顾问审批及开户失败：",error);
-alert("处理失败："+(error.message||"请稍后重试"));
-setButtonsDisabled(applicationId,false);
-if(button)button.textContent=activation?"创建登录账户":"批准并自动创建账户";
-}
+try{const d=await api('/api/admin/management/consultant-approve',{method:'POST',body:{application_id:Number(applicationId),login_email:email,review_note:null}});
+if(!d.success)throw Error(d.error||'开户失败');
+consultantApplications=consultantApplications.filter(x=>Number(x.id)!==Number(applicationId));updateConsultantAlert();
+document.getElementById('consultantList').innerHTML=`<div class="result-box"><h3>健康顾问开户成功</h3><p>唯一登录邮箱</p><div class="result-number" style="font-size:20px;letter-spacing:0;overflow-wrap:anywhere">${esc(d.login_email)}</div><p>初始密码</p><div class="result-password">${esc(d.initial_password||'12345678')}</div><p>永久顾问编号：${esc(d.consultant_no)}</p><h3>专属推荐二维码</h3><div style="padding:15px;background:#fff;margin:12px auto;max-width:270px"><canvas id="refQr"></canvas></div><p id="refUrl" style="overflow-wrap:anywhere;font-size:12px">${esc(d.qr_url)}</p><button class="approve-btn" onclick="navigator.clipboard.writeText(document.getElementById('refUrl').textContent)">复制推荐链接</button><div class="result-warning">请安全告知邮箱和初始密码，首次登录必须修改。顾问比例由系统自动匹配，不对顾问显示。客户绑定需要二维码入口完成登录后调用绑定接口。</div><button class="approve-btn" style="margin-top:15px" onclick="renderConsultantList()">继续处理</button></div>`;
+if(window.QRCode?.toCanvas)window.QRCode.toCanvas(document.getElementById('refQr'),d.qr_url,{width:220},err=>{if(err)console.warn(err)});
+}catch(err){alert('处理失败：'+err.message);setButtonsDisabled(applicationId,false);}
 }
 
 function openRejectModal(applicationId){
