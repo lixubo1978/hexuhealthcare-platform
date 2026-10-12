@@ -216,7 +216,7 @@ body{background:var(--hexu-cream);color:#233633;-webkit-font-smoothing:antialias
 <style id="wholemanagement-remove-info-v2">
 .content-wrap>.section-heading{margin-top:0}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script></head>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script></head>
 <body>
 <div id="loadingMask" class="loading-mask"><div class="spinner"></div><div class="loading-text">正在验证管理权限...</div></div>
 <header class="topbar">
@@ -414,6 +414,23 @@ if(approve)approve.disabled=disabled;
 if(reject)reject.disabled=disabled;
 }
 
+async function renderReferralQr(qrUrl){
+ const canvas=document.getElementById('referralQrCanvas'),img=document.getElementById('referralQrFallback'),error=document.getElementById('referralQrError');
+ if(!canvas||!img||!error)return;
+ if(window.QRCode&&typeof window.QRCode.toCanvas==='function'){
+  try{await window.QRCode.toCanvas(canvas,qrUrl,{width:220,margin:2,errorCorrectionLevel:'M',color:{dark:'#103537',light:'#FFFFFF'}});return;}catch(e){console.warn('本地二维码绘制失败',e)}
+ }
+ canvas.style.display='none';img.style.display='block';
+ const providers=[
+  'https://quickchart.io/qr?size=220&text='+encodeURIComponent(qrUrl),
+  'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(qrUrl)
+ ];
+ let index=0;
+ img.onerror=()=>{index++;if(index<providers.length)img.src=providers[index];else{img.style.display='none';error.style.display='block'}};
+ img.onload=()=>{error.style.display='none'};
+ img.src=providers[0];
+}
+
 async function approveOrActivate(applicationId){
 const item=consultantApplications.find(x=>Number(x.id)===Number(applicationId));if(!item)return;
 const email=String(item.login_email||'').trim().toLowerCase();
@@ -425,8 +442,8 @@ const d=await api('/api/admin/management/consultant-approve',{method:'POST',body
 if(!d.success)throw Error(d.message||d.error||'审批失败');
 consultantApplications=consultantApplications.filter(x=>Number(x.id)!==Number(applicationId));updateConsultantAlert();
 const qrUrl=String(d.qr_url||'');
-const qrImage=qrUrl?'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(qrUrl):'';
-document.getElementById('consultantList').innerHTML=`<div class="result-box"><h3>健康顾问资格审批成功</h3><p>已验证的登录邮箱</p><div class="result-number" style="font-size:20px;letter-spacing:0;overflow-wrap:anywhere">${esc(d.login_email||email)}</div><p>登录密码：申请人自行设置的原密码（管理员不可查看）</p><p>永久顾问编号：${esc(d.consultant_no)}</p><h3>专属推荐二维码</h3>${qrImage?`<div style="padding:15px;background:#fff;margin:12px auto;max-width:270px"><img src="${esc(qrImage)}" width="220" height="220" alt="专属推荐二维码"></div><p id="refUrl" style="overflow-wrap:anywhere;font-size:12px">${esc(qrUrl)}</p><button class="approve-btn" id="copyReferralUrl" type="button">复制推荐链接</button>`:'<p>二维码尚未生成，请检查推荐身份配置。</p>'}<div class="result-warning">原邮箱账号已开通顾问权限，无需重新开户或设置初始密码。推荐收益初始为0%，必须由平台单独授权；顾问端不显示比例。</div><button class="approve-btn" id="continueConsultant" style="margin-top:15px" type="button">继续处理</button></div>`;
+document.getElementById('consultantList').innerHTML=`<div class="result-box"><h3>健康顾问资格审批成功</h3><p>已验证的登录邮箱</p><div class="result-number" style="font-size:20px;letter-spacing:0;overflow-wrap:anywhere">${esc(d.login_email||email)}</div><p>登录密码：申请人自行设置（管理员不可查看）</p><p>永久顾问编号：<strong>${esc(d.consultant_no)}</strong></p><h3>专属推荐二维码</h3>${qrUrl?`<div id="referralQrArea" style="padding:15px;background:#fff;margin:12px auto;max-width:270px;min-height:250px;display:flex;align-items:center;justify-content:center;flex-direction:column"><canvas id="referralQrCanvas" width="220" height="220" style="max-width:100%" aria-label="专属推荐二维码"></canvas><img id="referralQrFallback" width="220" height="220" alt="专属推荐二维码" style="display:none;max-width:100%"><p id="referralQrError" style="display:none;color:#b33442;font-size:12px;margin-top:8px">二维码暂时无法加载，请先复制下方推荐链接。</p></div><p id="refUrl" style="overflow-wrap:anywhere;font-size:12px">${esc(qrUrl)}</p><button class="approve-btn" id="copyReferralUrl" type="button">复制推荐链接</button>`:'<p>二维码尚未生成，请检查推荐身份配置。</p>'}<div class="result-warning">原邮箱账号已开通顾问权限，无需重新开户或设置初始密码。推荐收益初始为0%，必须由平台单独授权；顾问端不显示比例。</div><button class="approve-btn" id="continueConsultant" style="margin-top:15px" type="button">继续处理</button></div>`;
+if(qrUrl)await renderReferralQr(qrUrl);
 const copy=document.getElementById('copyReferralUrl');if(copy)copy.onclick=()=>navigator.clipboard.writeText(qrUrl).then(()=>alert('推荐链接已复制')).catch(()=>prompt('请复制推荐链接',qrUrl));
 document.getElementById('continueConsultant').onclick=renderConsultantList;
 }catch(err){alert('处理失败：'+err.message);setButtonsDisabled(applicationId,false);}
