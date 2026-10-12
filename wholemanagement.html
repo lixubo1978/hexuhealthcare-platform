@@ -379,10 +379,10 @@ const activation=isActivationItem(item);
 const city=[item.province_name,item.city_name].filter(Boolean).join(" · ")||"未识别辖区";
 const badge=activation?'<span class="status-badge status-activation">已审批 · 待开户</span>':'<span class="status-badge status-pending">待审批</span>';
 const warning=activation?`<div class="activation-warning">该申请已经审批并生成永久编号 <strong>${esc(valueText(item.consultant_no))}</strong>，但登录账户尚未创建。点击下方按钮完成自动开户。${item.activation_error?`<div class="activation-error">上次开户失败：${esc(item.activation_error)}</div>`:""}</div>`:"";
-const emailField=`<div class="consultant-field full"><span>唯一登录邮箱（必填）</span><input id="consultantEmail-${esc(item.id)}" type="email" style="width:100%;padding:10px;border:1px solid #9bb6a9" placeholder="申请人邮箱" value="${esc(item.login_email||'')}"></div>`;
+const emailField=`<div class="consultant-field full"><span>申请人已验证的登录邮箱：</span><strong>${esc(valueText(item.login_email))}</strong>${!item.has_registered_account?'<div class="activation-error">该申请未关联注册账号，不能审批，请核对历史数据。</div>':''}</div>`;
 const action=activation
-?`<div class="action-row single"><button id="approveBtn-${esc(item.id)}" class="approve-btn activation" type="button" onclick="approveOrActivate(${Number(item.id)})">创建登录账户</button></div>`
-:`<div class="action-row"><button id="approveBtn-${esc(item.id)}" class="approve-btn" type="button" onclick="approveOrActivate(${Number(item.id)})">批准并自动创建账户</button><button id="rejectBtn-${esc(item.id)}" class="reject-btn" type="button" onclick="openRejectModal(${Number(item.id)})">拒绝申请</button></div>`;
+?`<div class="action-row single"><button id="approveBtn-${esc(item.id)}" class="approve-btn activation" type="button" onclick="approveOrActivate(${Number(item.id)})">开通原有邮箱账号</button></div>`
+:`<div class="action-row"><button id="approveBtn-${esc(item.id)}" class="approve-btn" type="button" onclick="approveOrActivate(${Number(item.id)})">批准并开通顾问权限</button><button id="rejectBtn-${esc(item.id)}" class="reject-btn" type="button" onclick="openRejectModal(${Number(item.id)})">拒绝申请</button></div>`;
 return `<div class="consultant-card">
 <div class="consultant-top"><div><div class="consultant-name">${esc(valueText(item.applicant_name))}</div>${badge}</div><div class="consultant-city">${esc(city)}</div></div>
 <div class="consultant-grid">
@@ -416,15 +416,19 @@ if(reject)reject.disabled=disabled;
 
 async function approveOrActivate(applicationId){
 const item=consultantApplications.find(x=>Number(x.id)===Number(applicationId));if(!item)return;
-const el=document.getElementById('consultantEmail-'+applicationId),email=String(el?.value||'').trim().toLowerCase();
-if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('请输入有效的登录邮箱');return;}
-if(!confirm('批准开户？\n登录邮箱：'+email+'\n初始密码：12345678\n同时生成专属推荐二维码。'))return;
+const email=String(item.login_email||'').trim().toLowerCase();
+if(!item.has_registered_account||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('申请记录尚未关联已注册邮箱账号，不能审批。');return;}
+if(!confirm('确认批准并开通原有健康顾问账号？\n申请人邮箱：'+email+'\n申请人继续使用自行设置的密码；推荐收益初始为0%，须另行授权。'))return;
 setButtonsDisabled(applicationId,true);
-try{const d=await api('/api/admin/management/consultant-approve',{method:'POST',body:{application_id:Number(applicationId),login_email:email,review_note:null}});
-if(!d.success)throw Error(d.error||'开户失败');
+try{
+const d=await api('/api/admin/management/consultant-approve',{method:'POST',body:{application_id:Number(applicationId),review_note:null}});
+if(!d.success)throw Error(d.message||d.error||'审批失败');
 consultantApplications=consultantApplications.filter(x=>Number(x.id)!==Number(applicationId));updateConsultantAlert();
-document.getElementById('consultantList').innerHTML=`<div class="result-box"><h3>健康顾问开户成功</h3><p>唯一登录邮箱</p><div class="result-number" style="font-size:20px;letter-spacing:0;overflow-wrap:anywhere">${esc(d.login_email)}</div><p>初始密码</p><div class="result-password">${esc(d.initial_password||'12345678')}</div><p>永久顾问编号：${esc(d.consultant_no)}</p><h3>专属推荐二维码</h3><div style="padding:15px;background:#fff;margin:12px auto;max-width:270px"><canvas id="refQr"></canvas></div><p id="refUrl" style="overflow-wrap:anywhere;font-size:12px">${esc(d.qr_url)}</p><button class="approve-btn" onclick="navigator.clipboard.writeText(document.getElementById('refUrl').textContent)">复制推荐链接</button><div class="result-warning">请安全告知邮箱和初始密码，首次登录必须修改。顾问比例由系统自动匹配，不对顾问显示。客户绑定需要二维码入口完成登录后调用绑定接口。</div><button class="approve-btn" style="margin-top:15px" onclick="renderConsultantList()">继续处理</button></div>`;
-if(window.QRCode?.toCanvas)window.QRCode.toCanvas(document.getElementById('refQr'),d.qr_url,{width:220},err=>{if(err)console.warn(err)});
+const qrUrl=String(d.qr_url||'');
+const qrImage=qrUrl?'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(qrUrl):'';
+document.getElementById('consultantList').innerHTML=`<div class="result-box"><h3>健康顾问资格审批成功</h3><p>已验证的登录邮箱</p><div class="result-number" style="font-size:20px;letter-spacing:0;overflow-wrap:anywhere">${esc(d.login_email||email)}</div><p>登录密码：申请人自行设置的原密码（管理员不可查看）</p><p>永久顾问编号：${esc(d.consultant_no)}</p><h3>专属推荐二维码</h3>${qrImage?`<div style="padding:15px;background:#fff;margin:12px auto;max-width:270px"><img src="${esc(qrImage)}" width="220" height="220" alt="专属推荐二维码"></div><p id="refUrl" style="overflow-wrap:anywhere;font-size:12px">${esc(qrUrl)}</p><button class="approve-btn" id="copyReferralUrl" type="button">复制推荐链接</button>`:'<p>二维码尚未生成，请检查推荐身份配置。</p>'}<div class="result-warning">原邮箱账号已开通顾问权限，无需重新开户或设置初始密码。推荐收益初始为0%，必须由平台单独授权；顾问端不显示比例。</div><button class="approve-btn" id="continueConsultant" style="margin-top:15px" type="button">继续处理</button></div>`;
+const copy=document.getElementById('copyReferralUrl');if(copy)copy.onclick=()=>navigator.clipboard.writeText(qrUrl).then(()=>alert('推荐链接已复制')).catch(()=>prompt('请复制推荐链接',qrUrl));
+document.getElementById('continueConsultant').onclick=renderConsultantList;
 }catch(err){alert('处理失败：'+err.message);setButtonsDisabled(applicationId,false);}
 }
 
