@@ -382,14 +382,14 @@ function releaseConsultantPhotos(){for(const u of consultantPhotoObjectUrls.valu
 async function loadPhoto(applicationId,path){
 const box=document.getElementById(`idPhoto-${applicationId}`);
 if(!box)return;
-if(!path){box.innerHTML='<div class="photo-error">申请人没有上传身份证正面照片</div>';return}
+if(!path){box.innerHTML='<div class="photo-error">申请人没有上传营业执照照片</div>';return}
 try{
 const url=await createPhotoUrl(path);
 if(!url)throw new Error("没有生成照片地址");
 if(!document.getElementById("consultantModal").classList.contains("show")){URL.revokeObjectURL(url);return}
 const previous=consultantPhotoObjectUrls.get(String(applicationId));if(previous)URL.revokeObjectURL(previous);
 consultantPhotoObjectUrls.set(String(applicationId),url);
-box.innerHTML=`<a href="${esc(url)}" target="_blank" rel="noopener"><img class="id-photo" src="${esc(url)}" alt="身份证正面照片"></a><div style="margin-top:7px;color:#748078;font-size:11px">图片已通过平台安全代理加载，关闭窗口后释放临时链接</div>`;
+box.innerHTML=`<a href="${esc(url)}" target="_blank" rel="noopener"><img class="id-photo" src="${esc(url)}" alt="营业执照照片"></a><div style="margin-top:7px;color:#748078;font-size:11px">图片已通过平台安全代理加载，关闭窗口后释放临时链接</div>`;
 }catch(error){console.warn("身份证照片读取失败：",error);box.innerHTML='<div class="photo-error">身份证照片读取失败，请确认照片路径和存储权限。</div>'}
 }
 
@@ -422,7 +422,7 @@ ${warning}
 <div class="consultant-field"><span>申请时间：</span>${esc(formatTime(item.created_at))}</div>
 <div class="consultant-field"><span>申请编号：</span>${esc(valueText(item.id))}</div>
 ${activation?`<div class="consultant-field full"><span>永久顾问编号：</span><strong>${esc(valueText(item.consultant_no))}</strong></div>`:""}
-<div class="id-photo-box"><div class="id-photo-label">身份证正面照片</div><div id="idPhoto-${esc(item.id)}" class="photo-loading">正在生成安全查看链接...</div></div>
+<div class="id-photo-box"><div class="id-photo-label">营业执照照片</div><div id="idPhoto-${esc(item.id)}" class="photo-loading">正在生成安全查看链接...</div></div>
 </div>${action}</div>`;
 }).join("");
 consultantApplications.forEach(item=>loadPhoto(item.id,item.id_card_front_path));
