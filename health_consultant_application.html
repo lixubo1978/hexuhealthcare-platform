@@ -233,21 +233,22 @@ let registrationAccessToken="",verifiedRegistrationEmail="";
 const REG_API="/api/public/health-consultant-application";
 function emailValid(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)}
 function registrationMessage(text,ok=false){const el=document.getElementById("registrationStatus");el.textContent=text;el.style.color=ok?"#16803c":"#a43c4b"}
-function registrationState(ok){document.getElementById("submitButton").disabled=!ok;document.getElementById("submitButton").textContent=ok?"提交申请，等待管理员审批":"请先验证邮箱";document.getElementById("registrationEmail").readOnly=ok;document.getElementById("registrationPassword").value="";document.getElementById("registrationPasswordAgain").value=""}
+function emailErrorText(error){const raw=String(error?.message||error||"验证失败");if(/请先完成手机验证码登录|手机验证码登录|手机验证码|短信验证码登录/.test(raw))return "邮箱验证接口仍在使用客户手机登录鉴权，请先更新 Worker 的邮箱注册/验证接口；本页面无需手机验证码。";if(/Not Found|API接口未部署|404/.test(raw))return "邮箱注册或验证接口尚未部署，请先更新 Worker API。";return raw}
+function registrationState(ok){document.getElementById("submitButton").disabled=!ok;document.getElementById("submitButton").textContent=ok?"提交申请，等待管理员审批":"请先验证邮箱";document.getElementById("registrationEmail").readOnly=ok;if(ok){document.getElementById("registrationPassword").value="";document.getElementById("registrationPasswordAgain").value=""}}
 async function registerEmail(){
  const email=getValue("registrationEmail").toLowerCase(),password=document.getElementById("registrationPassword").value,again=document.getElementById("registrationPasswordAgain").value;
  if(!emailValid(email))return registrationMessage("请输入正确的邮箱地址");
  if(password.length<8||password.length>72)return registrationMessage("密码长度须为8至72位");
  if(password!==again)return registrationMessage("两次输入的密码不一致");
  const btn=document.getElementById("registerEmailButton");btn.disabled=true;btn.textContent="正在发送验证邮件...";
- try{const d=await publicApi(REG_API+"/register",{method:"POST",body:{email,password}});if(!d?.success)throw Error(d?.message||"注册失败");registrationMessage("验证邮件已发送。请先打开邮箱点击验证链接，再回来检查状态。",true)}catch(e){registrationMessage(e.message||"注册失败")}finally{btn.disabled=false;btn.textContent="注册邮箱并发送验证邮件"}
+ try{const d=await publicApi(REG_API+"/register",{method:"POST",body:{email,password}});if(!d?.success)throw Error(d?.message||"注册失败");registrationMessage("验证邮件已发送。请先打开邮箱点击验证链接，再回来检查状态。",true)}catch(e){registrationMessage(emailErrorText(e))}finally{btn.disabled=false;btn.textContent="注册邮箱并发送验证邮件"}
 }
 async function checkEmailVerification(){
  const email=getValue("registrationEmail").toLowerCase(),password=document.getElementById("registrationPassword").value;
  if(!emailValid(email))return registrationMessage("请输入注册邮箱");
  if(!password)return registrationMessage("请输入刚才设置的登录密码，以验证邮箱状态");
  const btn=document.getElementById("checkEmailButton");btn.disabled=true;
- try{const d=await publicApi(REG_API+"/verify-status",{method:"POST",body:{email,password}});if(!d?.success||!d?.verified||!d?.access_token)throw Error(d?.message||"邮箱尚未验证，请先点击验证邮件中的链接");registrationAccessToken=d.access_token;verifiedRegistrationEmail=email;registrationState(true);registrationMessage("邮箱验证成功，可以提交健康顾问申请。",true)}catch(e){registrationAccessToken="";verifiedRegistrationEmail="";registrationState(false);registrationMessage(e.message||"验证失败")}finally{btn.disabled=false}
+ try{const d=await publicApi(REG_API+"/verify-status",{method:"POST",body:{email,password}});if(!d?.success||!d?.verified||!d?.access_token)throw Error(d?.message||"邮箱尚未验证，请先点击验证邮件中的链接");registrationAccessToken=d.access_token;verifiedRegistrationEmail=email;registrationState(true);registrationMessage("邮箱验证成功，可以提交健康顾问申请。",true)}catch(e){registrationAccessToken="";verifiedRegistrationEmail="";registrationState(false);registrationMessage(emailErrorText(e))}finally{btn.disabled=false}
 }
 
 document.addEventListener("DOMContentLoaded",async()=>{bindEvents();await loadActiveServiceCities()});
