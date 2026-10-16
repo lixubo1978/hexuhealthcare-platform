@@ -1,0 +1,2 @@
+// 工程师只需替换配置与目录接口，具体接入约定见 integration/website-2026/README.md。
+window.HEXU_SITE={projectsUrl:'',techniciansUrl:'',contentUrl:'/api/showcase',storesUrl:'/api/stores',orderUrl:'https://www.hexuhealthcare.com',loginUrl:'https://www.hexuhealthcare.com',pointsAccountUrl:'',rewardCatalogUrl:'',rewardCheckoutUrl:'',partnerUnlockUrl:'/api/showcase?action=unlock',contactPhone:'',contactEmail:'',officialAccountUrl:''};

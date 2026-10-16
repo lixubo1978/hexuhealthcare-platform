@@ -1,0 +1,33 @@
+/dist/
+.vinext/
+.wrangler/
+
+# Local dependencies and generated files
+node_modules/
+.next/
+dist/
+.sites-runtime/
+.wrangler/
+*.tsbuildinfo
+
+# Local backups
+*.backup
+*.bak
+
+# Mac system files
+.DS_Store
+
+# Local secrets
+.env
+.env.*
+!.env.example
+.openai/
+
+# Local logs
+*.log
+
+# Source archives - review before publishing
+/public/downloads/*.zip
+
+# Temporary markdown documents
+/*.md

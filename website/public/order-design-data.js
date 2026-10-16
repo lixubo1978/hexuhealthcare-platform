@@ -1,0 +1,4 @@
+// 演示数据。工程师用已审核的项目、门店、技师和预约数据替换，不作为正式报价。
+window.HEXU_ORDER_DEMO={categories:['全部项目','母乳喂养指导','月嫂服务类','辅导锻炼','睡眠辅助','家庭指导','清洗类','健康咨询服务（不含诊疗）'],projects:[
+{id:'A002',name:'乳腺疏通',category:'母乳喂养指导',description:'先了解你的需求，再由匹配的服务人员提供服务。',price:300,unit:'份',sessions:1,tags:['单次服务','需选择门店与技师'],images:['assets/order-operation-sample.png'],imageAlt:'操作图片版式样例：肩部放松，非乳腺疏通实拍'},
+{id:'A003',name:'催乳',category:'母乳喂养指导',description:'项目内容、适用情况与注意事项，以审核后的服务说明为准。',price:100,unit:'份',sessions:1,tags:['单次服务','需提前预约'],images:[],imageAlt:'催乳项目操作照片'}],stores:[{id:'demo-store1',name:'南通1号店铺',description:'视频中的门店名称 · 展示样例'},{id:'demo-store2',name:'南通2号店铺',description:'视频中的门店名称 · 展示样例'}],technicians:[{id:'demo-tech1',name:'服务人员 A',description:'人员资料展示样例；正式名单由系统认证记录提供'},{id:'demo-tech2',name:'服务人员 B',description:'人员资料展示样例；正式名单由系统认证记录提供'}]};
