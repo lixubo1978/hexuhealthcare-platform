@@ -1,0 +1,268 @@
+{
+  "categories": [
+    {
+      "id": "household_wash",
+      "name": "家用洗护",
+      "description": "洗衣、清洁与家庭洗护"
+    },
+    {
+      "id": "hygiene_care",
+      "name": "卫生护理",
+      "description": "个人卫生与日常护理"
+    },
+    {
+      "id": "home_textiles",
+      "name": "家居棉纺",
+      "description": "毛巾、被褥与家居织物"
+    },
+    {
+      "id": "appliances",
+      "name": "家电类",
+      "description": "实用小家电与生活电器"
+    },
+    {
+      "id": "daily_goods",
+      "name": "日用小商品",
+      "description": "收纳与日常生活用品"
+    },
+    {
+      "id": "strollers_beds",
+      "name": "车床类",
+      "description": "婴儿车、婴儿床、成人床等"
+    },
+    {
+      "id": "educational_toys",
+      "name": "益智玩具",
+      "description": "拼搭、启蒙与亲子游戏"
+    },
+    {
+      "id": "wellness_services",
+      "name": "养生服务类",
+      "description": "按需选择门店与服务人员"
+    }
+  ],
+  "items": [
+    {
+      "id": "preview_household_wash_0",
+      "categoryId": "household_wash",
+      "title": "洗衣液",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_household_wash_1",
+      "categoryId": "household_wash",
+      "title": "家庭清洁用品",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_hygiene_care_0",
+      "categoryId": "hygiene_care",
+      "title": "卫生护理用品",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_hygiene_care_1",
+      "categoryId": "hygiene_care",
+      "title": "日常护理组合",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_home_textiles_0",
+      "categoryId": "home_textiles",
+      "title": "纯棉毛巾",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_home_textiles_1",
+      "categoryId": "home_textiles",
+      "title": "家居被褥",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_appliances_0",
+      "categoryId": "appliances",
+      "title": "生活小家电",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_appliances_1",
+      "categoryId": "appliances",
+      "title": "家庭电器",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_daily_goods_0",
+      "categoryId": "daily_goods",
+      "title": "家庭收纳用品",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_daily_goods_1",
+      "categoryId": "daily_goods",
+      "title": "日常实用小物",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_strollers_beds_0",
+      "categoryId": "strollers_beds",
+      "title": "婴儿推车",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_strollers_beds_1",
+      "categoryId": "strollers_beds",
+      "title": "婴儿床与成人床",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_educational_toys_0",
+      "categoryId": "educational_toys",
+      "title": "拼搭玩具",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_educational_toys_1",
+      "categoryId": "educational_toys",
+      "title": "亲子益智游戏",
+      "kind": "physical",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "delivery",
+        "pickup"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_wellness_services_0",
+      "categoryId": "wellness_services",
+      "title": "身心舒缓服务",
+      "kind": "service",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "store_service"
+      ],
+      "isPreview": true
+    },
+    {
+      "id": "preview_wellness_services_1",
+      "categoryId": "wellness_services",
+      "title": "日常养生体验",
+      "kind": "service",
+      "imageUrl": null,
+      "pointsPrice": null,
+      "stock": null,
+      "fulfillmentModes": [
+        "store_service"
+      ],
+      "isPreview": true
+    }
+  ]
+}
