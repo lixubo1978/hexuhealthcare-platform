@@ -50,7 +50,40 @@ async function resolveFirstLocation(lng,lat){if(typeof BMap==="undefined")return
 async function autoSelectFirstServiceCity(){const el=document.getElementById("firstLocationMessage");if(!navigator.geolocation){el.textContent="当前设备无法定位，请手工选择已开通服务城市。";return}el.textContent="正在根据当前位置自动选择服务城市…";navigator.geolocation.getCurrentPosition(async p=>{const lat=Number(p.coords.latitude),lng=Number(p.coords.longitude),r=await resolveFirstLocation(lng,lat),a=r?.addressComponents||{},txt=[a.province,a.city,a.district,r?.address].filter(Boolean).join(" "),all=normalizePlaceName(txt),match=firstServiceAreas.find(x=>all.includes(normalizePlaceName(x.city_name))&&all.includes(normalizePlaceName(x.province_name)));if(match)selectFirstServiceArea(match,"定位成功，已自动选择 "+match.province_name+" / "+match.city_name+"。");else el.textContent="已获取当前位置，但该城市暂未开通服务，请手工选择。"},()=>el.textContent="自动定位未成功，请手工选择已开通服务城市。",{enableHighAccuracy:true,timeout:10000,maximumAge:0})}
 async function loadFirstServiceAreas(){const d=await customerApi("/api/customer/first-profile-options",{token:pendingCustomerSession.access_token}),p=document.getElementById("firstProvince");firstServiceAreas=Array.isArray(d?.areas)?d.areas:[];if(!firstServiceAreas.length)throw Error("当前暂时没有已开通服务城市。");p.innerHTML='<option value="">请选择省份</option>';const seen=new Set;for(const x of firstServiceAreas){if(seen.has(String(x.province_id)))continue;seen.add(String(x.province_id));const o=document.createElement("option");o.value=x.province_id;o.textContent=x.province_name;p.appendChild(o)}renderFirstCities();await autoSelectFirstServiceCity()}
 async function openFirstCustomerProfile(session){pendingCustomerSession=session;document.getElementById("customerFirstMask").classList.add("show");document.body.style.overflow="hidden";try{await loadFirstServiceAreas()}catch(e){showMessage(document.getElementById("customerFirstMessage"),getReadableError(e),"error")}setTimeout(()=>document.getElementById("firstNickname").focus(),60)}
-async function customerLogin(){clearMessage(customerMessage);const phone=normalizeChinaPhone(customerPhone.value),token=String(customerOtp.value||"").trim();if(!phone)return showMessage(customerMessage,"请输入正确的手机号码。","error");if(!/^\d{6}$/.test(token))return showMessage(customerMessage,"请输入6位短信验证码。","error");setButtonLoading(customerLoginButton,true,"正在登录");try{const session=await customerApi("/api/auth/verify-otp",{method:"POST",body:{phone,token}});const prepared=await customerApi("/api/customer/login-prepare",{method:"POST",token:session.access_token,body:{phone}});if(prepared.needs_profile===true){setButtonLoading(customerLoginButton,false,"登录");await openFirstCustomerProfile(session);return}saveCustomerSession(session);location.replace(PAGE_CUSTOMER)}catch(e){pendingCustomerSession=null;saveCustomerSession(null);showMessage(customerMessage,getReadableError(e),"error");setButtonLoading(customerLoginButton,false,"登录")}}
+async function customerLogin(){
+  clearMessage(customerMessage);
+  const phone=normalizeChinaPhone(customerPhone.value),token=String(customerOtp.value||"").trim();
+  if(!phone)return showMessage(customerMessage,"请输入正确的11位手机号码。","error");
+  if(!/^\d{6}$/.test(token))return showMessage(customerMessage,"请输入6位短信验证码。","error");
+  setButtonLoading(customerLoginButton,true,"正在登录");
+  try{
+    const session=await customerApi("/api/auth/verify-otp",{method:"POST",body:{phone,token}});
+    if(!session?.access_token)throw new Error("短信验证失败，请重新登录。");
+    // 先只读检查客户记录；不能用 login-prepare 判断是否注册，因为它会自动创建客户。
+    const records=await customerApi("/api/customer/record",{token:session.access_token});
+    const customer=Array.isArray(records)?records[0]:records;
+    // 已有注册资料（包括扫码注册保存的昵称），无论 profile_completed 是否为 true，直接登录。
+    const registered=Boolean(customer?.id && (customer.profile_completed===true || String(customer.nickname||"").trim()));
+    if(registered){
+      const profileResult=await customerApi("/api/customer/profile",{token:session.access_token});
+      const profile=Array.isArray(profileResult)?profileResult[0]:profileResult;
+      if(profile?.status && profile.status!=="active")throw new Error("该客户账号已停用。");
+      saveCustomerSession(session);
+      location.replace(PAGE_CUSTOMER);
+      return;
+    }
+    // 首次使用该手机号：沿用原有后台初始化和昵称、城市资料填写流程。
+    // 不设置任何推荐人，推荐关系保持空值；后续订单由平台兜底。
+    await customerApi("/api/customer/login-prepare",{method:"POST",token:session.access_token,body:{phone}});
+    setButtonLoading(customerLoginButton,false,"登录");
+    await openFirstCustomerProfile(session);
+  }catch(e){
+    pendingCustomerSession=null;
+    saveCustomerSession(null);
+    showMessage(customerMessage,getReadableError(e),"error");
+    setButtonLoading(customerLoginButton,false,"登录");
+  }
+}
 async function saveFirstCustomerProfile(){const nickname=document.getElementById("firstNickname").value.trim(),province_id=Number(document.getElementById("firstProvince").value),city_id=Number(document.getElementById("firstCity").value),msg=document.getElementById("customerFirstMessage"),btn=document.getElementById("customerFirstSave");clearMessage(msg);if(!nickname)return showMessage(msg,"请填写昵称。","error");if(!province_id)return showMessage(msg,"请选择您需要提供服务的省。","error");if(!city_id)return showMessage(msg,"请选择您需要提供服务的市。","error");btn.disabled=true;btn.textContent="正在保存...";try{const r=await customerApi("/api/customer/first-profile",{method:"POST",token:pendingCustomerSession.access_token,body:{nickname,province_id,city_id}});if(!r?.success)throw Error(r?.error||"客户资料保存失败");saveCustomerSession(pendingCustomerSession);pendingCustomerSession=null;location.replace(PAGE_CUSTOMER)}catch(e){showMessage(msg,getReadableError(e),"error");btn.disabled=false;btn.textContent="保存并进入"}}
 async function businessLogin(){
   if(businessBusy||merchantPasswordClient)return;
