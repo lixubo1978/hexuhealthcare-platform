@@ -72,11 +72,10 @@ async function customerLogin(){
       location.replace(PAGE_CUSTOMER);
       return;
     }
-    // 首次使用该手机号：沿用原有后台初始化和昵称、城市资料填写流程。
-    // 不设置任何推荐人，推荐关系保持空值；后续订单由平台兜底。
-    await customerApi("/api/customer/login-prepare",{method:"POST",token:session.access_token,body:{phone}});
-    setButtonLoading(customerLoginButton,false,"登录");
-    await openFirstCustomerProfile(session);
+    // 首次登录统一进入推荐注册资料页；普通入口不携带 ref，不绑定推荐人。
+    saveCustomerSession(session);
+    window.location.replace("./referral_register.html?source=login&phone="+encodeURIComponent(phone));
+    return;
   }catch(e){
     pendingCustomerSession=null;
     saveCustomerSession(null);
