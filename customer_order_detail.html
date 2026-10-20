@@ -352,7 +352,55 @@ function renderPaymentDeadline(){const box=document.getElementById("paymentDeadl
 function canShowVerificationQR(){if(!currentOrder){return false;}return currentOrder.payment_status==="paid"&&Number(currentOrder.remaining_uses??0)>0&&typeof currentOrder.verification_token==="string"&&currentOrder.verification_token.trim().length>=20;}
 function renderQRCodeEntry(){const card=document.getElementById("qrEntryCard");if(canShowVerificationQR()){card.classList.remove("hidden");setText("qrEntryDesc",`当前剩余 ${numberOrZero(currentOrder.remaining_uses)} 次服务，可扫码或人工输入核销码。`);}else{card.classList.add("hidden");}}
 function openVerificationQR(){if(!currentOrder){return;}if(currentOrder.payment_status!=="paid"){alert("订单尚未支付，暂不能进行消费核销。");return;}if(Number(currentOrder.remaining_uses??0)<=0){alert("本订单的服务次数已经全部使用。");return;}const token=String(currentOrder.verification_token??"").trim();if(token.length<20){alert("消费核销码尚未生成，请稍后刷新订单。");return;}setText("qrMerchantName",currentOrder.merchant_name_snapshot||"服务商户");setText("qrOrderNo",currentOrder.order_no||currentOrder.id||"-");setText("qrVerificationCode",token);setText("qrTotalUses",numberOrZero(currentOrder.total_uses));setText("qrUsedUses",numberOrZero(currentOrder.used_uses));setText("qrRemainingUses",numberOrZero(currentOrder.remaining_uses));document.getElementById("qrMask").classList.remove("hidden");document.body.style.overflow="hidden";renderQRCode(token);}
-function renderQRCode(token){const container=document.getElementById("qrCode");if(qrRenderedToken===token&&container.children.length>0){return;}container.innerHTML="";qrRenderedToken=null;try{if(typeof window.QRCode!=="function")throw new Error("二维码组件未加载");new window.QRCode(container,{text:token,width:215,height:215,correctLevel:window.QRCode.CorrectLevel.H});qrRenderedToken=token;}catch(error){console.error("生成消费二维码失败：",error);container.textContent="二维码暂时无法显示，请使用下方人工核销码完成核销。";container.style.textAlign="center";container.style.lineHeight="1.8";container.style.color="#8a5c17";}}
+async function renderQRCode(token){
+  const container=document.getElementById("qrCode");
+  if(qrRenderedToken===token&&container.querySelector("canvas,img"))return;
+  container.textContent="正在生成二维码……";
+  qrRenderedToken=null;
+  const ensureQRCode=async()=>{
+    if(typeof window.QRCode==="function")return;
+    const sources=[
+      "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+      "https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"
+    ];
+    for(const src of sources){
+      try{
+        await new Promise((resolve,reject)=>{
+          const script=document.createElement("script");
+          script.src=src;
+          script.async=true;
+          script.onload=resolve;
+          script.onerror=()=>reject(new Error("二维码脚本加载失败"));
+          document.head.appendChild(script);
+        });
+        if(typeof window.QRCode==="function")return;
+      }catch(error){console.warn("二维码备用组件加载失败：",error);}
+    }
+    throw new Error("二维码组件未能加载");
+  };
+  try{
+    await ensureQRCode();
+    if(!document.getElementById("qrMask").classList.contains("hidden")&&currentOrder?.verification_token===token){
+      let lastError=null;
+      for(const level of [window.QRCode.CorrectLevel.M,window.QRCode.CorrectLevel.L]){
+        try{
+          container.innerHTML="";
+          new window.QRCode(container,{text:token,width:215,height:215,correctLevel:level});
+          if(!container.querySelector("canvas,img"))throw new Error("未生成二维码图像");
+          qrRenderedToken=token;
+          return;
+        }catch(error){lastError=error;}
+      }
+      throw lastError||new Error("二维码绘制失败");
+    }
+  }catch(error){
+    console.error("生成消费二维码失败：",error);
+    container.textContent="二维码暂时无法显示，请使用下方人工核销码完成核销。";
+    container.style.textAlign="center";
+    container.style.lineHeight="1.8";
+    container.style.color="#8a5c17";
+  }
+}
 function closeVerificationQR(){document.getElementById("qrMask").classList.add("hidden");document.body.style.overflow="";}
 function handleQRMaskClick(event){if(event.target.id==="qrMask"){closeVerificationQR();}}
 function updatePayButton(){const button=document.getElementById("payButton");if(currentOrder.payment_status==="paid"){if(Number(currentOrder.remaining_uses??0)>0&&currentOrder.verification_token){button.textContent="显示二维码 / 核销码";button.disabled=false;button.onclick=openVerificationQR;}else{button.textContent=Number(currentOrder.remaining_uses??0)<=0?"服务已完成":"已支付";button.disabled=true;}return;}if(currentOrder.order_status==="cancelled"||paymentExpired()){button.textContent="订单已取消";button.disabled=true;button.onclick=null;return;}button.textContent="去支付";button.disabled=false;button.onclick=simulatePayment;}
