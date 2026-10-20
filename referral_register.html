@@ -23,7 +23,12 @@ async function loadServiceAreas(){
   const opt=document.createElement('option');opt.value=String(x.province_id);opt.textContent=x.province_name;$('province').appendChild(opt);
  }
 }
-async function init(){if(!/^(?:[a-f0-9]{32}|[a-f0-9]{48})$/i.test(ref)){msg('推荐链接无效，请重新扫码');return}try{const d=await api('/api/referrals/resolve?ref='+encodeURIComponent(ref));$('referrer').textContent='推荐人：'+(d.referrer?.display_name||'荷序健康用户');await loadServiceAreas();valid=true;$('send').disabled=false;$('register').disabled=false}catch(e){$('referrer').textContent='推荐二维码不可用';msg(e.message)}}
+async function init(){if(!/^(?:[a-f0-9]{32}|[a-f0-9]{48})$/i.test(ref)){msg('推荐链接无效，请重新扫码');return}try{const d=await api('/api/referrals/resolve?ref='+encodeURIComponent(ref));$('referrer').textContent='推荐人：'+(d.referrer?.display_name||'荷序健康用户');await loadServiceAreas();
+ const rp=String(d.referrer?.province_id||''),rc=String(d.referrer?.city_id||'');
+ if(rp&&rc&&serviceAreas.some(x=>String(x.province_id)===rp&&String(x.city_id)===rc)){
+   $('province').value=rp;fillCities();$('city').value=rc;
+ }
+ valid=true;$('send').disabled=false;$('register').disabled=false}catch(e){$('referrer').textContent='推荐二维码不可用';msg(e.message)}}
 $('send').onclick=async()=>{if(!valid)return;const p=phone();if(!p)return msg('请输入正确的11位手机号码');const b=$('send');b.disabled=true;try{await api('/api/auth/send-otp',{phone:p});msg('验证码已发送，请查看短信');let n=60;const t=setInterval(()=>{n--;b.textContent=n+'秒';if(n<=0){clearInterval(t);b.disabled=false;b.textContent='重新发送'}},1000)}catch(e){msg(e.message);b.disabled=false}};
 $('register').onclick=async()=>{if(busy||!valid)return;const p=phone(),otp=$('otp').value.trim(),nickname=$('nickname').value.trim(),province_id=Number($('province').value),city_id=Number($('city').value);if(!p||!/^\d{6}$/.test(otp))return msg('请填写正确的手机号和6位验证码');if(!nickname)return msg('请填写姓名或昵称');if(!province_id||!city_id)return msg('请选择服务省份和城市');busy=true;$('register').disabled=true;try{const auth=await api('/api/auth/verify-otp',{phone:p,token:otp});if(!auth.access_token||!auth.user)throw Error('短信验证失败');await api('/api/customer/referral-register',{ref,nickname},auth.access_token);await api('/api/customer/first-profile',{nickname,province_id,city_id},auth.access_token);localStorage.setItem('hexu_customer_session_v1',JSON.stringify(auth));msg('注册成功，正在进入客户服务平台…');location.replace('./qr_login.html')}catch(e){msg(e.message||'注册失败，请重试')}finally{busy=false;$('register').disabled=false}};
 init();</script></body></html>
