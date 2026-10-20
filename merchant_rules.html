@@ -52,9 +52,9 @@ button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
 <div class="field"><label>城市合伙人（%）</label><input id="cityManagerRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>商户（%）</label><input id="storeRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
 <div class="field"><label>服务人员（%）</label><input id="operatorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
-<div class="field"><label>健康顾问（%）</label><input id="advisorRatio" class="ratio-input" type="number" min="0" max="100" step="0.01" value="0"></div>
+<div class="field"><label>推荐人动态分账</label><input class="ratio-input" value="从平台份额扣除；下单时按授权比例计算" readonly></div>
 <div class="field"><label>软件服务（固定 %）</label><input class="ratio-input" type="number" value="0.8" readonly></div>
-</div><div id="totalBox" class="total-box"><span>六方比例合计（必须等于100%）</span><strong id="ratioTotal">0.8%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
+</div><p style="font-size:12px;color:#52695e">推荐人不占固定比例；实际推荐佣金从平台基础份额扣除。</p><div id="totalBox" class="total-box"><span>基础分账合计（必须等于100%）</span><strong id="ratioTotal">0.8%</strong></div></div><div class="modal-foot"><button class="btn" id="cancelRuleBtn">取消</button><button class="btn btn-primary" id="saveRuleBtn">保存分账规则</button></div></div></div>
 <script>
 const BUSINESS_SESSION_KEY="sb-qbuqjwpkltbjhlfbyjyb-auth-token",LOGIN_PAGE="./login.html",HOME_PAGE="./wholemanagement.html",IDLE_LIMIT=600000;
 let currentUser=null,currentProfile=null,merchants=[],products=[],categories=[],rules=[],serviceAreas=[],cities=[],provinces=[],cityPrices=[],citypartners=[],citypartnerCities=[],idleTimer=null,editingMerchantId=null,editingProductId=null,saving=false;
@@ -68,7 +68,7 @@ const merchantName=m=>m?.merchant_name||m?.name||m?.full_name||m?.company_name||
 function productCategory(p){const c=categories.find(x=>String(x.id)===String(p?.category_id));return c?.category_name||"未分类"}function cityById(id){return cities.find(x=>String(x.id)===String(id))}function provinceById(id){return provinces.find(x=>String(x.id)===String(id))}
 function activeRule(mid,pid){return rules.find(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="active")}function historyRules(mid,pid){return rules.filter(r=>String(r.merchant_id)===String(mid)&&String(r.product_id)===String(pid)&&r.status==="inactive").sort((a,b)=>Number(b.version_no||0)-Number(a.version_no||0)||String(b.invalidated_at||"").localeCompare(String(a.invalidated_at||"")))}function fmt(v){return v?new Date(v).toLocaleString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}):"—"}function invalidator(r){return r?.invalidated_by_name||"未设置姓名"}
 function cityPriceHtml(m,p){const cityId=merchantCityId(m),undefinedPrice='<span class="badge badge-orange">未定义</span>';if(cityId==null||!serviceAreas.some(a=>a.status==="active"&&String(a.city_id)===String(cityId)))return undefinedPrice;const now=Date.now(),r=cityPrices.find(x=>String(x.city_id)===String(cityId)&&String(x.product_id)===String(p.id)&&x.status==="active"&&x.invalidated_at==null&&Date.parse(x.effective_from)<=now);if(!r||r.price==null||String(r.price).trim()==="")return undefinedPrice;const price=Number(r.price);return Number.isFinite(price)&&price>=0?`<span class="city-price">¥${price.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`:undefinedPrice}
-function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}function citypartnerName(id){const cp=citypartners.find(x=>String(x.id)===String(id));return cp?(cp.citypartner_name||cp.full_name||("城市合伙人 "+cp.citypartner_no)):"无"}function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市合伙人 ${r.citypartner_id?`<b>${esc(citypartnerName(r.citypartner_id))}</b> `:""}<b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">健康顾问 <b>${rv(r.order_source_ratio)}%</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
+function rv(v){const n=Number(v);return Number.isFinite(n)?n.toLocaleString("zh-CN",{maximumFractionDigits:4}):"0"}function citypartnerName(id){const cp=citypartners.find(x=>String(x.id)===String(id));return cp?(cp.citypartner_name||cp.full_name||("城市合伙人 "+cp.citypartner_no)):"无"}function ratioHtml(r){return r?`<div class="ratio-line"><span class="ratio-item">平台 <b>${rv(r.platform_ratio)}%</b></span><span class="ratio-item">城市合伙人 ${r.citypartner_id?`<b>${esc(citypartnerName(r.citypartner_id))}</b> `:""}<b>${rv(r.city_manager_ratio)}%</b></span><span class="ratio-item">商户 <b>${rv(r.store_ratio)}%</b></span><span class="ratio-item">服务人员 <b>${rv(r.operator_ratio)}%</b></span><span class="ratio-item">推荐人 <b>动态扣平台份额</b></span><span class="ratio-item">软件服务 <b>${rv(r.software_service_ratio)}%</b></span></div>`:"—"}
 async function init(){resetIdle();try{if(!accessToken()){location.replace(LOGIN_PAGE);return}const identity=await api("/api/auth/business-identity");if(!identity?.user)throw new Error("无法读取当前账号权限。");currentUser=identity.user;currentProfile=identity.profile||{id:identity.user.id,role:identity.role,status:identity.status};if(currentProfile.status!=="active")throw new Error("当前账号已经停用。");if(!["founder","platform_admin"].includes(currentProfile.role)){alert("您没有商户分账规则管理权限。");location.replace(HOME_PAGE);return}await loadData();loading()}catch(e){console.error(e);loading();alert(e.message||"页面初始化失败。")}}
 async function loadData(){const d=await api("/api/admin/merchant-rules/data");merchants=d.merchants||[];products=d.products||[];categories=d.categories||[];rules=d.rules||[];serviceAreas=d.service_areas||[];cities=d.cities||[];provinces=d.provinces||[];cityPrices=d.city_prices||[];citypartners=d.citypartners||[];citypartnerCities=d.citypartner_cities||[];renderCity();renderMerchantFilter();renderCategoryFilters();renderAll()}
 function openedCities(){const m=new Map;serviceAreas.forEach(a=>{if(a.city_id&&!m.has(String(a.city_id)))m.set(String(a.city_id),a)});return [...m.values()]}
@@ -105,11 +105,11 @@ editingMerchantId=realMerchantId;
 editingProductId=String(p.id);
 $("ruleTarget").innerHTML=`商户：<b>${esc(merchantName(m))}</b><br>服务项目类型：<b>${esc(productCategory(p))}</b><br>服务项目：<b>${esc(productName(p))}</b>${productCode(p)?`（${esc(productCode(p))}）`:""}`;
 renderCitypartnerSelect(m);$("citypartnerSelect").value="";
-["platformRatio","cityManagerRatio","storeRatio","operatorRatio","advisorRatio"].forEach(id=>$(id).value="0");
+["platformRatio","cityManagerRatio","storeRatio","operatorRatio"].forEach(id=>$(id).value="0");
 calcTotal();$("ruleModal").classList.add("show")
 }
 function closeModal(){if(saving)return;$("ruleModal").classList.remove("show");editingMerchantId=null;editingProductId=null}
-function ratios(){return{platform:Number($("platformRatio").value),city:Number($("cityManagerRatio").value),store:Number($("storeRatio").value),operator:Number($("operatorRatio").value),advisor:Number($("advisorRatio").value)}}
+function ratios(){return{platform:Number($("platformRatio").value),city:Number($("cityManagerRatio").value),store:Number($("storeRatio").value),operator:Number($("operatorRatio").value),advisor:0}}
 function calcTotal(){const r=ratios(),v=Object.values(r),valid=v.every(n=>Number.isFinite(n)&&n>=0&&n<=100),total=valid?v.reduce((a,b)=>a+b,0)+0.8:NaN;$("ratioTotal").textContent=Number.isFinite(total)?rv(total)+"%":"无效";$("totalBox").classList.toggle("bad",!Number.isFinite(total)||Math.abs(total-100)>.000001);return{r,total,valid}}
 async function saveRule(){
 if(saving)return;
@@ -124,7 +124,7 @@ const {r,total,valid}=calcTotal();
 const citypartnerId=$("citypartnerSelect").value?Number($("citypartnerSelect").value):null;
 if(!valid)return toast("所有分账比例必须在0%至100%之间。","error");
 if(citypartnerId===null&&Math.abs(r.city)>.000001)return toast("未选择城市合伙人时，城市合伙人分账比例必须为0%。","error");
-if(Math.abs(total-100)>.000001)return toast("六方分账比例合计必须等于100%。","error");
+if(Math.abs(total-100)>.000001)return toast("基础分账比例合计必须等于100%。","error");
 if(activeRule(merchantId,productId))return toast("该商户与服务项目已经存在有效分账规则，请刷新页面。","error");
 if(!confirm(`确认保存这条分账规则？\n\n商户：${merchantName(merchant)}\n服务项目：${productName(product)}\n\n保存后将立即生效并锁定。`))return;
 saving=true;$("saveRuleBtn").disabled=true;
@@ -137,7 +137,7 @@ p_city_manager_ratio:r.city,
 p_platform_ratio:r.platform,
 p_store_ratio:r.store,
 p_operator_ratio:r.operator,
-p_order_source_ratio:r.advisor
+p_order_source_ratio:0
 };
 console.log("create_merchant_product_rule payload:",payload);
 const data=await api("/api/admin/merchant-rules/create",{method:"POST",body:payload});
@@ -173,7 +173,7 @@ $("topCategoryFilter").addEventListener("change",()=>{$("categoryFilter").value=
 $("categoryFilter").addEventListener("change",renderList);
 $("searchInput").addEventListener("input",renderList);
 $("showHistory").addEventListener("change",renderList);
-["platformRatio","cityManagerRatio","storeRatio","operatorRatio","advisorRatio"].forEach(id=>$(id).addEventListener("input",calcTotal));
+["platformRatio","cityManagerRatio","storeRatio","operatorRatio"].forEach(id=>$(id).addEventListener("input",calcTotal));
 $("ruleModal").addEventListener("click",e=>{if(e.target===$("ruleModal"))closeModal()});
 $("modalCloseBtn").addEventListener("click",closeModal);
 $("cancelRuleBtn").addEventListener("click",closeModal);
