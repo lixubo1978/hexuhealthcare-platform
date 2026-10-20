@@ -4,24 +4,35 @@ const $=id=>document.getElementById(id),ref=(new URLSearchParams(location.search
 function msg(s){$('message').textContent=s||''}function phone(){const p=$('phone').value.replace(/\D/g,'');return /^1\d{10}$/.test(p)?'+86'+p:null}
 async function api(path,body,token){const h={Accept:'application/json'};if(body!==undefined)h['Content-Type']='application/json';if(token)h.Authorization='Bearer '+token;const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:h,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});let d;try{d=await r.json()}catch{throw Error('服务器返回格式异常')}if(!r.ok||d?.success===false)throw Error(d?.error||d?.message||'操作失败');return d}
 function fillCities(){
- const province=$('province').value,city=$('city');
- city.innerHTML='<option value="">请选择城市</option>';
- for(const x of serviceAreas.filter(x=>String(x.province_id)===province)){
-   const opt=document.createElement('option');opt.value=String(x.city_id);opt.textContent=x.city_name;city.appendChild(opt);
+ const province=String($('province').value||''),city=$('city');
+ city.replaceChildren(new Option(province?'请选择城市':'请先选择省份',''));
+ const seen=new Set();
+ for(const x of serviceAreas){
+  if(String(x.province_id)!==province)continue;
+  const id=String(x.city_id||'');
+  if(!id||seen.has(id))continue;
+  seen.add(id);
+  city.add(new Option(String(x.city_name||'城市 '+id),id));
  }
- city.disabled=!province||city.options.length===1;
+ city.disabled=!province||seen.size===0;
+ city.value='';
 }
-$('province').onchange=fillCities;
+$('province').addEventListener('change',fillCities);
 async function loadServiceAreas(){
  const d=await api('/api/customer/first-profile-options');
  serviceAreas=Array.isArray(d.areas)?d.areas:[];
  if(!serviceAreas.length)throw Error('当前没有可选的已开通城市，请联系管理员检查服务区域配置');
- const provinces=new Set();
+ const province=$('province');
+ province.replaceChildren(new Option('请选择省份',''));
+ const seen=new Set();
  for(const x of serviceAreas){
-  if(provinces.has(String(x.province_id)))continue;
-  provinces.add(String(x.province_id));
-  const opt=document.createElement('option');opt.value=String(x.province_id);opt.textContent=x.province_name;$('province').appendChild(opt);
+  const id=String(x.province_id||'');
+  if(!id||seen.has(id))continue;
+  seen.add(id);
+  province.add(new Option(String(x.province_name||'省份 '+id),id));
  }
+ province.value='';
+ fillCities();
 }
 async function init(){
  if(!/^(?:[a-f0-9]{32}|[a-f0-9]{48})$/i.test(ref)){msg('推荐链接无效，请重新扫码');return}
@@ -29,12 +40,8 @@ async function init(){
   const d=await api('/api/referrals/resolve?ref='+encodeURIComponent(ref));
   $('referrer').textContent='推荐人：'+(d.referrer?.display_name||'荷序健康用户');
   valid=true;$('send').disabled=false;
-  const rp=String(d.referrer?.province_id||''),rc=String(d.referrer?.city_id||'');
   try{
    await loadServiceAreas();
-   if(rp&&rc&&serviceAreas.some(x=>String(x.province_id)===rp&&String(x.city_id)===rc)){
-    $('province').value=rp;fillCities();$('city').value=rc;
-   }
    $('register').disabled=false;msg('');
   }catch(e){
    msg('城市列表加载失败：'+e.message+'。请刷新页面重试。');
