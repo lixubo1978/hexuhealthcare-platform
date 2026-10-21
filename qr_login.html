@@ -354,6 +354,22 @@ async function checkSession(){
  // 注册完成后的登录状态只由已验证的客户资料决定；私有订单接口故障不能清空登录凭证。
  try{
   isCustomer=await verifyCustomer();
+  // 对刚刚完成首次登记的客户，优先用后端统一的 needs_profile 状态确认。
+  // 某些 profile 返回结构没有 role/status，不能因此误判成未登录。
+  if(!isCustomer&&sessionStorage.getItem(REGISTRATION_DRAFT_KEY)){
+   const p=phone(apiSession?.user?.phone||"");
+   if(p){
+    const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:p}});
+    if(prepared?.needs_profile===false){
+     const rows=await apiAuth('/api/customer/profile');
+     const profile=Array.isArray(rows)?rows[0]:rows;
+     if(profile&&typeof profile==='object'){
+      currentProfile=profile;
+      isCustomer=true;
+     }
+    }
+   }
+  }
   if(!isCustomer&&await refreshApiSession()){
    currentUser=apiSession?.user||currentUser;
    isCustomer=await verifyCustomer();
@@ -422,7 +438,7 @@ async function verifyLogin(){
   $("customerName").value=currentProfile?.full_name||currentProfile?.nickname||"";
   updateAccountEntry();await loadPrivate();await applyReferralBinding();
   showLogin("已识别历史客户。",true);
-  close("customerMask");await openMerchants();
+  close("customerMask");restoreRegistrationDraft();await openMerchants();
  }catch(e){showLogin(e.message||"验证失败，请重试");b.disabled=false;b.textContent="验证并继续"}
 }
 
