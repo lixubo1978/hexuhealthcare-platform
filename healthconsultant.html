@@ -41,6 +41,7 @@ body,.loading-mask{background:#f4f0e6}.topbar{background:rgba(255,252,247,.97);b
 .summary-card,.panel,.order-card,.merchant-card{background:#fffcf7;border-radius:4px}.summary-value{color:#0b5051}.panel{border-top:3px solid #0b5051}.panel-title{color:#103537}.filters{background:#e8efe8}.control,.password-input{background:#fff;border-color:#c5d3c9;border-radius:4px;color:#233633}.control:focus,.password-input:focus{border-color:#478c80;box-shadow:0 0 0 3px rgba(11,80,81,.09)}.refresh-btn{background:#0b5051;color:#fff;border-radius:4px}
 .order-head{background:#edf1e8;border-color:#dce3da}.order-number,.city-name,.merchant-name{color:#103537}.item{border-color:#dce3da}.split-box{border-radius:4px;background:#fff4f8;border-color:#ead2dc}.split-title,.split-amount span{color:#80616f}.split-row strong{color:#233633}.split-amount strong{color:#b63c69}
 .city-bar{background:#fffcf7;border-color:#d3dcd4;border-radius:4px}.detail-mask,.password-mask{background:rgba(16,53,55,.55)}.detail-modal,.password-modal{background:#fffcf7;border-radius:4px;border:1px solid #afc3b9;box-shadow:0 25px 80px rgba(16,53,55,.2)}.detail-title,.password-title{color:#103537;font-family:"Songti SC","STSong",serif;font-weight:500}.detail-section h3,.info-tag b,.data-cell strong,.form-label{color:#233633}.info-tag,.data-cell{background:#f4f0e6;border-radius:4px}.cancel-password{background:#e8efe8;color:#0b5051;border-radius:4px}.show-password{color:#0b5051}.toast{background:#103537;border-radius:4px}button:focus-visible{outline:2px solid #478c80;outline-offset:3px}
+.consultant-qr-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.consultant-qr-box{text-align:center;padding:14px 0}.consultant-qr-canvas{display:flex;justify-content:center;margin:14px auto}.consultant-qr-canvas img,.consultant-qr-canvas canvas{max-width:100%}.consultant-qr-link{word-break:break-all;color:#0b5051;font-size:12px;margin:12px 0}.consultant-qr-buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.consultant-qr-message{color:#68766e;font-size:13px;line-height:1.8}.consultant-qr-message.error{color:#bd2940}@media(max-width:700px){.consultant-qr-actions{justify-content:flex-start;width:100%}}
 </style>
 </head>
 <body>
@@ -71,7 +72,7 @@ body,.loading-mask{background:#f4f0e6}.topbar{background:rgba(255,252,247,.97);b
 <div class="summary-card"><div class="summary-icon">📱</div><div class="summary-label">绑定手机号</div><div id="consultantPhone" class="summary-value small">-</div></div>
 </section>
 
-<section class="city-bar"><div><div class="city-note">当前工作城市（仅可查看本城市数据）</div><div id="cityName" class="city-name">正在读取…</div></div><button class="small-btn" type="button" onclick="openProfileModal()">查看我的登记资料</button></section>
+<section class="city-bar"><div><div class="city-note">当前工作城市（仅可查看本城市数据）</div><div id="cityName" class="city-name">正在读取…</div></div><div class="consultant-qr-actions"><button class="small-btn" type="button" onclick="openConsultantQr()">我的专属推荐二维码</button><button class="small-btn" type="button" onclick="openProfileModal()">查看我的登记资料</button></div></section>
 
 <section class="panel" style="margin-bottom:22px"><div class="panel-head"><div><div class="panel-title">本城市全部门店</div><div class="panel-hint">仅显示正常营业门店；点击查看技术服务人员及已授权经营项目</div></div><div id="merchantCount" class="status status-green">0 家</div></div><div id="merchantList" class="merchant-list"><div class="empty">正在读取本城市门店…</div></div></section>
 
@@ -94,6 +95,7 @@ body,.loading-mask{background:#f4f0e6}.topbar{background:rgba(255,252,247,.97);b
 
 <div id="detailMask" class="detail-mask"><div class="detail-modal"><div class="detail-head"><div><div id="detailTitle" class="detail-title">门店详情</div><div id="detailSub" class="detail-sub"></div></div><button class="close-detail" type="button" onclick="closeDetailModal()">×</button></div><div id="detailContent"></div></div></div>
 
+<div id="consultantQrMask" class="detail-mask"><div class="detail-modal" style="width:min(490px,100%)"><div class="detail-head"><div><div class="detail-title">我的专属推荐二维码</div><div class="detail-sub">专属推荐身份由平台统一分配</div></div><button class="close-detail" type="button" onclick="closeConsultantQr()">×</button></div><div class="consultant-qr-box"><div id="consultantQrMessage" class="consultant-qr-message">正在读取专属推荐二维码…</div><div id="consultantQrCanvas" class="consultant-qr-canvas"></div><div id="consultantQrLink" class="consultant-qr-link"></div><div class="consultant-qr-buttons"><button id="consultantQrCopy" class="small-btn hidden" type="button" onclick="copyConsultantQr()">复制推荐链接</button><button id="consultantQrSave" class="small-btn hidden" type="button" onclick="saveConsultantQr()">保存二维码图片</button></div></div></div></div>
 <div id="profileMask" class="detail-mask"><div class="detail-modal"><div class="detail-head"><div><div class="detail-title">我的申请登记资料</div><div class="detail-sub">以下资料仅供本人只读查看</div></div><button class="close-detail" type="button" onclick="closeProfileModal()">×</button></div><div id="profileContent"></div></div></div>
 <div id="orderList" class="order-list"><div class="empty"><div class="empty-icon">🧾</div>正在读取订单...</div></div>
 </section>
@@ -185,6 +187,34 @@ document.getElementById("detailContent").innerHTML=`<section class="detail-secti
 document.getElementById("detailMask").classList.add("show");document.body.style.overflow="hidden";
 }
 function closeDetailModal(){document.getElementById("detailMask").classList.remove("show");document.body.style.overflow=""}
+let consultantQrUrl="";
+async function ensureConsultantQrLibrary(){
+ if(window.QRCode)return;
+ await new Promise((resolve,reject)=>{const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";script.onload=resolve;script.onerror=()=>reject(new Error("二维码组件加载失败，请检查网络"));document.head.appendChild(script)});
+}
+async function openConsultantQr(){
+ const mask=document.getElementById("consultantQrMask"),msg=document.getElementById("consultantQrMessage"),canvas=document.getElementById("consultantQrCanvas");
+ mask.classList.add("show");document.body.style.overflow="hidden";consultantQrUrl="";canvas.innerHTML="";msg.textContent="正在读取专属推荐二维码…";msg.classList.remove("error");document.getElementById("consultantQrLink").textContent="";document.getElementById("consultantQrCopy").classList.add("hidden");document.getElementById("consultantQrSave").classList.add("hidden");
+ try{
+  const data=await api("/api/referrals/my-qr");
+  const list=Array.isArray(data.referrals)?data.referrals:[];
+  const cid=String(dashboardData?.consultant?.id??"");
+  const qr=list.find(x=>["health_consultant","consultant"].includes(String(x.kind||"").toLowerCase())&&(!cid||String(x.entity_id)===cid));
+  if(!qr)throw new Error("当前健康顾问尚未分配专属推荐二维码，请联系平台管理员核查推荐身份");
+  if(qr.qr_enabled===false||qr.source_active===false)throw new Error("该专属推荐二维码已停用");
+  if(!qr.token)throw new Error("推荐身份缺少推荐码");
+  const url=new URL(qr.qr_url||("https://www.hexuhealthcare.com/referral_register.html?ref="+encodeURIComponent(qr.token)));
+  if(url.origin!=="https://www.hexuhealthcare.com"||url.pathname!=="/referral_register.html"||url.searchParams.get("ref")!==String(qr.token))throw new Error("后台返回的推荐链接无效");
+  consultantQrUrl=url.href;
+  document.getElementById("consultantQrLink").textContent=consultantQrUrl;
+  document.getElementById("consultantQrCopy").classList.remove("hidden");
+  try{await ensureConsultantQrLibrary();new QRCode(canvas,{text:consultantQrUrl,width:190,height:190,colorDark:"#103537",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});msg.textContent="扫码进入推荐注册页面；分成比例以平台后台授权为准。";document.getElementById("consultantQrSave").classList.remove("hidden")}
+  catch(e){msg.textContent="推荐链接已读取成功，但二维码图片生成失败。可先复制链接。"}
+ }catch(e){msg.textContent=e.message||"推荐二维码读取失败";msg.classList.add("error")}
+}
+function closeConsultantQr(){document.getElementById("consultantQrMask").classList.remove("show");document.body.style.overflow=""}
+async function copyConsultantQr(){if(!consultantQrUrl)return;try{await navigator.clipboard.writeText(consultantQrUrl);showToast("推荐链接已复制")}catch{const t=document.createElement("textarea");t.value=consultantQrUrl;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();showToast("推荐链接已复制")}}
+function saveConsultantQr(){const box=document.getElementById("consultantQrCanvas"),canvas=box.querySelector("canvas"),img=box.querySelector("img");let url=canvas?.toDataURL("image/png")||img?.src;if(!url)return showToast("二维码图片尚未生成");const a=document.createElement("a");a.href=url;a.download="荷序健康_健康顾问专属推荐二维码.png";document.body.appendChild(a);a.click();a.remove()}
 function openProfileModal(){
 const c=dashboardData?.consultant||{};const a=dashboardData?.application||{};const fields=[["健康顾问编号",c.consultant_no],["姓名",a.applicant_name||c.consultant_name],["手机号",a.phone||c.phone],["身份证号",a.id_card_number],["个体工商户名称",a.individual_business_name||c.individual_business_name],["税号",a.tax_no||c.tax_no],["开户银行",a.bank_name||c.bank_name],["银行账号",a.bank_account||c.bank_account],["申请状态",a.status||c.status],["提交时间",dateTime(a.submitted_at)],["审核时间",dateTime(a.reviewed_at)],["审核说明",a.review_note]];
 document.getElementById("profileContent").innerHTML=`<div class="data-grid">${fields.map(x=>`<div class="data-cell"><label>${esc(x[0])}</label><strong>${esc(x[1]??"未登记")}</strong></div>`).join("")}</div>`;
@@ -297,6 +327,7 @@ document.getElementById("searchInput").addEventListener("input",renderOrders);
 document.getElementById("statusFilter").addEventListener("change",renderOrders);
 document.getElementById("confirmPassword").addEventListener("keydown",event=>{if(event.key==="Enter")saveNewPassword()});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!passwordForced)closePasswordModal()});
+document.getElementById("consultantQrMask").addEventListener("click",e=>{if(e.target.id==="consultantQrMask")closeConsultantQr()});
 document.addEventListener("DOMContentLoaded",initialize);
 </script>
 
