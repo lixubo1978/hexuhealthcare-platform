@@ -110,9 +110,16 @@ function msg(s) {
   $('message').textContent = s || '';
 }
 
+// 兼容 +86、86、0086 和纯11位手机号，界面只显示11位。
+function localPhone(value) {
+  let p = String(value || '').replace(/\D/g, '');
+  if (p.startsWith('0086') && p.length === 15) p = p.slice(4);
+  else if (p.startsWith('86') && p.length === 13) p = p.slice(2);
+  return /^1\d{10}$/.test(p) ? p : '';
+}
 function phone() {
-  const p = $('phone').value.replace(/\D/g, '');
-  return /^1\d{10}$/.test(p) ? '+86' + p : null;
+  const p = localPhone($('phone').value);
+  return p ? '+86' + p : null;
 }
 
 async function api(path, body, token) {
@@ -226,13 +233,19 @@ async function init() {
 
     const urlPhone = params.get('phone') || '';
     const sessionPhone = String(session.user?.phone || '');
-    if (sessionPhone && urlPhone && sessionPhone.replace(/\D/g,'') !== urlPhone.replace(/\D/g,'')) {
+    if (sessionPhone && urlPhone && localPhone(sessionPhone) !== localPhone(urlPhone)) {
       $('referrer').textContent = '手机号验证不一致';
       msg('登录手机号不匹配，请返回重新验证');
       return;
     }
 
-    $('phone').value = (sessionPhone || urlPhone).replace(/^\+86/, '');
+    const verifiedPhone = localPhone(sessionPhone || urlPhone);
+    if (!verifiedPhone) {
+      $('referrer').textContent = '手机号验证异常';
+      msg('无法识别已验证手机号，请返回重新登录');
+      return;
+    }
+    $('phone').value = verifiedPhone;
     $('phone').readOnly = true;
 
     // 修复原代码 previousElementSibling 为 null 的错误。
