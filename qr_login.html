@@ -345,7 +345,26 @@ async function verifyCustomer(){if(!currentUser||!accessToken())return false;try
 async function loadPrivate(){let r0=await apiAuth("/api/order/options");privateOptions=Array.isArray(r0)?r0:[]}
 function maskedPhone(v){let n=String(v||"").replace(/\D/g,"");if(n.startsWith("86")&&n.length===13)n=n.slice(2);return /^1\d{10}$/.test(n)?n.slice(0,3)+"****"+n.slice(-4):""}
 function updateAccountEntry(){let a=$("accountEntry");if(!a)return;if(!isCustomer||!accessToken()){a.textContent="登录";a.href="./login.html";a.setAttribute("aria-label","登录荷序健康");return}let name=String(currentProfile?.full_name||currentProfile?.nickname||apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"").trim(),phoneText=maskedPhone(currentProfile?.phone||apiSession?.user?.phone||"");a.textContent=name||phoneText||"我的";a.href="./customer.html";a.setAttribute("aria-label","进入客户中心")}
-async function checkSession(){if(!apiSession?.access_token){currentUser=null;currentProfile=null;isCustomer=false;updateAccountEntry();return}currentUser=apiSession?.user||{id:null,phone:""};isCustomer=false;$("customerPhone").value=String(apiSession?.user?.phone||"").replace("+86","");$("customerName").value=apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"";try{isCustomer=await verifyCustomer();if(isCustomer&&sessionStorage.getItem(REGISTRATION_DRAFT_KEY)){const verifiedPhone=phone(apiSession?.user?.phone||'');if(!verifiedPhone){isCustomer=false}else{const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:verifiedPhone}});if(prepared?.needs_profile!==false)isCustomer=false}}updateAccountEntry();if(isCustomer){await loadPrivate();await applyReferralBinding()}}catch(e){console.error("已登录客户私有下单数据预加载失败：",e);if(!(await refreshApiSession())){currentUser=null;currentProfile=null;isCustomer=false;saveApiSession(null)}updateAccountEntry()}}
+async function checkSession(){
+ if(!apiSession?.access_token){currentUser=null;currentProfile=null;isCustomer=false;updateAccountEntry();return false}
+ currentUser=apiSession?.user||{id:null,phone:""};
+ isCustomer=false;
+ $("customerPhone").value=String(apiSession?.user?.phone||"").replace("+86","");
+ $("customerName").value=apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"";
+ // 注册完成后的登录状态只由已验证的客户资料决定；私有订单接口故障不能清空登录凭证。
+ try{
+  isCustomer=await verifyCustomer();
+  if(!isCustomer&&await refreshApiSession()){
+   currentUser=apiSession?.user||currentUser;
+   isCustomer=await verifyCustomer();
+  }
+ }catch(e){console.warn("客户身份验证失败：",e)}
+ updateAccountEntry();
+ if(!isCustomer)return false;
+ try{await loadPrivate()}catch(e){console.warn("商户资料预加载失败，可在下一步重试：",e)}
+ try{await applyReferralBinding()}catch(e){console.warn("推荐绑定暂未完成：",e)}
+ return true;
+}
 async function begin(){if(!cityId)return toast("请先选择服务城市。");if(!product||qty<1)return toast("请先选择服务和数量。");if(isCustomer&&accessToken()){await openMerchants();return}open("customerMask")}
 async function sendOtp(){let p=phone($("customerPhone").value);if(!p)return showLogin("请输入正确的11位手机号码。");let b=$("sendOtp");b.disabled=true;b.textContent="发送中…";try{await api("/api/auth/send-otp",{method:"POST",body:{phone:p}});showLogin("验证码已发送，请查看手机短信。",true);let n=60,t=setInterval(()=>{b.textContent=n+"秒";if(--n<0){clearInterval(t);b.disabled=false;b.textContent="重新获取验证码"}},1000)}catch(e){showLogin(e.message||"验证码发送失败");b.disabled=false;b.textContent="获取验证码"}}
 function showLogin(s,ok=false){$("loginMsg").textContent=s;$("loginMsg").className="msg "+(ok?"ok":"")}
@@ -470,7 +489,40 @@ async function referralGateVerify(){
 }
 
 $('referralSendOtp').onclick=referralGateSend;$('referralVerify').onclick=referralGateVerify;
-async function init(){try{let[r,priceResult]=await Promise.all([api("/api/public-order-catalog"),api("/api/public-city-prices")]);catalog=typeof r==="string"?JSON.parse(r):r||catalog;cityPrices=Array.isArray(priceResult)?priceResult:[];if(Array.isArray(catalog.items)){catalog.items=catalog.items.map(item=>{let cp=cityPrices.find(p=>String(p.city_id)===String(item.city_id)&&String(p.product_id)===String(item.product_id));return cp?{...item,reference_price:Number(cp.reference_price),actual_sale_price:Number(cp.actual_sale_price),unit_price:Number(cp.actual_sale_price)}:item})}if(!Array.isArray(catalog.cities)||!catalog.cities.length)throw Error("暂时没有已开通服务的城市");renderCatalog();await checkSession();const resumed=restoreRegistrationDraft();if(resumed&&isCustomer&&accessToken()){history.replaceState(null,"",location.pathname);await openMerchants()}else getLocation()}catch(e){console.error("qr_login 初始化失败",e);$("items").innerHTML='<div class="empty">服务目录读取失败，请稍后重试。</div>';$("cityName").textContent="请选择服务城市";$("cityMsg").textContent="服务城市读取失败，请点击“手工选择城市”。";toast(e.message||"页面加载失败")}}
+async function init(){
+ try{
+  let[r,priceResult]=await Promise.all([api("/api/public-order-catalog"),api("/api/public-city-prices")]);
+  catalog=typeof r==="string"?JSON.parse(r):r||catalog;
+  cityPrices=Array.isArray(priceResult)?priceResult:[];
+  if(Array.isArray(catalog.items))catalog.items=catalog.items.map(item=>{
+   let cp=cityPrices.find(p=>String(p.city_id)===String(item.city_id)&&String(p.product_id)===String(item.product_id));
+   return cp?{...item,reference_price:Number(cp.reference_price),actual_sale_price:Number(cp.actual_sale_price),unit_price:Number(cp.actual_sale_price)}:item;
+  });
+  if(!Array.isArray(catalog.cities)||!catalog.cities.length)throw Error("暂时没有已开通服务的城市");
+  renderCatalog();
+  await checkSession();
+  const pending=!!sessionStorage.getItem(REGISTRATION_DRAFT_KEY);
+  const resumed=restoreRegistrationDraft();
+  if(resumed&&isCustomer&&accessToken()){
+   history.replaceState(null,"",location.pathname);
+   await openMerchants();
+  }else{
+   getLocation();
+   if(pending&&!isCustomer){
+    toast("资料登记已返回，但尚未确认登录状态，请重新验证手机号。");
+    open("customerMask");
+   }else if(pending&&isCustomer){
+    toast("已登录，但原服务项目暂不可用，请重新选择。");
+   }
+  }
+ }catch(e){
+  console.error("qr_login 初始化失败",e);
+  $("items").innerHTML='<div class="empty">服务目录读取失败，请稍后重试。</div>';
+  $("cityName").textContent="请选择服务城市";
+  $("cityMsg").textContent="服务城市读取失败，请点击“手工选择城市”。";
+  toast(e.message||"页面加载失败");
+ }
+}
 $("changeCity").onclick=()=>{renderCities();open("cityMask")};
 $("customerBack").onclick=backToCatalog;
 $("merchantBack").onclick=backToCustomerOrCatalog;
