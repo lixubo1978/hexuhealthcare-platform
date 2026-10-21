@@ -1108,11 +1108,11 @@ function renderMerchants(){
             <td>${escapeHtml(row.email||"—")}</td>
             <td><span class="badge badge-merchant">${merchantTypeLabel(row.merchant_type)}</span></td>
             <td>${escapeHtml(getServiceAreaName(row.service_area_id))}</td>
-            <td><span class="badge ${row.status==="active"?"status-active":"status-other"}">${statusLabel(row.status)}</span><div style="margin-top:5px;font-size:11px;color:${row.listing_status==='suspended'?'#b45309':'#23765a'}">${row.status==='active'?(row.listing_status==='suspended'?'暂停营业':'正常营业'):''}</div></td>
+            <td><span class="badge ${row.status==="active"?"status-active":"status-other"}">${statusLabel(row.status)}</span><div style="margin-top:5px;font-size:11px;color:${row.listing_status==='suspended'?'#b45309':'#23765a'}">${row.status==='active'?(row.listing_status==='suspended'?'暂停营业':row.listing_status==='online'?'正常营业':'状态待同步'):''}</div></td>
             <td>
                 ${canManage&&row.status==="active"
                     ? `<button class="action edit-action" onclick="editMerchant('${row.id}')">编辑</button>
-                       <button class="action ${row.listing_status==='suspended'?'edit-action':'danger-action'}" onclick="toggleMerchantBusinessStatus('${row.id}')">${row.listing_status==='suspended'?'恢复营业':'暂停营业'}</button>
+                       <button class="action ${row.listing_status==='suspended'?'edit-action':'danger-action'}" onclick="${['online','suspended'].includes(row.listing_status)?`toggleMerchantBusinessStatus('${row.id}')`:'loadAllData()'}">${row.listing_status==='suspended'?'恢复营业':row.listing_status==='online'?'暂停营业':'刷新状态'}</button>
                        <button class="action danger-action" onclick="invalidateMerchant('${row.id}')">设为无效</button>`
                     :"—"}
             </td>
@@ -1185,9 +1185,9 @@ function renderMerchantMobile(list){
                 类型：${escapeHtml(merchantTypeLabel(row.merchant_type))}<br>
                 电话：${escapeHtml(row.phone||"—")}<br>
                 服务区域：${escapeHtml(getServiceAreaName(row.service_area_id))}<br>
-                营业状态：${row.listing_status==='suspended'?'暂停营业':'正常营业'}
+                营业状态：${row.listing_status==='suspended'?'暂停营业':row.listing_status==='online'?'正常营业':'状态待同步'}
             </div>
-            ${["founder","platform_admin"].includes(currentProfile.role)&&row.status==='active'?`<button class="action ${row.listing_status==='suspended'?'edit-action':'danger-action'}" onclick="toggleMerchantBusinessStatus('${row.id}')">${row.listing_status==='suspended'?'恢复营业':'暂停营业'}</button>`:''}
+            ${["founder","platform_admin"].includes(currentProfile.role)&&row.status==='active'?`<button class="action ${row.listing_status==='suspended'?'edit-action':'danger-action'}" onclick="${['online','suspended'].includes(row.listing_status)?`toggleMerchantBusinessStatus('${row.id}')`:'loadAllData()'}">${row.listing_status==='suspended'?'恢复营业':row.listing_status==='online'?'暂停营业':'刷新状态'}</button>`:''}
         </div>
     `).join("");
 }
@@ -1565,7 +1565,15 @@ async function toggleMerchantBusinessStatus(id){
             method:"POST",body:{merchant_id:id,action,reason}
         });
         if(result?.success===false)throw new Error(result.error||"操作失败");
+        // 先使用 RPC 返回的数据库实际状态更新页面，避免刷新时短暂显示旧状态。
+        const confirmedStatus=result?.listing_status;
+        if(!["online","suspended"].includes(confirmedStatus)){
+            throw new Error("数据库未返回有效的营业状态，请刷新核实");
+        }
+        row.listing_status=confirmedStatus;
+        renderMerchants();
         showToast(`商户已${verb}。`,"success");
+        // 随后重新读取数据库，确保列表与数据库一致。
         await loadAllData();
     }catch(error){showToast(error.message||"营业状态操作失败。","error")}
 }
