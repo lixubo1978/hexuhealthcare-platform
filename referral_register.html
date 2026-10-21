@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="zh-CN">
 <head>
@@ -101,7 +100,7 @@ select:disabled{background:#f3f4f1;color:#829087}
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const ref = (params.get('ref') || '').trim();
-const fromLogin = params.get('source') === 'login' && !ref;
+const fromLogin = ['login','qr_login'].includes(params.get('source'));
 
 let valid = false;
 let busy = false;
@@ -226,8 +225,14 @@ async function init() {
     }
 
     const urlPhone = params.get('phone') || '';
+    const sessionPhone = String(session.user?.phone || '');
+    if (sessionPhone && urlPhone && sessionPhone.replace(/\D/g,'') !== urlPhone.replace(/\D/g,'')) {
+      $('referrer').textContent = '手机号验证不一致';
+      msg('登录手机号不匹配，请返回重新验证');
+      return;
+    }
 
-    $('phone').value = urlPhone.replace(/^\+86/, '');
+    $('phone').value = (sessionPhone || urlPhone).replace(/^\+86/, '');
     $('phone').readOnly = true;
 
     // 修复原代码 previousElementSibling 为 null 的错误。
@@ -238,7 +243,21 @@ async function init() {
       otpLabel.style.display = 'none';
     }
 
-    $('referrer').textContent = '普通客户注册 · 无推荐人';
+    if (ref) {
+      if (!/^(?:[a-f0-9]{32}|[a-f0-9]{48})$/i.test(ref)) {
+        msg('推荐链接无效，请重新扫码');
+        return;
+      }
+      try {
+        const d = await api('/api/referrals/resolve?ref=' + encodeURIComponent(ref));
+        $('referrer').textContent = '推荐人：' + (d.referrer?.display_name || '荷序健康用户');
+      } catch (e) {
+        msg('推荐二维码不可用：' + e.message);
+        return;
+      }
+    } else {
+      $('referrer').textContent = '普通客户注册 · 无推荐人';
+    }
     valid = true;
 
     try {
@@ -370,7 +389,7 @@ $('register').onclick = async () => {
       throw Error('短信验证失败');
     }
 
-    if (fromLogin) {
+    if (fromLogin && !ref) {
       // 普通注册：不绑定推荐人。
       await api(
         '/api/customer/login-prepare',
@@ -415,7 +434,13 @@ $('register').onclick = async () => {
     );
 
     msg('注册成功，正在进入客户服务平台…');
-    location.replace('./qr_login.html');
+    const resume = params.get('return');
+    // 仅允许返回站内 qr_login 页面，不接受外部跳转。
+    if (resume && /^\/?qr_login\.html\?resume_order=1$/.test(resume)) {
+      location.replace('./qr_login.html?resume_order=1');
+    } else {
+      location.replace('./qr_login.html');
+    }
   } catch (e) {
     msg(e.message || '注册失败，请重试');
   } finally {
