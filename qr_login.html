@@ -345,7 +345,7 @@ async function verifyCustomer(){if(!currentUser||!accessToken())return false;try
 async function loadPrivate(){let r0=await apiAuth("/api/order/options");privateOptions=Array.isArray(r0)?r0:[]}
 function maskedPhone(v){let n=String(v||"").replace(/\D/g,"");if(n.startsWith("86")&&n.length===13)n=n.slice(2);return /^1\d{10}$/.test(n)?n.slice(0,3)+"****"+n.slice(-4):""}
 function updateAccountEntry(){let a=$("accountEntry");if(!a)return;if(!isCustomer||!accessToken()){a.textContent="登录";a.href="./login.html";a.setAttribute("aria-label","登录荷序健康");return}let name=String(currentProfile?.full_name||currentProfile?.nickname||apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"").trim(),phoneText=maskedPhone(currentProfile?.phone||apiSession?.user?.phone||"");a.textContent=name||phoneText||"我的";a.href="./customer.html";a.setAttribute("aria-label","进入客户中心")}
-async function checkSession(){if(!apiSession?.access_token){currentUser=null;currentProfile=null;isCustomer=false;updateAccountEntry();return}currentUser=apiSession?.user||{id:null,phone:""};isCustomer=false;$("customerPhone").value=String(apiSession?.user?.phone||"").replace("+86","");$("customerName").value=apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"";try{isCustomer=await verifyCustomer();updateAccountEntry();if(isCustomer){await loadPrivate();await applyReferralBinding()}}catch(e){console.error("已登录客户私有下单数据预加载失败：",e);if(!(await refreshApiSession())){currentUser=null;currentProfile=null;isCustomer=false;saveApiSession(null)}updateAccountEntry()}}
+async function checkSession(){if(!apiSession?.access_token){currentUser=null;currentProfile=null;isCustomer=false;updateAccountEntry();return}currentUser=apiSession?.user||{id:null,phone:""};isCustomer=false;$("customerPhone").value=String(apiSession?.user?.phone||"").replace("+86","");$("customerName").value=apiSession?.user?.user_metadata?.full_name||apiSession?.user?.user_metadata?.name||"";try{isCustomer=await verifyCustomer();if(isCustomer&&sessionStorage.getItem(REGISTRATION_DRAFT_KEY)){const verifiedPhone=phone(apiSession?.user?.phone||'');if(!verifiedPhone){isCustomer=false}else{const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:verifiedPhone}});if(prepared?.needs_profile!==false)isCustomer=false}}updateAccountEntry();if(isCustomer){await loadPrivate();await applyReferralBinding()}}catch(e){console.error("已登录客户私有下单数据预加载失败：",e);if(!(await refreshApiSession())){currentUser=null;currentProfile=null;isCustomer=false;saveApiSession(null)}updateAccountEntry()}}
 async function begin(){if(!cityId)return toast("请先选择服务城市。");if(!product||qty<1)return toast("请先选择服务和数量。");if(isCustomer&&accessToken()){await openMerchants();return}open("customerMask")}
 async function sendOtp(){let p=phone($("customerPhone").value);if(!p)return showLogin("请输入正确的11位手机号码。");let b=$("sendOtp");b.disabled=true;b.textContent="发送中…";try{await api("/api/auth/send-otp",{method:"POST",body:{phone:p}});showLogin("验证码已发送，请查看手机短信。",true);let n=60,t=setInterval(()=>{b.textContent=n+"秒";if(--n<0){clearInterval(t);b.disabled=false;b.textContent="重新获取验证码"}},1000)}catch(e){showLogin(e.message||"验证码发送失败");b.disabled=false;b.textContent="获取验证码"}}
 function showLogin(s,ok=false){$("loginMsg").textContent=s;$("loginMsg").className="msg "+(ok?"ok":"")}
@@ -355,7 +355,7 @@ function saveRegistrationDraft(){
 }
 function sendToRegistration(verifiedPhone,refCode=""){
  saveRegistrationDraft();
- const q=new URLSearchParams({source:"login",phone:verifiedPhone,return:"qr_login.html?resume_order=1"});
+ const q=new URLSearchParams({source:"qr_login",phone:verifiedPhone,return:"qr_login.html?resume_order=1"});
  if(refCode)q.set("ref",refCode);
  location.assign("./referral_register.html?"+q.toString());
 }
@@ -389,11 +389,15 @@ async function verifyLogin(){
   const auth=await api("/api/auth/verify-otp",{method:"POST",body:{phone:p,token}});
   if(!auth?.access_token||!auth?.user)throw Error("登录失败，请重新获取验证码。");
   saveApiSession(auth);currentUser=auth.user;
-  if(!await verifyCustomer()){
-   showLogin("首次登录，请完善客户资料，完成后自动返回继续下单。",true);
+  // 先检查 customers.profile_completed，不能仅凭 profiles 中存在登录身份就认定注册完成。
+  const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:p}});
+  if(prepared?.needs_profile===true){
+   showLogin('检测到首次注册或资料未完善，正在进入统一资料登记页…',true);
    sendToRegistration(p,referralToken);
    return;
   }
+  if(prepared?.needs_profile!==false)throw Error('无法确认客户资料是否完整，请稍后重试');
+  if(!await verifyCustomer())throw Error('客户资料读取失败，请重新登录');
   isCustomer=true;
   $("customerPhone").value=String(auth.user.phone||p).replace("+86","");
   $("customerName").value=currentProfile?.full_name||currentProfile?.nickname||"";
@@ -449,11 +453,14 @@ async function referralGateVerify(){
   const auth=await api('/api/auth/verify-otp',{method:'POST',body:{phone:p,token:otp}});
   if(!auth?.access_token||!auth?.user)throw Error('手机登录失败');
   saveApiSession(auth);currentUser=auth.user;
-  if(!await verifyCustomer()){
-   referralGateMessage('首次注册，请先完善资料。');
+  const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:p}});
+  if(prepared?.needs_profile===true){
+   referralGateMessage('首次注册或资料未完善，正在进入统一资料登记页…');
    sendToRegistration(p,referralToken);
    return;
   }
+  if(prepared?.needs_profile!==false)throw Error('无法确认客户资料是否完整，请稍后重试');
+  if(!await verifyCustomer())throw Error('客户资料读取失败，请重新登录');
   isCustomer=true;
   if(!await applyReferralBinding())throw Error('推荐关系绑定未成功，请稍后重试');
   await loadPrivate();updateAccountEntry();$('referralGate').hidden=true;
