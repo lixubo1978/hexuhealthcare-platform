@@ -1108,10 +1108,11 @@ function renderMerchants(){
             <td>${escapeHtml(row.email||"—")}</td>
             <td><span class="badge badge-merchant">${merchantTypeLabel(row.merchant_type)}</span></td>
             <td>${escapeHtml(getServiceAreaName(row.service_area_id))}</td>
-            <td><span class="badge ${row.status==="active"?"status-active":"status-other"}">${statusLabel(row.status)}</span></td>
+            <td><span class="badge ${row.status==="active"?"status-active":"status-other"}">${statusLabel(row.status)}</span><div style="margin-top:5px;font-size:11px;color:${row.listing_status==='offline'?'#b45309':'#23765a'}">${row.status==='active'?(row.listing_status==='offline'?'暂停营业':'正常营业'):''}</div></td>
             <td>
                 ${canManage&&row.status==="active"
                     ? `<button class="action edit-action" onclick="editMerchant('${row.id}')">编辑</button>
+                       <button class="action ${row.listing_status==='offline'?'edit-action':'danger-action'}" onclick="toggleMerchantBusinessStatus('${row.id}')">${row.listing_status==='offline'?'恢复营业':'暂停营业'}</button>
                        <button class="action danger-action" onclick="invalidateMerchant('${row.id}')">设为无效</button>`
                     :"—"}
             </td>
@@ -1183,8 +1184,10 @@ function renderMerchantMobile(list){
             <div style="margin-top:10px;font-size:12px;color:#64716a;line-height:1.8">
                 类型：${escapeHtml(merchantTypeLabel(row.merchant_type))}<br>
                 电话：${escapeHtml(row.phone||"—")}<br>
-                服务区域：${escapeHtml(getServiceAreaName(row.service_area_id))}
+                服务区域：${escapeHtml(getServiceAreaName(row.service_area_id))}<br>
+                营业状态：${row.listing_status==='offline'?'暂停营业':'正常营业'}
             </div>
+            ${["founder","platform_admin"].includes(currentProfile.role)&&row.status==='active'?`<button class="action ${row.listing_status==='offline'?'edit-action':'danger-action'}" onclick="toggleMerchantBusinessStatus('${row.id}')">${row.listing_status==='offline'?'恢复营业':'暂停营业'}</button>`:''}
         </div>
     `).join("");
 }
@@ -1539,6 +1542,32 @@ async function invalidateMerchant(id){
     }catch(error){
         showToast(error.message||"操作失败。","error");
     }
+}
+
+
+/* 商户营业状态切换：只有创始人和平台管理员可操作。 */
+async function toggleMerchantBusinessStatus(id){
+    if(!["founder","platform_admin"].includes(currentProfile?.role))return showToast("没有操作权限。","error");
+    const row=merchants.find(x=>String(x.id)===String(id));
+    if(!row||row.status!=="active")return showToast("商户不存在或已失效。","error");
+    const paused=row.listing_status==="offline";
+    const action=paused?"resume":"pause";
+    const verb=paused?"恢复营业":"暂停营业";
+    if(!confirm(`确定将「${row.merchant_name||"该商户"}」${verb}吗？\n\n暂停营业不影响账号登录、历史订单和已有订单核销。`))return;
+    let reason="";
+    if(!paused){
+        const input=prompt("请填写暂停营业原因（可留空）：","");
+        if(input===null)return;
+        reason=input.trim().slice(0,500);
+    }
+    try{
+        const result=await api("/api/admin/merchant-business-status",{
+            method:"POST",body:{merchant_id:id,action,reason}
+        });
+        if(result?.success===false)throw new Error(result.error||"操作失败");
+        showToast(`商户已${verb}。`,"success");
+        await loadAllData();
+    }catch(error){showToast(error.message||"营业状态操作失败。","error")}
 }
 
 /* 健康顾问 */
