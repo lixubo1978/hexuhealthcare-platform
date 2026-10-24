@@ -398,8 +398,8 @@ $('register').onclick = async () => {
           token:otp
         });
 
-    if (!auth?.access_token) {
-      throw Error('短信验证失败');
+    if (!auth?.access_token || !auth?.refresh_token || !auth?.user?.id) {
+      throw Error('短信验证成功后未能建立登录会话，请重新获取验证码');
     }
 
     if (fromLogin && !ref) {
