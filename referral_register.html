@@ -46,6 +46,9 @@ select:disabled{background:#f3f4f1;color:#829087}
     <button id="send" type="button" disabled>获取验证码</button>
   </div>
 
+  <button id="checkExisting" type="button" class="main" style="margin-top:12px;background:#446d61">验证手机号并继续</button>
+  <p class="muted">已有账号的客户先验证手机号，系统会检查当前推荐关系；首次注册客户再填写下方资料。</p>
+
   <label for="nickname">姓名或昵称</label>
   <input id="nickname" maxlength="40" placeholder="请输入姓名或昵称">
 
@@ -92,6 +95,15 @@ select:disabled{background:#f3f4f1;color:#829087}
 
   <button class="main" id="register" type="button" disabled>验证并完成注册</button>
   <p id="message" role="status"></p>
+  <div id="existingBinding" role="dialog" aria-modal="true" aria-labelledby="existingTitle" hidden style="position:fixed;inset:0;background:#162d27aa;z-index:100;display:none;align-items:center;justify-content:center;padding:18px">
+    <div style="width:min(440px,100%);background:#fff;border-radius:14px;padding:25px;box-shadow:0 15px 45px #0003">
+      <h2 id="existingTitle" style="color:#155e50;font-size:21px">您已绑定推荐人</h2>
+      <p id="existingInfo" style="font-size:16px;color:#263b34"></p>
+      <p>当前推荐关系仍然有效，本次扫码不会更换推荐人。您可以直接进入客户服务平台下单。</p>
+      <div style="display:flex;gap:10px"><button type="button" id="bindingExit" style="flex:1;background:#71857b">退出</button><button type="button" id="bindingEnter" style="flex:1">进入客户平台</button></div>
+    </div>
+  </div>
+
   <p class="muted">已经注册？<a href="./qr_login.html">直接进入客户服务平台</a></p>
 </div>
 </div>
@@ -272,6 +284,7 @@ async function init() {
       $('referrer').textContent = '普通客户注册 · 无推荐人';
     }
     valid = true;
+    try { if(await checkExistingBinding(session))return; } catch(e) { msg('推荐关系查询失败：'+e.message); return; }
 
     try {
       // 公开读取省市，与推荐二维码入口完全相同。
@@ -319,6 +332,33 @@ async function init() {
   }
 }
 
+
+let verifiedAuth = null;
+let boundPromptShown = false;
+function showExistingBinding(binding) {
+  boundPromptShown = true;
+  const kindMap={merchant:'商户',technician:'技术服务人员',consultant:'健康顾问',customer:'客户'};
+  const name=String(binding.referrer_name||'荷序健康用户');
+  const kind=kindMap[binding.referrer_kind]||binding.referrer_kind||'推荐人';
+  $('existingInfo').textContent='您在荷序健康已绑定的推荐人：'+name+'（'+kind+'）。';
+  $('existingBinding').hidden=false;
+  $('existingBinding').style.display='flex';
+  $('register').disabled=true;
+  $('send').disabled=true;
+  msg('检测到已有有效推荐关系，请选择进入客户平台或退出。');
+}
+$('bindingEnter').onclick=()=>location.replace('./customer.html');
+$('bindingExit').onclick=()=>location.replace('./login.html');
+async function checkExistingBinding(auth) {
+  const b=await api('/api/customer/referral-binding-status',undefined,auth.access_token);
+  if(b.bound){
+    localStorage.setItem('hexu_customer_session_v1',JSON.stringify(auth));
+    showExistingBinding(b);
+    return true;
+  }
+  return false;
+}
+
 $('send').onclick = async () => {
   if (!valid) return;
 
@@ -351,6 +391,23 @@ $('send').onclick = async () => {
     b.disabled = false;
     b.textContent = '获取验证码';
   }
+};
+
+$('checkExisting').onclick=async()=>{
+  if(busy||boundPromptShown)return;
+  const p=phone(),otp=$('otp').value.trim();
+  if(!p||(!fromLogin&&!/^\d{6}$/.test(otp)))return msg('请先填写手机号和6位验证码');
+  busy=true;$('checkExisting').disabled=true;
+  try{
+    const auth=fromLogin?JSON.parse(localStorage.getItem('hexu_customer_session_v1')||'null')
+      :await api('/api/auth/verify-otp',{phone:p,token:otp});
+    if(!auth?.access_token||!auth?.user?.id)throw Error('短信验证未能建立登录会话');
+    verifiedAuth=auth;
+    if(await checkExistingBinding(auth))return;
+    msg('手机号验证成功，尚无有效推荐关系。首次注册请填写下方资料并完成注册。');
+    $('checkExisting').textContent='手机号已验证';
+  }catch(e){msg(e.message||'验证失败');}
+  finally{busy=false;$('checkExisting').disabled=false;}
 };
 
 $('register').onclick = async () => {
@@ -389,18 +446,20 @@ $('register').onclick = async () => {
   $('register').disabled = true;
 
   try {
-    const auth = fromLogin
+    const auth = verifiedAuth || (fromLogin
       ? JSON.parse(
           localStorage.getItem('hexu_customer_session_v1') || 'null'
         )
       : await api('/api/auth/verify-otp', {
           phone:p,
           token:otp
-        });
+        }));
 
     if (!auth?.access_token || !auth?.refresh_token || !auth?.user?.id) {
       throw Error('短信验证成功后未能建立登录会话，请重新获取验证码');
     }
+
+    if(await checkExistingBinding(auth))return;
 
     if (fromLogin && !ref) {
       // 普通注册：不绑定推荐人。
