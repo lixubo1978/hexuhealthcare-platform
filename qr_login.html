@@ -422,7 +422,7 @@ async function verifyLogin(){
  let b=$("verifyLogin");b.disabled=true;b.textContent="正在验证…";
  try{
   const auth=await api("/api/auth/verify-otp",{method:"POST",body:{phone:p,token}});
-  if(!auth?.access_token||!auth?.user)throw Error("登录失败，请重新获取验证码。");
+  if(!auth?.access_token||!auth?.refresh_token||!auth?.user?.id)throw Error("登录会话建立失败，请重新获取验证码。");
   saveApiSession(auth);currentUser=auth.user;
   // 先检查 customers.profile_completed，不能仅凭 profiles 中存在登录身份就认定注册完成。
   const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:p}});
@@ -486,7 +486,7 @@ async function referralGateVerify(){
  referralGateBusy=true;$('referralVerify').disabled=true;
  try{
   const auth=await api('/api/auth/verify-otp',{method:'POST',body:{phone:p,token:otp}});
-  if(!auth?.access_token||!auth?.user)throw Error('手机登录失败');
+  if(!auth?.access_token||!auth?.refresh_token||!auth?.user?.id)throw Error('登录会话建立失败，请重新获取验证码');
   saveApiSession(auth);currentUser=auth.user;
   const prepared=await apiAuth('/api/customer/login-prepare',{method:'POST',body:{phone:p}});
   if(prepared?.needs_profile===true){
